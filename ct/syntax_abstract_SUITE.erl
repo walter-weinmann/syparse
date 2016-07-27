@@ -8,8 +8,8 @@
 
 -compile(export_all).
 
--include_lib("common_test/include/ct.hrl ;").
--include_lib("eunit/include/eunit.hrl ;").
+-include_lib("common_test/include/ct.hrl").
+-include_lib("eunit/include/eunit.hrl").
 
 %%--------------------------------------------------------------------
 %% COMMON TEST CALLBACK FUNCTIONS - SUITE
@@ -34,14 +34,13 @@ groups() ->
     [
         {all_expressions, [], [
             test_expression_assignment,
-            test_expression_binary_expression,
+            test_expression_expression,
             test_expression_function_call,
             test_expression_index_access,
             test_expression_member_access,
             test_expression_new_expression,
             test_expression_primary_expression,
-            test_expression_primary_expression_brackets,
-            test_expression_unary_operation
+            test_expression_primary_expression_brackets
         ]},
         {all_statements, [], [
             test_statement_break,
@@ -97,29 +96,43 @@ test_expression_assignment(_Config) ->
     sytest:cd_string("RETURN new Berlin -= 4321 minutes ;").
 
 %%--------------------------------------------------------------------
-%% Expression: BinaryExpression.
+%% Expression: Expression.
 %%--------------------------------------------------------------------
 
-test_expression_binary_expression(_Config) ->
+test_expression_expression(_Config) ->
     sytest:cd_string("RETURN ! 21 seconds |= new b [0] !=new a_1_b_C ;"),
+    sytest:cd_string("RETURN ! 21 seconds |= new b [0] ;"),
     sytest:cd_string("RETURN ! 21 seconds |= new b [0] < new a_1_b_C.Berlin ;"),
     sytest:cd_string("RETURN ! 21 seconds |= new b [0] == new A ;"),
     sytest:cd_string("RETURN ! 21 seconds |= new b [0] > new LONDON [] ;"),
     sytest:cd_string("RETURN ! 21 seconds |= new b [0]<=TRUE [] ;"),
     sytest:cd_string("RETURN ! 21 seconds |= new b [0]>=ufixed [new LONDON] ;"),
+    sytest:cd_string("RETURN ! TRUE [] ;"),
     sytest:cd_string("RETURN !321 hours ^= a_1_b_C [1] % a1(21 seconds |= new b [0],21 seconds |= new b [0]) ;"),
     sytest:cd_string("RETURN !321 hours ^= a_1_b_C [1] && New __ ;"),
+    sytest:cd_string("RETURN !321 hours ^= a_1_b_C [1] ;"),
     sytest:cd_string("RETURN !321 hours ^= a_1_b_C [1] || delete New __ ;"),
-    sytest:cd_string("RETURN ++A( ) - A( ) ;"),
+    sytest:cd_string("RETURN !new a_1_b_C.Berlin ;"),
+    sytest:cd_string("RETURN ++ a_1_b_C [1].a1 ;"),
     sytest:cd_string("RETURN ++A( ) * a_1_b_C [1].a1 ;"),
-    sytest:cd_string("RETURN ++A( ) / a_1_b_C(21 seconds |= new b [0]) ;"),
     sytest:cd_string("RETURN ++A( ) + A [0x4711].__ ;"),
+    sytest:cd_string("RETURN ++A( ) - A( ) ;"),
+    sytest:cd_string("RETURN ++A( ) / a_1_b_C(21 seconds |= new b [0]) ;"),
+    sytest:cd_string("RETURN ++A( ) ;"),
+    sytest:cd_string("RETURN -- a1(21 seconds |= new b [0],21 seconds |= new b [0]) ;"),
+    sytest:cd_string("RETURN --a_1_b_C(21 seconds |= new b [0]) ;"),
     sytest:cd_string("RETURN DELETE ufixed [new LONDON] ** new a ;"),
+    sytest:cd_string("RETURN DELETE ufixed [new LONDON] ;"),
     sytest:cd_string("RETURN DELETE ufixed [new LONDON] >> 4321 minutes &= A [0x4711] ;"),
     sytest:cd_string("RETURN DELETE ufixed [new LONDON]<<321 hours ^= a_1_b_C [1] ;"),
+    sytest:cd_string("RETURN Delete var ;"),
+    sytest:cd_string("RETURN delete New __ ;"),
     sytest:cd_string("RETURN new a_1_b_C.Berlin & 21 seconds |= new b [0] ;"),
     sytest:cd_string("RETURN new a_1_b_C.Berlin ^~4321 minutes &= A [0x4711] ;"),
-    sytest:cd_string("RETURN new a_1_b_C.Berlin|!321 hours ^= a_1_b_C [1] ;").
+    sytest:cd_string("RETURN new a_1_b_C.Berlin|!321 hours ^= a_1_b_C [1] ;"),
+    sytest:cd_string("RETURN ~ A [0x4711].__ ;"),
+    sytest:cd_string("RETURN ~4321 minutes &= A [0x4711] ;"),
+    sytest:cd_string("RETURN ~new LONDON [] ;").
 
 %%--------------------------------------------------------------------
 %% Expression: FunctionCall.
@@ -252,26 +265,6 @@ test_expression_primary_expression_brackets(_Config) ->
     sytest:cd_string("RETURN (new b [0]) ;"),
     sytest:cd_string("RETURN (new b ) ;"),
     sytest:cd_string("RETURN ( new Berlin) ;").
-
-%%--------------------------------------------------------------------
-%% Expression: UnaryOperation.
-%%--------------------------------------------------------------------
-
-test_expression_unary_operation(_Config) ->
-    sytest:cd_string("RETURN -- a1(21 seconds |= new b [0],21 seconds |= new b [0]) ;"),
-    sytest:cd_string("RETURN ! 21 seconds |= new b [0] ;"),
-    sytest:cd_string("RETURN ! TRUE [] ;"),
-    sytest:cd_string("RETURN !321 hours ^= a_1_b_C [1] ;"),
-    sytest:cd_string("RETURN !new a_1_b_C.Berlin ;"),
-    sytest:cd_string("RETURN ~ A [0x4711].__ ;"),
-    sytest:cd_string("RETURN ~4321 minutes &= A [0x4711] ;"),
-    sytest:cd_string("RETURN ~new LONDON [] ;"),
-    sytest:cd_string("RETURN ++ a_1_b_C [1].a1 ;"),
-    sytest:cd_string("RETURN ++A( ) ;"),
-    sytest:cd_string("RETURN --a_1_b_C(21 seconds |= new b [0]) ;"),
-    sytest:cd_string("RETURN delete New __ ;"),
-    sytest:cd_string("RETURN DELETE ufixed [new LONDON] ;"),
-    sytest:cd_string("RETURN Delete var ;").
 
 %%--------------------------------------------------------------------
 %% Statement: Break.

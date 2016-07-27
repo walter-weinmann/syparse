@@ -24,42 +24,56 @@
 "RETURN new Berlin -= 4321 minutes ;".
 
 %% =============================================================================
-%% BinaryExpression
+%% Expression
 %% -----------------------------------------------------------------------------
 
 "RETURN ! 21 seconds |= new b [0] !=new a_1_b_C ;".
+"RETURN ! 21 seconds |= new b [0] ;".
 "RETURN ! 21 seconds |= new b [0] < new a_1_b_C.Berlin ;".
 "RETURN ! 21 seconds |= new b [0] == new A ;".
 "RETURN ! 21 seconds |= new b [0] > new LONDON [] ;".
 "RETURN ! 21 seconds |= new b [0]<=TRUE [] ;".
 "RETURN ! 21 seconds |= new b [0]>=ufixed [new LONDON] ;".
-% wwe "RETURN !321 hours ^= a_1_b_C [1] % a1(21 seconds |= new b [0],21 seconds |= new b [0]) ;".
+"RETURN ! TRUE [] ;".
+"RETURN !321 hours ^= a_1_b_C [1] % a1(21 seconds |= new b [0],21 seconds |= new b [0]) ;".
 "RETURN !321 hours ^= a_1_b_C [1] && New __ ;".
+"RETURN !321 hours ^= a_1_b_C [1] ;".
 "RETURN !321 hours ^= a_1_b_C [1] || delete New __ ;".
-% wwe "RETURN ++A( ) - A( ) ;".
-% wwe "RETURN ++A( ) * a_1_b_C [1].a1 ;".
-% wwe "RETURN ++A( ) / a_1_b_C(21 seconds |= new b [0]) ;".
-% wwe "RETURN ++A( ) + A [0x4711].__ ;".
+"RETURN !new a_1_b_C.Berlin ;".
+"RETURN ++ a_1_b_C [1].a1 ;".
+"RETURN ++A( ) * a_1_b_C [1].a1 ;".
+"RETURN ++A( ) + A [0x4711].__ ;".
+"RETURN ++A( ) - A( ) ;".
+"RETURN ++A( ) / a_1_b_C(21 seconds |= new b [0]) ;".
+"RETURN ++A( ) ;".
+"RETURN -- a1(21 seconds |= new b [0],21 seconds |= new b [0]) ;".
+"RETURN --a_1_b_C(21 seconds |= new b [0]) ;".
 "RETURN DELETE ufixed [new LONDON] ** new a ;".
+"RETURN DELETE ufixed [new LONDON] ;".
 "RETURN DELETE ufixed [new LONDON] >> 4321 minutes &= A [0x4711] ;".
 "RETURN DELETE ufixed [new LONDON]<<321 hours ^= a_1_b_C [1] ;".
+"RETURN Delete var ;".
+"RETURN delete New __ ;".
 "RETURN new a_1_b_C.Berlin & 21 seconds |= new b [0] ;".
 "RETURN new a_1_b_C.Berlin ^~4321 minutes &= A [0x4711] ;".
 "RETURN new a_1_b_C.Berlin|!321 hours ^= a_1_b_C [1] ;".
+"RETURN ~ A [0x4711].__ ;".
+"RETURN ~4321 minutes &= A [0x4711] ;".
+"RETURN ~new LONDON [] ;".
 
 %% =============================================================================
 %% FunctionCall
 %% -----------------------------------------------------------------------------
 
-% wwe "RETURN _() ;".
-% wwe "RETURN __ () ;".
-% wwe "RETURN a ( ) ;".
-% wwe "RETURN A( ) ;".
-% wwe "RETURN a_1_b_C(21 seconds |= new b [0]) ;".
-% wwe "RETURN a1(21 seconds = new b [0],21 seconds |= new b [0]) ;".
-% wwe "RETURN Berlin ( 4321 minutes &= A [0x4711] , new a_1_b_C.Berlin,var) ;".
-% wwe "RETURN LONDON(TRUE []) ;".
-% wwe "RETURN paris ( ufixed [new LONDON] ) ;".
+"RETURN _() ;".
+"RETURN __ () ;".
+"RETURN a ( ) ;".
+"RETURN A( ) ;".
+"RETURN a_1_b_C(21 seconds |= new b [0]) ;".
+"RETURN a1(21 seconds = new b [0],21 seconds |= new b [0]) ;".
+"RETURN Berlin ( 4321 minutes &= A [0x4711] , new a_1_b_C.Berlin,var) ;".
+"RETURN LONDON(TRUE []) ;".
+"RETURN paris ( ufixed [new LONDON] ) ;".
 
 %% =============================================================================
 %% IndexAccess
@@ -68,7 +82,7 @@
 "RETURN A [0x4711] ;".
 "RETURN a_1_b_C [1] ;".
 "RETURN new b [0] ;".
-% wwe timeout "RETURN new Berlin [ \"Dies ist ein Test\" ] ;".
+timeout "RETURN new Berlin [ \"Dies ist ein Test\" ] ;".
 "RETURN new LONDON [] ;".
 "RETURN TRUE [] ;".
 "RETURN ufixed [new LONDON] ;".
@@ -108,7 +122,7 @@
 %% -----------------------------------------------------------------------------
 
 "RETURN \"\" ;".
-% wwe "RETURN \"Dies ist ein Test\" ;".
+"RETURN \"Dies ist ein Test\" ;".
 "RETURN _ ;".
 "RETURN __ ;".
 "RETURN 0 finney ;".
@@ -126,7 +140,7 @@
 "RETURN 321 hours ;".
 "RETURN 4321 minutes ;".
 "RETURN 4711 ;".
-% wwe "RETURN a ;".
+"RETURN a ;".
 "RETURN b ;".
 "RETURN A ;".
 "RETURN a_1_b_C ;".
@@ -162,32 +176,13 @@
 %% PrimaryExpression - Brackets
 %% -----------------------------------------------------------------------------
 
-% wwe "RETURN (21 seconds) ;".
-% wwe "RETURN (321 hours ) ;".
-% wwe "RETURN ( 4321 minutes) ;".
-% wwe "RETURN ( A [0x4711] ) ;".
-% wwe "RETURN (a_1_b_C [1]) ;".
-% wwe "RETURN ( new a_1_b_C ) ;".
-% wwe "RETURN ( new a1) ;".
-% wwe "RETURN (new b [0]) ;".
-% wwe "RETURN (new b ) ;".
-% wwe "RETURN ( new Berlin) ;".
-
-%% =============================================================================
-%% UnaryOperation
-%% -----------------------------------------------------------------------------
-
-% wwe "RETURN -- a1(21 seconds |= new b [0],21 seconds |= new b [0]) ;".
-"RETURN ! 21 seconds |= new b [0] ;".
-"RETURN ! TRUE [] ;".
-"RETURN !321 hours ^= a_1_b_C [1] ;".
-"RETURN !new a_1_b_C.Berlin ;".
-"RETURN ~ A [0x4711].__ ;".
-"RETURN ~4321 minutes &= A [0x4711] ;".
-"RETURN ~new LONDON [] ;".
-"RETURN ++ a_1_b_C [1].a1 ;".
-% wwe "RETURN ++A( ) ;".
-% wwe "RETURN --a_1_b_C(21 seconds |= new b [0]) ;".
-"RETURN delete New __ ;".
-"RETURN DELETE ufixed [new LONDON] ;".
-"RETURN Delete var ;".
+"RETURN (21 seconds) ;".
+"RETURN (321 hours ) ;".
+"RETURN ( 4321 minutes) ;".
+"RETURN ( A [0x4711] ) ;".
+"RETURN (a_1_b_C [1]) ;".
+"RETURN ( new a_1_b_C ) ;".
+"RETURN ( new a1) ;".
+"RETURN (new b [0]) ;".
+"RETURN (new b ) ;".
+"RETURN ( new Berlin) ;".

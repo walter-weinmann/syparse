@@ -8,3 +8,5 @@ ebin
 .rebar
 /ct/logs
 /test/wwe.tst
+/src/sylexer.erl
+/src/syparse.erl

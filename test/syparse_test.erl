@@ -113,8 +113,8 @@ tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
 
 test_contractdefinition(TestGroup, Test, Logs) ->
     ?D1("~n ~s", [Test]),
-    %?debugFmt("~n", []),
-    %?debugFmt("wwe debugging test_contractdefinition/3 ===> ~n Test: ~p~n", [Test]),
+    ?debugFmt("~n", []),
+    ?debugFmt("wwe debugging test_contractdefinition/3 ===> ~n Test: ~p~n", [Test]),
     case syparse:parsetree_with_tokens(Test) of
         {ok, {ParseTree, Tokens}} ->
             ?debugFmt("wwe debugging test_contractdefinition/3 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
