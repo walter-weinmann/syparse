@@ -4,29 +4,29 @@ Definitions.
 Rules.
 
 %% number literals
-((0x)?[0-9]*)                                             : {token, {'NUMBER_LITERAL', TokenLine, TokenChars}}.
-
-%% assignment operators
-(\|=|\^=|&=|<<=|>>=|\+=|-=|\*=|/=|%=)                     : {token, {'ASSIGNMENT_OP', TokenLine, TokenChars}}.
-
-%% unary operators
-(!|~|\+\+|--)                                             : {token, {'UNARY_OP', TokenLine, TokenChars}}.
-
-%% binary operators
-(\||\^|&|<<|>>|\+|-|\*|/|%|\|\||&&|\*\*|==|!=|<|>|<=|>=)  : {token, {'BINARY_OP', TokenLine, TokenChars}}.
+((0x)?[0-9]+)                                             : {token, {'NUMBER_LITERAL', TokenLine, TokenChars}}.
 
 %% identifiers
-([a-zA-Z_][a-zA-Z_0-9]*)                                  : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatters).
+(_[a-zA-Z_0-9]+)                                          : {token, {'IDENTIFIER', TokenLine, TokenChars}}.
+([a-zA-Z][a-zA-Z_0-9]*)                                   : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatterns).
 
 %% string literals
-(\"[a-zA-Z_0-9]*\")                                       : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
+(\"([^\"\r\n\\]|\\.)*\")                                  : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
 
 % comments
 ((//).*[\n\r]?)                                           : skip_token.
 ((/\*)(.|\n|\r)*(\*/))                                    : skip_token.
 
 %% punctuation
-(,|{|}|(|)|;|=>|\[|\]|\.)                                 : {token, {list_to_atom(TokenChars), TokenLine}}.
+(,|{|}|\(|\)|;|_|=>|\[|\]|\.)                             : {token, {list_to_atom(TokenChars), TokenLine}}.
+(=|\|=|\^=|&=|<<=|>>=|>>>=|\+=|-=|\*=|/=|%=)              : {token, {list_to_atom(TokenChars), TokenLine}}.
+(!|~|\+\+|--)                                             : {token, {list_to_atom(TokenChars), TokenLine}}.
+(\*\*|\*|/|%)                                             : {token, {list_to_atom(TokenChars), TokenLine}}.
+(\||\^|&|<<|>>|>>>)                                       : {token, {list_to_atom(TokenChars), TokenLine}}.
+(\+|-)                                                    : {token, {list_to_atom(TokenChars), TokenLine}}.
+(<=|>=|<|>)                                               : {token, {list_to_atom(TokenChars), TokenLine}}.
+(==|!=)                                                   : {token, {list_to_atom(TokenChars), TokenLine}}.
+(&&|\|\||\?|:)                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
 
 %% white space
 ([\n\r\s\t]+)                                             : skip_token.
@@ -35,7 +35,7 @@ Erlang code.
 
 -export([reserved_keywords/0]).
 
--define(TokenPatters, [
+-define(TokenPatterns, [
 
     {"^(?i)(ADDRESS)$",          'ADDRESS'},
     {"^(?i)(AS)$",               'AS'},
@@ -1310,14 +1310,16 @@ Erlang code.
     {"^(?i)(YEARS)$",            'YEARS'}
 ]).
 
-%-define(DEBUG, true).
+% -define(NODEBUG, true).
+-include_lib("eunit/include/eunit.hrl").
+
 -ifdef(DEBUG).
 -define(Dbg(F,A), io:format(user, "[~p] "++F++"~n", [?LINE|A])).
 -else.
 -define(Dbg(F,A), ok).
 -endif.
 
-reserved_keywords() -> [T || {_, T} <- ?TokenPatters].
+reserved_keywords() -> [T || {_, T} <- ?TokenPatterns].
 
 match_any(TokenChars, TokenLen, _TokenLine, []) ->
     {token, {'IDENTIFIER', TokenLen, TokenChars}};
