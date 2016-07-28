@@ -2,11 +2,11 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([test_contractdefinition/3]).
+-export([test_sourceunit/3]).
 
-contractdefinition_test_() ->
-    WCard = case os:getenv("CONTRACTDEFINITION") of
-                Contractdefinition when is_list(Contractdefinition) -> Contractdefinition;
+sourceunit_test_() ->
+    WCard = case os:getenv("SOURCEUNIT") of
+                Sourceunit when is_list(Sourceunit) -> Sourceunit;
                 _ -> "*"
             end ++ ".tst",
     Logs = case os:getenv("LOG") of
@@ -81,7 +81,7 @@ tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
             tests_gen(TestGroup, Tests, Logs, SelTests,
                 [{TestGroup, I,
                     fun() ->
-                        {timeout, 60, ?MODULE:test_contractdefinition(TestGroup, T, Logs)}
+                        {timeout, 60, ?MODULE:test_sourceunit(TestGroup, T, Logs)}
                     end} | Acc]);
         _ -> Acc
     end.
@@ -111,33 +111,33 @@ tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
 -define(D5(__Msg), ?D(5, __Msg)).
 -define(D5(__Fmt, __Args), ?D(5, __Fmt, __Args)).
 
-test_contractdefinition(TestGroup, Test, Logs) ->
+test_sourceunit(TestGroup, Test, Logs) ->
     ?D1("~n ~s", [Test]),
     ?debugFmt("~n", []),
-    ?debugFmt("wwe debugging test_contractdefinition/3 ===> ~n Test: ~p~n", [Test]),
+    ?debugFmt("wwe debugging test_sourceunit/3 ===> ~n Test: ~p~n", [Test]),
     case syparse:parsetree_with_tokens(Test) of
         {ok, {ParseTree, Tokens}} ->
-            ?debugFmt("wwe debugging test_contractdefinition/3 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
+            ?debugFmt("wwe debugging test_sourceunit/3 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
             ?D2("~n~p", [ParseTree]),
-            NContractdefinition = case syparse:parsetree_to_string_td(ParseTree) of
+            NSourceunit = case syparse:parsetree_to_string_td(ParseTree) of
                           {error, Error} ->
                               throw({error, Error});
                           NS ->
-                              %?debugFmt("wwe debugging test_contractdefinition/3 ===> ~n NS: ~p~n", [NS]),
+                              %?debugFmt("wwe debugging test_sourceunit/3 ===> ~n NS: ~p~n", [NS]),
                               NS
                       end,
-            ?D3("~n ~ts~n", [NContractdefinition]),
+            ?D3("~n ~ts~n", [NSourceunit]),
             {ok, {NPTree, NToks}}
                 = try
-                      {ok, {NPT, NT}} = syparse:parsetree_with_tokens(NContractdefinition),
+                      {ok, {NPT, NT}} = syparse:parsetree_with_tokens(NSourceunit),
                       {ok, {NPT, NT}}
-                  catch _:_ -> ?D_("Error : ~p syparse:parsetree_with_tokens(~s)", [TestGroup, NContractdefinition])
+                  catch _:_ -> ?D_("Error : ~p syparse:parsetree_with_tokens(~s)", [TestGroup, NSourceunit])
                   end,
             try
                 ParseTree = NPTree
             catch
                 _:_ ->
-                    ?debugFmt("wwe debugging test_contractdefinition/3 ===> ~n NPTree: ~p~n NToks: ~p~n", [NPTree, NToks]),
+                    ?debugFmt("wwe debugging test_sourceunit/3 ===> ~n NPTree: ~p~n NToks: ~p~n", [NPTree, NToks]),
                     ?D_("~n > ~p", [NPTree]),
                     ?D_("~n > ~p", [Tokens]),
                     ?D_("~n > ~p", [NToks])
@@ -146,15 +146,15 @@ test_contractdefinition(TestGroup, Test, Logs) ->
                 ?assertEqual(ParseTree, NPTree)
             catch
                 _:_ ->
-                    ?debugFmt("wwe debugging test_contractdefinition/3 ===> not equal~n ParseTree: ~p~n NPTree: ~p~n", [ParseTree, NPTree])
+                    ?debugFmt("wwe debugging test_sourceunit/3 ===> not equal~n ParseTree: ~p~n NPTree: ~p~n", [ParseTree, NPTree])
             end,
             ?D4("~n ~p~n", [ParseTree]);
         {lex_error, Error} ->
-            ?debugFmt("wwe debugging test_contractdefinition/3 ===> Failed lexer~n Error: ~p~n", [Error]),
+            ?debugFmt("wwe debugging test_sourceunit/3 ===> Failed lexer~n Error: ~p~n", [Error]),
             ?D_("Failed lexer ~p", [Error]),
             ?assertEqual(ok, Error);
         {parse_error, {Error, _Tokens}} ->
-            ?debugFmt("wwe debugging test_contractdefinition/3 parser ===> ~n Error: ~p~n Tokens: ~p~n", [Error, _Tokens]),
+            ?debugFmt("wwe debugging test_sourceunit/3 parser ===> ~n Error: ~p~n Tokens: ~p~n", [Error, _Tokens]),
             ?D_("Failed parser ~p", [Error]),
             % ?D_("~nFailed: ~p~nTest: ~s~nTokens ~p", [Error, Test, Tokens]),
             ?assertEqual(ok, Error)
