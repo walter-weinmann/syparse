@@ -2,7 +2,7 @@
 
 -export([fold/5]).
 
-% -define(NODEBUG, true).
+-define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -148,7 +148,8 @@ fold(FType, Fun, Ctx, Lvl, {expression, {SubType, _} = Value} = ST)
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {expression, {SubType, _, _} = Value} = ST)
-    when SubType == indexAccess;  SubType == memberAccess;  SubType == primaryExpression ->
+    when SubType == functionCall; SubType == indexAccess;  SubType == memberAccess;
+    SubType == primaryExpression ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -163,7 +164,7 @@ fold(FType, Fun, Ctx, Lvl, {expression, {SubType, _, _} = Value} = ST)
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {expression, {SubType, _, _, _} = Value} = ST)
-    when SubType == functionCall;  SubType == primaryExpression ->
+    when SubType == primaryExpression ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
