@@ -127,8 +127,8 @@ match_any(TokenChars, TokenLen, TokenLine, [{P,T}|TPs]) ->
     end.
 
 match_bytes(TokenChars, TokenLen) ->
-    TokenCharsLower = list_to_atom(string:to_lower(TokenChars)),
-    Size = string:sub_string(TokenChars, 6),
+    TokenCharsLower = string:to_lower(TokenChars),
+    Size = string:substr(TokenChars, 6),
     case Size of
         [] ->
             {token, {'BYTE', TokenLen, TokenCharsLower}};
@@ -141,18 +141,40 @@ match_bytes(TokenChars, TokenLen) ->
     end.
 
 match_fixed(TokenChars, TokenLen) ->
-    TokenCharsLower = list_to_atom(string:to_lower(TokenChars)),
-    case {string:sub_string(TokenCharsLower, 7), string:sub_string(TokenCharsLower, 8), string:sub_string(TokenCharsLower, 9)} of
-        {"x", _, _} ->
-            Size = string:to_integer(string:sub_string(TokenChars, 6, 1)) + string:to_integer(string:sub_string(TokenChars, 8));
-        {_, "x", _} ->
-            Size = string:to_integer(string:sub_string(TokenChars, 6, 2)) + string:to_integer(string:sub_string(TokenChars, 9));
-        {_, _, "x"} ->
-            Size = string:to_integer(string:sub_string(TokenChars, 6, 3)) + string:to_integer(string:sub_string(TokenChars, 10));
+    TokenCharsLower = string:to_lower(TokenChars),
+    case TokenLen > 7 of
+        true ->
+            Pos7 = string:substr(TokenCharsLower, 7, 1);
         _ ->    
-            Size = 0
+            Pos7 = []
+    end,        
+    case TokenLen > 8 of
+        true ->
+            Pos8 = string:substr(TokenCharsLower, 8, 1);
+        _ ->    
+            Pos8 = []
+    end,        
+    case TokenLen > 9 of
+        true ->
+            Pos9 = string:substr(TokenCharsLower, 9, 1);
+        _ ->    
+            Pos9 = []
+    end,        
+    case {Pos7, Pos8, Pos9} of
+        {"x", _, _} ->
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 1)), 
+            {Size2, _} = string:to_integer(string:substr(TokenChars, 8));
+        {_, "x", _} ->
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 2)), 
+            {Size2, _} = string:to_integer(string:substr(TokenChars, 9));
+        {_, _, "x"} ->
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 3)), 
+            {Size2, _} = string:to_integer(string:substr(TokenChars, 10));
+        _ ->    
+            Size1 = 0,
+            Size2 = 0
     end,
-    case 256 - Size >= 0 of
+    case 256 - Size1 - Size2 >= 0 of
         true ->
             {token, {'FIXED', TokenLen, TokenCharsLower}};
         _ ->
@@ -160,18 +182,40 @@ match_fixed(TokenChars, TokenLen) ->
     end.
 
 match_ufixed(TokenChars, TokenLen) ->
-    TokenCharsLower = list_to_atom(string:to_lower(TokenChars)),
-    case {string:sub_string(TokenCharsLower, 8), string:sub_string(TokenCharsLower, 9), string:sub_string(TokenCharsLower, 10)} of
-        {"x", _, _} ->
-            Size = string:to_integer(string:sub_string(TokenChars, 7, 1)) + string:to_integer(string:sub_string(TokenChars, 9));
-        {_, "x", _} ->
-            Size = string:to_integer(string:sub_string(TokenChars, 7, 2)) + string:to_integer(string:sub_string(TokenChars, 10));
-        {_, _, "x"} ->
-            Size = string:to_integer(string:sub_string(TokenChars, 7, 3)) + string:to_integer(string:sub_string(TokenChars, 11));
+    TokenCharsLower = string:to_lower(TokenChars),
+    case TokenLen > 8 of
+        true ->
+            Pos8 = string:substr(TokenCharsLower, 8, 1);
         _ ->    
-            Size = 0
+            Pos8 = []
+    end,        
+    case TokenLen > 9 of
+        true ->
+            Pos9 = string:substr(TokenCharsLower, 9, 1);
+        _ ->    
+            Pos9 = []
+    end,        
+    case TokenLen > 10 of
+        true ->
+            Pos10 = string:substr(TokenCharsLower, 10, 1);
+        _ ->    
+            Pos10 = []
+    end,        
+    case {Pos8, Pos9, Pos10} of
+        {"x", _, _} ->
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 1)), 
+            {Size2, _} = string:to_integer(string:substr(TokenChars, 9));
+        {_, "x", _} ->
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 2)), 
+            {Size2, _} = string:to_integer(string:substr(TokenChars, 10));
+        {_, _, "x"} ->
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 3)), 
+            {Size2, _} = string:to_integer(string:substr(TokenChars, 11));
+        _ ->    
+            Size1 = 0,
+            Size2 = 0
     end,
-    case 256 - Size >= 0 of
+    case 256 - Size1 - Size2 >= 0 of
         true ->
             {token, {'UFIXED', TokenLen, TokenCharsLower}};
         _ ->
