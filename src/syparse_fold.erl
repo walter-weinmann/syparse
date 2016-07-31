@@ -92,10 +92,12 @@ fold(FType, Fun, Ctx, Lvl, {binaryOperation, Value1, {binaryOp, BinaryOp}, Value
     RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% booleanLiteral
+% booleanLiteral, placeHolderStatement
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fold(FType, Fun, Ctx, _Lvl, {booleanLiteral, Value} = ST) ->
+fold(FType, Fun, Ctx, _Lvl, {Type, Value} = ST)
+    when Type == booleanLiteral;
+    Type == placeHolderStatement ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -114,7 +116,10 @@ fold(FType, Fun, Ctx, _Lvl, {booleanLiteral, Value} = ST) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fold(FType, Fun, Ctx, _Lvl, {Type, Value} = ST)
-    when Type == elementaryTypeName; Type == identifier; Type == numberUnit; Type == stringLiteral ->
+    when Type == elementaryTypeName;
+    Type == identifier;
+    Type == numberUnit;
+    Type == stringLiteral ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -148,7 +153,9 @@ fold(FType, Fun, Ctx, Lvl, {expression, {SubType, _} = Value} = ST)
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {expression, {SubType, _, _} = Value} = ST)
-    when SubType == functionCall; SubType == indexAccess;  SubType == memberAccess;
+    when SubType == functionCall;
+    SubType == indexAccess;
+    SubType == memberAccess;
     SubType == primaryExpression ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
@@ -164,7 +171,8 @@ fold(FType, Fun, Ctx, Lvl, {expression, {SubType, _, _} = Value} = ST)
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {expression, {SubType, _, _, _} = Value} = ST)
-    when SubType == expression; SubType == primaryExpression ->
+    when SubType == expression;
+    SubType == primaryExpression ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -193,8 +201,15 @@ fold(FType, Fun, Ctx, Lvl, {expression, "(", Value} = ST) ->
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {expression, [], UnaryOp, Value} = ST)
-    when UnaryOp == "!"; UnaryOp == "~"; UnaryOp == "after"; UnaryOp == "delete"; UnaryOp == "++";
-    UnaryOp == "--"; UnaryOp == "+"; UnaryOp == "-"; UnaryOp == "," ->
+    when UnaryOp == "!";
+    UnaryOp == "~";
+    UnaryOp == "after";
+    UnaryOp == "delete";
+    UnaryOp == "++";
+    UnaryOp == "--";
+    UnaryOp == "+";
+    UnaryOp == "-";
+    UnaryOp == "," ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -216,7 +231,8 @@ fold(FType, Fun, Ctx, Lvl, {expression, [], UnaryOp, Value} = ST)
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {expression, Value, UnaryOp, []} = ST)
-    when UnaryOp == "++"; UnaryOp == "--" ->
+    when UnaryOp == "++";
+    UnaryOp == "--" ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -232,18 +248,35 @@ fold(FType, Fun, Ctx, Lvl, {expression, Value, UnaryOp, []} = ST)
     RT;
 fold(FType, Fun, Ctx, Lvl, {expression, Value1, BinaryOp, Value2} = ST)
     when BinaryOp == "**";
-    BinaryOp == "*"; BinaryOp == "/"; BinaryOp == "%";
-    BinaryOp == "+"; BinaryOp == "-";
-    BinaryOp == "<<"; BinaryOp == ">>"; BinaryOp == ">>>";
+    BinaryOp == "*";
+    BinaryOp == "/";
+    BinaryOp == "%";
+    BinaryOp == "+";
+    BinaryOp == "-";
+    BinaryOp == "<<";
+    BinaryOp == ">>";
+    BinaryOp == ">>>";
     BinaryOp == "&";
     BinaryOp == "^";
     BinaryOp == "|";
-    BinaryOp == "<"; BinaryOp == ">"; BinaryOp == "<="; BinaryOp == ">=";
-    BinaryOp == "=="; BinaryOp == "!=";
+    BinaryOp == "<";
+    BinaryOp == ">";
+    BinaryOp == "<=";
+    BinaryOp == ">=";
+    BinaryOp == "==";
+    BinaryOp == "!=";
     BinaryOp == "&&";
     BinaryOp == "||";
-    BinaryOp == "="; BinaryOp == "|="; BinaryOp == "^="; BinaryOp == "&="; BinaryOp == "<<=";
-    BinaryOp == ">>="; BinaryOp == "+="; BinaryOp == "-="; BinaryOp == "*="; BinaryOp == "/=";
+    BinaryOp == "=";
+    BinaryOp == "|=";
+    BinaryOp == "^=";
+    BinaryOp == "&=";
+    BinaryOp == "<<=";
+    BinaryOp == ">>=";
+    BinaryOp == "+=";
+    BinaryOp == "-=";
+    BinaryOp == "*=";
+    BinaryOp == "/=";
     BinaryOp == "%=";
     BinaryOp == "," ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
@@ -338,6 +371,183 @@ fold(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
     RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% forStatement
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {forStatement, [], [], [], Value4} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value4New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value4),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {"for (;;) " ++ Value4New, NewCtx2},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {forStatement, [], [], Value3, Value4} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value3New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value3),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    {Value4New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Value4),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    RT = {"for (;;" ++ Value3New ++ ") " ++ Value4New, NewCtx4},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {forStatement, [], Value2, [], Value4} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value2New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value2),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    {Value4New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Value4),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    RT = {"for (;" ++ Value2New ++ ";) " ++ Value4New, NewCtx4},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {forStatement, [], Value2, Value3, Value4} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value2New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value2),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    {Value3New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Value3),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    {Value4New, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Value4),
+    NewCtx6 = case FType of
+                  top_down -> NewCtx5;
+                  bottom_up -> Fun(ST, NewCtx5)
+              end,
+    RT = {"for (;" ++ Value2New ++ ";" ++ Value3New ++ ") " ++ Value4New, NewCtx6},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, [], [], Value4} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value1),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    {Value4New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Value4),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    RT = {"for (" ++ Value1New ++ ";;) " ++ Value4New, NewCtx4},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, [], Value3, Value4} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value1),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    {Value3New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Value3),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    {Value4New, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Value4),
+    NewCtx6 = case FType of
+                  top_down -> NewCtx5;
+                  bottom_up -> Fun(ST, NewCtx5)
+              end,
+    RT = {"for (" ++ Value1New ++ ";;" ++ Value3New ++ ") " ++ Value4New, NewCtx6},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, Value2, [], Value4} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value1),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    {Value2New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Value2),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    {Value4New, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Value4),
+    NewCtx6 = case FType of
+                  top_down -> NewCtx5;
+                  bottom_up -> Fun(ST, NewCtx5)
+              end,
+    RT = {"for (" ++ Value1New ++ ";" ++ Value2New ++ ";) " ++ Value4New, NewCtx6},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, Value2, Value3, Value4} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value1),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    {Value2New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Value2),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    {Value3New, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Value3),
+    NewCtx6 = case FType of
+                  top_down -> NewCtx5;
+                  bottom_up -> Fun(ST, NewCtx5)
+              end,
+    {Value4New, NewCtx7} = fold(FType, Fun, NewCtx6, Lvl + 1, Value4),
+    NewCtx8 = case FType of
+                  top_down -> NewCtx7;
+                  bottom_up -> Fun(ST, NewCtx7)
+              end,
+    RT = {"for (" ++ Value1New ++ ";" ++ Value2New ++ ";" ++ Value3New ++ ") " ++ Value4New, NewCtx8},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % functionCall
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -372,6 +582,54 @@ fold(FType, Fun, Ctx, Lvl, {functionCall, Value1, Value2} = ST) ->
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {Value1New ++ "(" ++ Value2New ++ ")", NewCtx4},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ifStatement
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {ifStatement, Value1, Value2, []} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value1),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    {Value2New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Value2),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    RT = {"if (" ++ Value1New ++ ") " ++ Value2New, NewCtx4},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {ifStatement, Value1, Value2, Value3} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value1),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    {Value2New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Value2),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    {Value3New, NewCtx5} = fold(FType, Fun, NewCtx4, Lvl + 1, Value3),
+    NewCtx6 = case FType of
+                  top_down -> NewCtx5;
+                  bottom_up -> Fun(ST, NewCtx5)
+              end,
+    RT = {"if (" ++ Value1New ++ ") " ++ Value2New ++ " else " ++ Value3New, NewCtx6},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -582,7 +840,9 @@ fold(FType, Fun, Ctx, Lvl, {return, Value} = ST) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fold(FType, Fun, Ctx, _Lvl, {Type, {SubType, Value}} = ST)
-    when Type == statement, SubType == break; Type == statement, SubType == continue;
+    when Type == expressionStatement, SubType == expression;
+    Type == statement, SubType == break;
+    Type == statement, SubType == continue;
     Type == statement, SubType == throw ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
@@ -597,9 +857,15 @@ fold(FType, Fun, Ctx, _Lvl, {Type, {SubType, Value}} = ST)
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {Type, {SubType, _} = Value} = ST)
-    when Type == statement, SubType == return; Type == statement, SubType == variableDefinition;
-    Type == typeName, SubType == arrayTypeName; Type == typeName, SubType == elementaryTypeName;
-    Type == typeName, SubType == identifier; Type == typeName, SubType == mapping ->
+    when Type == simpleStatement, SubType == expressionStatement;
+    Type == statement, SubType == placeHolderStatement;
+    Type == statement, SubType == return;
+    Type == statement, SubType == simpleStatement;
+    Type == statement, SubType == variableDefinition;
+    Type == typeName, SubType == arrayTypeName;
+    Type == typeName, SubType == elementaryTypeName;
+    Type == typeName, SubType == identifier;
+    Type == typeName, SubType == mapping ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -614,7 +880,40 @@ fold(FType, Fun, Ctx, Lvl, {Type, {SubType, _} = Value} = ST)
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {Type, {SubType, _, _} = Value} = ST)
-    when Type == statement, SubType == variableDefinition ->
+    when Type == expressionStatement, SubType == expression;
+    Type == simpleStatement, SubType == variableDefinition;
+    Type == statement, SubType == variableDefinition;
+    Type == statement, SubType == whileStatement ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ValueNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {ValueNew, NewCtx2},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {Type, {SubType, _, _, _} = Value} = ST)
+    when Type == expressionStatement, SubType == expression;
+    Type == statement, SubType == ifStatement ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {ValueNew, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {ValueNew, NewCtx2},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+fold(FType, Fun, Ctx, Lvl, {statement, {forStatement, _, _, _, _} = Value} = ST) ->
     ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -710,6 +1009,29 @@ fold(FType, Fun, Ctx, Lvl, {variableDefinition, Value1, Value2} = ST) ->
                   bottom_up -> Fun(ST, NewCtx3)
               end,
     RT = {Value1New ++ "=" ++ Value2New ++ ";", NewCtx4},
+    ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
+    RT;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% whileStatement
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+fold(FType, Fun, Ctx, Lvl, {whileStatement, Value1, Value2} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value1),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    {Value2New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Value2),
+    NewCtx4 = case FType of
+                  top_down -> NewCtx3;
+                  bottom_up -> Fun(ST, NewCtx3)
+              end,
+    RT = {"while (" ++ Value1New ++ ") " ++ Value2New, NewCtx4},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 

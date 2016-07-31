@@ -65,15 +65,11 @@
 %% FunctionCall
 %% -----------------------------------------------------------------------------
 
-"RETURN _() ;".
-"RETURN __ () ;".
-"RETURN a ( ) ;".
-"RETURN A( ) ;".
-"RETURN a_1_b_C(21 seconds |= new b [0]) ;".
-"RETURN a1(21 seconds = new b [0],21 seconds |= new b [0]) ;".
-"RETURN Berlin ( 4321 minutes &= A [0x4711] , new a_1_b_C.Berlin,var) ;".
-"RETURN LONDON(TRUE []) ;".
-"RETURN paris ( ufixed [new LONDON] ) ;".
+% "_()".
+"__ ()".
+"a ( )".
+"A( )".
+"LONDON(TRUE [])".
 
 %% =============================================================================
 %% IndexAccess
