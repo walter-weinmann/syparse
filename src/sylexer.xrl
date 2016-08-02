@@ -46,7 +46,7 @@ Rules.
 (\+|-)                                                    : {token, {list_to_atom(TokenChars), TokenLine}}.
 (<=|>=|<|>)                                               : {token, {list_to_atom(TokenChars), TokenLine}}.
 (==|!=)                                                   : {token, {list_to_atom(TokenChars), TokenLine}}.
-(&&|\|\||\?|:)                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
+(&&|\|\||\?|:|\s)                                         : {token, {list_to_atom(TokenChars), TokenLine}}.
 
 %% white space
 ([\n\r\s\t]+)                                             : skip_token.

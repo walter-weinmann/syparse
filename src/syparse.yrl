@@ -31,13 +31,15 @@ Nonterminals
  identifier
  if_statement
  import_directive
+ import_directive_contract_definition
+ import_directive_contract_definition_list
  import_directive_semicolonlist
  import_identifier
  import_identifier_commalist
  index_access
- indexed_type_parameter
- indexed_type_parameter_commalist
- indexed_type_parameter_list
+ indexed_parameter
+ indexed_parameter_commalist
+ indexed_parameter_list
  inheritance_specifier
  inheritance_specifier_commalist
  mapping
@@ -179,6 +181,7 @@ Terminals
  '||'
  '?'
  ':'
+ '\s'
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -222,9 +225,8 @@ Nonassoc    800 ','.                                    %% comma operator.
 %% Grammar rules.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-source_unit ->                                contract_definition                               : {sourceUnit, [],   '$1'}.
-source_unit -> import_directive_semicolonlist contract_definition                               : {sourceUnit, '$1', '$2'}.
- 
+source_unit -> import_directive_contract_definition_list                                        : {sourceUnit, '$1'}.
+
 source_unit -> statement                                                                        : '$1'.
 % source_unit -> expression                                                                       : '$1'.
 % wwe source_unit -> primary_expression                                                               : '$1'.
@@ -232,8 +234,12 @@ source_unit -> statement                                                        
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-import_directive_semicolonlist -> import_directive                                              : ['$1'].
-import_directive_semicolonlist -> import_directive ';' import_directive_semicolonlist           : ['$1' | '$3'].
+import_directive_contract_definition_list -> import_directive_contract_definition               : ['$1'].
+import_directive_contract_definition_list -> import_directive_contract_definition ';' import_directive_contract_definition_list
+                                                                                                : ['$1' | '$3'].
+                                                                                                
+import_directive_contract_definition -> import_directive                                        : '$1'.                                                                                                
+import_directive_contract_definition -> contract_definition                                     : '$1'.                                                                                                
 %% =====================================================================================================================
 
 contract_definition -> CONTRACT identifier                                    '{'                    '}'
@@ -263,13 +269,13 @@ contract_part_list -> contract_part_list contract_part                          
 contract_part_list -> contract_part                                                             : ['$1'].
 %% =====================================================================================================================
 
-import_directive -> IMPORT STRING_LITERAL                                                       : {importDirective, unwrap('$2'), []}.
-import_directive -> IMPORT STRING_LITERAL as_identifier                                         : {importDirective, unwrap('$2'), '$3'}.
-import_directive -> IMPORT '*'                                 FROM STRING_LITERAL              : {importDirective, "*",          [],   unwrap('$4')}.
-import_directive -> IMPORT '*'            as_identifier        FROM STRING_LITERAL              : {importDirective, "*",          '$3', unwrap('$5')}.
-import_directive -> IMPORT identifier                          FROM STRING_LITERAL              : {importDirective, '$2',         [],   unwrap('$4')}.
-import_directive -> IMPORT identifier     as_identifier        FROM STRING_LITERAL              : {importDirective, '$2',         '$3', unwrap('$5')}.
-import_directive -> IMPORT '(' import_identifier_commalist ')' FROM STRING_LITERAL              : {importDirective, "(",          '$3', unwrap('$5')}.
+import_directive -> IMPORT STRING_LITERAL                                          ';'          : {importDirective, unwrap('$2'), []}.
+import_directive -> IMPORT STRING_LITERAL as_identifier                            ';'          : {importDirective, unwrap('$2'), '$3'}.
+import_directive -> IMPORT '*'                                 FROM STRING_LITERAL ';'          : {importDirective, "*",          [],   unwrap('$4')}.
+import_directive -> IMPORT '*'            as_identifier        FROM STRING_LITERAL ';'          : {importDirective, "*",          '$3', unwrap('$5')}.
+import_directive -> IMPORT identifier                          FROM STRING_LITERAL ';'          : {importDirective, '$2',         [],   unwrap('$4')}.
+import_directive -> IMPORT identifier     as_identifier        FROM STRING_LITERAL ';'          : {importDirective, '$2',         '$3', unwrap('$5')}.
+import_directive -> IMPORT '(' import_identifier_commalist ')' FROM STRING_LITERAL ';'          : {importDirective, "(",          '$3', unwrap('$5')}.
  
 %% =====================================================================================================================
 %% Helper definitions.
@@ -331,9 +337,18 @@ function_definition -> FUNCTION identifier parameter_list function_definition_vi
 function_definition -> FUNCTION identifier parameter_list function_definition_visibility_list RETURNS parameter_list      block
                                                                                                 : {functionDefinition, '$2', '$3', '$4', '$6', '$7'}.
 
+parameter_list -> '('                                ')'                                        : {typeParameterList, []}.
+parameter_list -> '(' type_name_identifier_commalist ')'                                        : {typeParameterList, '$2'}.
+
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+type_name_identifier_commalist -> type_name_identifier                                          : ['$1'].
+type_name_identifier_commalist -> type_name_identifier ',' type_name_identifier_commalist       : ['$1' | '$3'].
+
+type_name_identifier -> type_name                                                               : {'$1', []}.
+type_name_identifier -> type_name identifier                                                    : {'$1', '$2'}.
+
 function_definition_visibility_list -> function_definition_visibility_list function_definition_visibility
                                                                                                 : '$1' ++ ['$2'].
 function_definition_visibility_list -> function_definition_visibility                           : ['$1'].
@@ -347,10 +362,8 @@ function_definition_visibility -> INTERNAL                                      
 function_definition_visibility -> PRIVATE                                                       : "private".
 %% ---------------------------------------------------------------------------------------------------------------------
 
-event_definition -> EVENT identifier parameter_list                        ';'                  : {eventDefinition, '$2', '$3', []}.
-event_definition -> EVENT identifier parameter_list              ANONYMOUS ';'                  : {eventDefinition, '$2', '$3', "anonymous"}.
-event_definition -> EVENT identifier indexed_type_parameter_list           ';'                  : {eventDefinition, '$2', '$3', []}.
-event_definition -> EVENT identifier indexed_type_parameter_list ANONYMOUS ';'                  : {eventDefinition, '$2', '$3', "anonymous"}.
+event_definition -> EVENT identifier indexed_parameter_list           ';'                       : {eventDefinition, '$2', '$3', []}.
+event_definition -> EVENT identifier indexed_parameter_list ANONYMOUS ';'                       : {eventDefinition, '$2', '$3', "anonymous"}.
 
 enum_value -> identifier                                                                        : {enumValue, '$1'}.
 
@@ -364,36 +377,16 @@ enum_value_commalist -> enum_value                                              
 enum_value_commalist -> enum_value ',' enum_value_commalist                                     : ['$1' | '$3'].
 %% ---------------------------------------------------------------------------------------------------------------------
 
-indexed_type_parameter_list -> '(' indexed_type_parameter_commalist ')'                         : {indexedTypeParameterList, '$2'}.
+indexed_parameter_list -> '(' indexed_parameter_commalist ')'                                   : {indexedParameterList, '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-indexed_type_parameter_commalist -> indexed_type_parameter                                      : ['$1'].
-indexed_type_parameter_commalist -> indexed_type_parameter ',' indexed_type_parameter_commalist : ['$1' | '$3'].
+indexed_parameter_commalist -> indexed_parameter                                                : ['$1'].
+indexed_parameter_commalist -> indexed_parameter ',' indexed_parameter_commalist                : ['$1' | '$3'].
 
-%% =====================================================================================================================
-%% Helper definitions - reduce/reduce problem.
-%% ---------------------------------------------------------------------------------------------------------------------
-% wwe indexed_type_parameter -> type_name                                                             : {'$1', [], []}.
-% wwe indexed_type_parameter -> type_name identifier                                                  : {'$1', [], '$2'}.
-%% ---------------------------------------------------------------------------------------------------------------------
-
-indexed_type_parameter -> type_name INDEXED                                                     : {'$1', "indexed", []}.
-indexed_type_parameter -> type_name INDEXED identifier                                          : {'$1', "indexed", '$3'}.
-%% ---------------------------------------------------------------------------------------------------------------------
-
-parameter_list -> '('                                ')'                                        : {typeParameterList, []}.
-parameter_list -> '(' type_name_identifier_commalist ')'                                        : {typeParameterList, '$2'}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-type_name_identifier_commalist -> type_name_identifier                                          : ['$1'].
-type_name_identifier_commalist -> type_name_identifier ',' type_name_identifier_commalist       : ['$1' | '$3'].
-
-type_name_identifier -> type_name                                                               : {'$1', []}.
-type_name_identifier -> type_name identifier                                                    : {'$1', '$2'}.
+indexed_parameter -> type_name INDEXED                                                          : {'$1', "indexed", []}.
+indexed_parameter -> type_name INDEXED identifier                                               : {'$1', "indexed", '$3'}.
 %% ---------------------------------------------------------------------------------------------------------------------
 
 variable_declaration -> type_name identifier                                                    : {variableDeclaration, '$1', '$2'}.
@@ -542,12 +535,6 @@ expression -> expression '*='  expression                                       
 expression -> expression '/='  expression                                                       : {expression, '$1', "/=",  '$3'}.
 expression -> expression '%='  expression                                                       : {expression, '$1', "%=",  '$3'}.
 
-%% =====================================================================================================================
-%% Helper definitions - reduce/shift problem.
-%% ---------------------------------------------------------------------------------------------------------------------
-% wwe expression -> expression                                                                        : {expression, '$1', ",", []}.
-%% =====================================================================================================================
-
 expression -> expression ',' expression                                                         : {expression, '$1', ",", '$3'}.
 expression -> ',' expression                                                                    : {expression, [],   ",", '$2'}.
 
@@ -573,7 +560,7 @@ boolean_literal -> TRUE                                                         
 boolean_literal -> FALSE                                                                        : {booleanLiteral, "false"}.
 
 number_literal -> NUMBER_LITERAL                                                                : {numberLiteral, unwrap('$1'), []}.
-number_literal -> NUMBER_LITERAL number_unit                                                    : {numberLiteral, unwrap('$1'), '$2'}.
+number_literal -> NUMBER_LITERAL ' ' number_unit                                                : {numberLiteral, unwrap('$1'), '$3'}.
 
 number_unit -> WEI                                                                              : {numberUnit, "wei"}.
 number_unit -> SZABO                                                                            : {numberUnit, "szabo"}.
