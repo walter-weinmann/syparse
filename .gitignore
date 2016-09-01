@@ -11,3 +11,4 @@ ebin
 /src/sylexer.erl
 /src/syparse.erl
 /src/sylexer.dot
+/test/generic_*.tst

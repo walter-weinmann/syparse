@@ -17,11 +17,13 @@ Nonterminals
  contract_part
  contract_part_list
  elementary_type_name
+ else_opt
  enum_definition
  enum_value
  enum_value_commalist
  event_definition
  expression
+ expression_commalist
  expression_statement
  for_statement
  function_call
@@ -31,9 +33,7 @@ Nonterminals
  identifier
  if_statement
  import_directive
- import_directive_contract_definition
  import_directive_contract_definition_list
- import_directive_semicolonlist
  import_identifier
  import_identifier_commalist
  index_access
@@ -58,12 +58,14 @@ Nonterminals
  state_variable_declaration_visibility
  statement
  statement_list
+ storage_location
  string_literal
  struct_definition
  throw
  type_name
  type_name_identifier
  type_name_identifier_commalist
+ unary
  using_for_declaration
  variable_declaration
  variable_declaration_semicolonlist
@@ -76,7 +78,6 @@ Terminals
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  ADDRESS
- AFTER
  ANONYMOUS
  AS
  BOOL
@@ -181,7 +182,6 @@ Terminals
  '||'
  '?'
  ':'
- '\s'
 .
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -198,28 +198,32 @@ Endsymbol
 %% Operator precedences.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Nonassoc    100 '++' '--'.                              %% increment and decrement.
-Nonassoc    110 '(' ')'.                                %% function-like call.
-Nonassoc    120 '[' ']'.                                %% array subscripting.
-Nonassoc    130 '.'.                                    %% member access.
-%Unary      150 '+' '-'.                                %% unary plus and minus.
-Nonassoc    160 '!'.                                    %% logical NOT.
-Nonassoc    170 '~'.                                    %% bitwise NOT.
-Left        200 '**'.                                   %% exponentation.
-Left        210 '*' '/' '%'.                            %% multiplication, division and modulo. 
-Left        220 '+' '-'.                                %% addition and subtraction. 
-Left        300 '<<' '>>' '>>>'.                        %% bitwise shift operators.
-Left        310 '&'.                                    %% bitwise AND.
-Left        320 '^'.                                    %% bitwise XOR.
-Left        330 '|'.                                    %% bitwise OR.
-Nonassoc    400 '<' '>' '<=' '>='.                      %% inequality operators.
-Nonassoc    410 '==' '!='.                              %% equality operators.
-Left        500 '&&'.                                   %% logical AND.
-Left        510 '||'.                                   %% logical OR.
-Left        600 '?' ':'.                                %% tenary operator. 
-Nonassoc    700 '=' '|=' '^=' '&=' '<<=' '>>='  '+=' '-=' '*=' '/=' '%='.     
+Nonassoc    100 expression_commalist.
+
+Right       200 '=' '|=' '^=' '&=' '<<=' '>>='  '+=' '-=' '*=' '/=' '%='.
                                                         %% assignment operators.
-Nonassoc    800 ','.                                    %% comma operator.   
+Left        300 '?' ':'.                                %% tenary operator.
+
+Left        400 '&&'.                                   %% logical AND.
+Left        410 '||'.                                   %% logical OR.
+
+Left        500 '<' '>' '<=' '>='.                      %% inequality operators.
+Left        510 '==' '!='.                              %% equality operators.
+
+Left        600 '<<' '>>' '>>>'.                        %% bitwise shift operators.
+Left        610 '&'.                                    %% bitwise AND.
+Left        620 '^'.                                    %% bitwise XOR.
+Left        630 '|'.                                    %% bitwise OR.
+
+Left        700 '**'.                                   %% exponentation.
+Left        710 '*' '/' '%'.                            %% multiplication, division and modulo.
+Left        720 '+' '-'.                                %% addition and subtraction.
+
+Left        800 '++' '--'.                              %% increment and decrement.
+Nonassoc    810 '(' ')'.                                %% function-like call.
+Nonassoc    820 '[' ']'.                                %% array subscripting.
+Nonassoc    830 '.'.                                    %% member access.
+Left        850 unary.                                  %% unary plus and minus.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
@@ -228,18 +232,19 @@ Nonassoc    800 ','.                                    %% comma operator.
 source_unit -> import_directive_contract_definition_list                                        : {sourceUnit, '$1'}.
 
 source_unit -> statement                                                                        : '$1'.
-% source_unit -> expression                                                                       : '$1'.
-% wwe source_unit -> primary_expression                                                               : '$1'.
+source_unit -> expression                                                                       : '$1'.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-import_directive_contract_definition_list -> import_directive_contract_definition               : ['$1'].
-import_directive_contract_definition_list -> import_directive_contract_definition ';' import_directive_contract_definition_list
-                                                                                                : ['$1' | '$3'].
-                                                                                                
-import_directive_contract_definition -> import_directive                                        : '$1'.                                                                                                
-import_directive_contract_definition -> contract_definition                                     : '$1'.                                                                                                
+import_directive_contract_definition_list ->                                           import_directive
+                                                                                                :         ['$1'].
+import_directive_contract_definition_list ->                                           contract_definition
+                                                                                                :         ['$1'].
+import_directive_contract_definition_list -> import_directive_contract_definition_list import_directive
+                                                                                                : '$1' ++ ['$2'].
+import_directive_contract_definition_list -> import_directive_contract_definition_list contract_definition
+                                                                                                : '$1' ++ ['$2'].
 %% =====================================================================================================================
 
 contract_definition -> CONTRACT identifier                                    '{'                    '}'
@@ -265,8 +270,8 @@ contract_definition -> LIBRARY  identifier IS inheritance_specifier_commalist '{
 inheritance_specifier_commalist -> inheritance_specifier                                        : ['$1'].
 inheritance_specifier_commalist -> inheritance_specifier ',' inheritance_specifier_commalist    : ['$1' | '$3'].
 
+contract_part_list ->                    contract_part                                          :         ['$1'].
 contract_part_list -> contract_part_list contract_part                                          : '$1' ++ ['$2'].
-contract_part_list -> contract_part                                                             : ['$1'].
 %% =====================================================================================================================
 
 import_directive -> IMPORT STRING_LITERAL                                          ';'          : {importDirective, unwrap('$2'), []}.
@@ -276,7 +281,7 @@ import_directive -> IMPORT '*'            as_identifier        FROM STRING_LITER
 import_directive -> IMPORT identifier                          FROM STRING_LITERAL ';'          : {importDirective, '$2',         [],   unwrap('$4')}.
 import_directive -> IMPORT identifier     as_identifier        FROM STRING_LITERAL ';'          : {importDirective, '$2',         '$3', unwrap('$5')}.
 import_directive -> IMPORT '(' import_identifier_commalist ')' FROM STRING_LITERAL ';'          : {importDirective, "(",          '$3', unwrap('$5')}.
- 
+
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
@@ -299,8 +304,14 @@ contract_part -> enum_definition                                                
 
 inheritance_specifier -> identifier '(' expression ')'                                          : {inheritanceSpecifier, '$1', '$3'}.
 
-state_variable_declaration -> type_name                                       identifier ';'    : {stateVariableDeclaration, '$1', [],   '$2'}.
-state_variable_declaration -> type_name state_variable_declaration_visibility identifier ';'    : {stateVariableDeclaration, '$1', '$2', '$3'}.
+state_variable_declaration -> type_name                                       identifier                ';'
+                                                                                                : {stateVariableDeclaration, '$1', [],   '$2', []}.
+state_variable_declaration -> type_name                                       identifier '=' expression ';'
+                                                                                                : {stateVariableDeclaration, '$1', [],   '$2', '$4'}.
+state_variable_declaration -> type_name state_variable_declaration_visibility identifier                ';'
+                                                                                                : {stateVariableDeclaration, '$1', '$2', '$3', []}.
+state_variable_declaration -> type_name state_variable_declaration_visibility identifier '=' expression ';'
+                                                                                                : {stateVariableDeclaration, '$1', '$2', '$3', '$5'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -319,15 +330,22 @@ struct_definition -> STRUCT identifier '{' variable_declaration_semicolonlist '}
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-variable_declaration_semicolonlist -> variable_declaration                                      : ['$1'].
-variable_declaration_semicolonlist -> variable_declaration ',' variable_declaration_semicolonlist
+variable_declaration_semicolonlist -> variable_declaration ';'                                  : ['$1'].
+variable_declaration_semicolonlist -> variable_declaration ';' variable_declaration_semicolonlist
                                                                                                 : ['$1' | '$3'].
 %% =====================================================================================================================
 
-modifier_definition -> MODIFIER identifier                                                                                block
-                                                                                                : {modifierDefinition, '$2', [],   [],   [],   '$3'}.
-modifier_definition -> MODIFIER identifier parameter_list                                                                 block
-                                                                                                : {modifierDefinition, '$2', '$3', [],   [],   '$4'}.
+modifier_definition -> MODIFIER identifier                block                                 : {modifierDefinition, '$2', [],   [],   [],   '$3'}.
+modifier_definition -> MODIFIER identifier parameter_list block                                 : {modifierDefinition, '$2', '$3', [],   [],   '$4'}.
+
+function_definition -> FUNCTION            parameter_list                                                                 block
+                                                                                                : {functionDefinition, [],   '$2', [],   [],   '$3'}.
+function_definition -> FUNCTION            parameter_list                                     RETURNS parameter_list      block
+                                                                                                : {functionDefinition, [],   '$2', [],   '$4', '$5'}.
+function_definition -> FUNCTION            parameter_list function_definition_visibility_list                             block
+                                                                                                : {functionDefinition, [],   '$2', '$3', [],   '$4'}.
+function_definition -> FUNCTION            parameter_list function_definition_visibility_list RETURNS parameter_list      block
+                                                                                                : {functionDefinition, [],   '$2', '$3', '$5', '$6'}.
 function_definition -> FUNCTION identifier parameter_list                                                                 block
                                                                                                 : {functionDefinition, '$2', '$3', [],   [],   '$4'}.
 function_definition -> FUNCTION identifier parameter_list                                     RETURNS parameter_list      block
@@ -337,21 +355,13 @@ function_definition -> FUNCTION identifier parameter_list function_definition_vi
 function_definition -> FUNCTION identifier parameter_list function_definition_visibility_list RETURNS parameter_list      block
                                                                                                 : {functionDefinition, '$2', '$3', '$4', '$6', '$7'}.
 
-parameter_list -> '('                                ')'                                        : {typeParameterList, []}.
-parameter_list -> '(' type_name_identifier_commalist ')'                                        : {typeParameterList, '$2'}.
-
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-type_name_identifier_commalist -> type_name_identifier                                          : ['$1'].
-type_name_identifier_commalist -> type_name_identifier ',' type_name_identifier_commalist       : ['$1' | '$3'].
-
-type_name_identifier -> type_name                                                               : {'$1', []}.
-type_name_identifier -> type_name identifier                                                    : {'$1', '$2'}.
-
+function_definition_visibility_list ->                                      function_definition_visibility
+                                                                                                :          ['$1'].
 function_definition_visibility_list -> function_definition_visibility_list function_definition_visibility
                                                                                                 : '$1' ++ ['$2'].
-function_definition_visibility_list -> function_definition_visibility                           : ['$1'].
 
 function_definition_visibility -> function_call                                                 : '$1'.
 function_definition_visibility -> identifier                                                    : '$1'.
@@ -377,6 +387,7 @@ enum_value_commalist -> enum_value                                              
 enum_value_commalist -> enum_value ',' enum_value_commalist                                     : ['$1' | '$3'].
 %% ---------------------------------------------------------------------------------------------------------------------
 
+indexed_parameter_list -> '('                             ')'                                   : {indexedParameterList, []}.
 indexed_parameter_list -> '(' indexed_parameter_commalist ')'                                   : {indexedParameterList, '$2'}.
 
 %% =====================================================================================================================
@@ -389,29 +400,35 @@ indexed_parameter -> type_name INDEXED                                          
 indexed_parameter -> type_name INDEXED identifier                                               : {'$1', "indexed", '$3'}.
 %% ---------------------------------------------------------------------------------------------------------------------
 
-variable_declaration -> type_name identifier                                                    : {variableDeclaration, '$1', '$2'}.
-
-type_name -> elementary_type_name                                                               : {typeName, '$1'}.
+parameter_list -> '('                                ')'                                        : {typeParameterList, []}.
+parameter_list -> '(' type_name_identifier_commalist ')'                                        : {typeParameterList, '$2'}.
 
 %% =====================================================================================================================
-%% Helper definitions - reduce/reduce problem.
+%% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-% wwe type_name -> identifier                                                                         : {typeName, '$1', []}.
+type_name_identifier_commalist -> type_name_identifier                                          : ['$1'].
+type_name_identifier_commalist -> type_name_identifier ',' type_name_identifier_commalist       : ['$1' | '$3'].
+
+type_name_identifier -> type_name                                                               : {'$1', []}.
+type_name_identifier -> type_name identifier                                                    : {'$1', '$2'}.
 %% ---------------------------------------------------------------------------------------------------------------------
 
-type_name -> identifier MEMORY                                                                  : {typeName, '$1', "memory"}.
-type_name -> identifier STORAGE                                                                 : {typeName, '$1', "storage"}.
-type_name -> mapping                                                                            : {typeName, '$1'}.
-type_name -> array_type_name                                                                    : {typeName, '$1'}.
+variable_declaration -> type_name identifier                                                    : {variableDeclaration, '$1', '$2'}.
+
+type_name -> elementary_type_name                                                               : {typeName, '$1', []}.
+type_name -> identifier           storage_location                                              : {typeName, '$1', '$2'}.
+type_name -> mapping                                                                            : {typeName, '$1', []}.
+type_name -> array_type_name                                                                    : {typeName, '$1', []}.
 
 mapping -> MAPPING '(' elementary_type_name '=>' type_name ')'                                  : {mapping, '$3', '$5'}.
 
-array_type_name -> type_name         '['            ']'                                         : {arrayTypeName, '$1', [],         []}.
-array_type_name -> type_name         '[' expression ']'                                         : {arrayTypeName, '$1', [],         '$3'}.
-array_type_name -> type_name MEMORY  '['            ']'                                         : {arrayTypeName, '$1', "memory",   []}.
-array_type_name -> type_name STORAGE '['            ']'                                         : {arrayTypeName, '$1', "storagfe", []}.
-array_type_name -> type_name MEMORY  '[' expression ']'                                         : {arrayTypeName, '$1', "memory",   '$4'}.
-array_type_name -> type_name STORAGE '[' expression ']'                                         : {arrayTypeName, '$1', "storagfe", '$4'}.
+array_type_name -> type_name                   '['            ']'                               : {arrayTypeName, '$1', [],   []}.
+array_type_name -> type_name                   '[' expression ']'                               : {arrayTypeName, '$1', [],   '$3'}.
+array_type_name -> type_name storage_location  '['            ']'                               : {arrayTypeName, '$1', '$2', []}.
+array_type_name -> type_name storage_location  '[' expression ']'                               : {arrayTypeName, '$1', '$2', '$4'}.
+
+storage_location -> MEMORY                                                                      : {storageLocation, "memory"}.
+storage_location -> STORAGE                                                                     : {storageLocation, "storage"}.
 
 block -> '{'                '}'                                                                 : {block, []}.
 block -> '{' statement_list '}'                                                                 : {block, '$2'}.
@@ -419,8 +436,8 @@ block -> '{' statement_list '}'                                                 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
+statement_list ->                statement                                                      :         ['$1'].
 statement_list -> statement_list statement                                                      : '$1' ++ ['$2'].
-statement_list -> statement                                                                     : ['$1'].
 %% =====================================================================================================================
 
 statement -> if_statement                                                                       : {statement, '$1'}.
@@ -428,37 +445,48 @@ statement -> while_statement                                                    
 statement -> for_statement                                                                      : {statement, '$1'}.
 statement -> block                                                                              : {statement, '$1'}.
 statement -> place_holder_statement                                                             : {statement, '$1'}.
-statement -> continue ';'                                                                       : {statement, '$1'}.
-statement -> break ';'                                                                          : {statement, '$1'}.
-statement -> return ';'                                                                         : {statement, '$1'}.
-statement -> throw ';'                                                                          : {statement, '$1'}.
+statement -> continue         ';'                                                               : {statement, '$1'}.
+statement -> break            ';'                                                               : {statement, '$1'}.
+statement -> return           ';'                                                               : {statement, '$1'}.
+statement -> throw            ';'                                                               : {statement, '$1'}.
 statement -> simple_statement ';'                                                               : {statement, '$1'}.
-statement -> expression_statement ';'                                                           : {statement, '$1'}.
+
+%% =====================================================================================================================
+%% Helper definitions - redundant.
+%% ---------------------------------------------------------------------------------------------------------------------
+% wwe statement -> expression_statement                                                               : {statement, '$1'}.
+%% =====================================================================================================================
 
 expression_statement -> expression                                                              : {expressionStatement, '$1'}.
+expression_statement -> variable_definition                                                     : {expressionStatement, '$1'}.
+
+if_statement -> IF '(' expression ')' statement else_opt                                        : {ifStatement, '$3', '$5', '$6'}.
 
 %% =====================================================================================================================
-%% Helper definitions - reduce/reduce conflict.
+%% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-% wwe expression_statement -> variable_definition                                                   : {expressionStatement, '$1'}.
+else_opt -> '$empty'                                                                            : [].
+else_opt -> ELSE statement                                                                      : '$2'.
 %% =====================================================================================================================
-
-if_statement -> IF '(' expression ')' statement                                                 : {ifStatement, '$3', '$5', []}.
-if_statement -> IF '(' expression ')' statement ELSE statement                                  : {ifStatement, '$3', '$5', '$7'}.
 
 while_statement -> WHILE '(' expression ')' statement                                           : {whileStatement, '$3', '$5'}.
 
 place_holder_statement -> '_'                                                                   : {placeHolderStatement, "_"}.
 
-simple_statement -> variable_definition                                                         : {simpleStatement, '$1'}.
+%% =====================================================================================================================
+%% Helper definitions - redundant.
+%% ---------------------------------------------------------------------------------------------------------------------
+% wwe simple_statement -> variable_definition                                                         : {simpleStatement, '$1'}.
+%% =====================================================================================================================
+
 simple_statement -> expression_statement                                                        : {simpleStatement, '$1'}.
 
 for_statement -> FOR '('                  ';'            ';'                      ')' statement : {forStatement, [],   [],   [],   '$6'}.
 for_statement -> FOR '('                  ';'            ';' expression_statement ')' statement : {forStatement, [],   [],   '$5', '$7'}.
-for_statement -> FOR '(' simple_statement ';'            ';'                      ')' statement : {forStatement, '$3', [],   [],   '$7'}.
-for_statement -> FOR '(' simple_statement ';'            ';' expression_statement ')' statement : {forStatement, '$3', [],   '$6', '$8'}.
 for_statement -> FOR '('                  ';' expression ';'                      ')' statement : {forStatement, [],   '$4', [],   '$7'}.
 for_statement -> FOR '('                  ';' expression ';' expression_statement ')' statement : {forStatement, [],   '$4', '$6', '$8'}.
+for_statement -> FOR '(' simple_statement ';'            ';'                      ')' statement : {forStatement, '$3', [],   [],   '$7'}.
+for_statement -> FOR '(' simple_statement ';'            ';' expression_statement ')' statement : {forStatement, '$3', [],   '$6', '$8'}.
 for_statement -> FOR '(' simple_statement ';' expression ';'                      ')' statement : {forStatement, '$3', '$5', [],   '$8'}.
 for_statement -> FOR '(' simple_statement ';' expression ';' expression_statement ')' statement : {forStatement, '$3', '$5', '$7', '$9'}.
 
@@ -482,14 +510,19 @@ expression -> index_access                                                      
 expression -> member_access                                                                     : {expression, '$1'}.
 expression -> '(' expression ')'                                                                : {expression, "(", '$2'}.
 
-expression -> '!'    expression                                                                 : {expression, [],   "!",      '$2'}.
-expression -> '~'    expression                                                                 : {expression, [],   "~",      '$2'}.
-expression -> AFTER  expression                                                                 : {expression, [],   "after",  '$2'}.
-expression -> DELETE expression                                                                 : {expression, [],   "delete", '$2'}.
-expression -> '++'   expression                                                                 : {expression, [],   "++",     '$2'}.
-expression -> '--'   expression                                                                 : {expression, [],   "--",     '$2'}.
-expression -> '+'    expression                                                                 : {expression, [],   "+",      '$2'}.
-expression -> '-'    expression                                                                 : {expression, [],   "-",      '$2'}.
+expression -> unary  expression                                                                 : {expression, [],   '$1',     '$2'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+unary -> '!'                                                                                    : "!".
+unary -> '~'                                                                                    : "~".
+unary -> DELETE                                                                                 : "delete".
+unary -> '++'                                                                                   : "++".
+unary -> '--'                                                                                   : "--".
+unary -> '+'                                                                                    : "+".
+unary -> '-'                                                                                    : "-".
+%% ---------------------------------------------------------------------------------------------------------------------
 
 expression -> expression '**'  expression                                                       : {expression, '$1', "**", '$3'}.
 
@@ -535,8 +568,15 @@ expression -> expression '*='  expression                                       
 expression -> expression '/='  expression                                                       : {expression, '$1', "/=",  '$3'}.
 expression -> expression '%='  expression                                                       : {expression, '$1', "%=",  '$3'}.
 
-expression -> expression ',' expression                                                         : {expression, '$1', ",", '$3'}.
-expression -> ',' expression                                                                    : {expression, [],   ",", '$2'}.
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+expression_commalist -> expression                                                              : ['$1'].
+expression_commalist -> expression ',' expression_commalist                                     : ['$1' | '$3'].
+%% ---------------------------------------------------------------------------------------------------------------------
+
+expression ->            ','   expression                                                       : {expression, [],   "," ,  '$2'}.
+expression -> expression ','   expression                                                       : {expression, '$1', "," ,  '$3'}.
 
 expression -> primary_expression                                                                : {expression, '$1'}.
 
@@ -546,8 +586,8 @@ primary_expression -> number_literal                                            
 primary_expression -> string_literal                                                            : {primaryExpression, '$1'}.
 primary_expression -> new_expression                                                            : {primaryExpression, '$1'}.
 
-function_call -> identifier '('            ')'                                                  : {functionCall, '$1', []}.
-function_call -> identifier '(' expression ')'                                                  : {functionCall, '$1', '$3'}.
+function_call -> identifier '('                      ')'                                        : {functionCall, '$1', []}.
+function_call -> identifier '(' expression_commalist ')'                                        : {functionCall, '$1', '$3'}.
 
 new_expression -> NEW identifier                                                                : {newExpression, '$2'}.
 
@@ -560,7 +600,7 @@ boolean_literal -> TRUE                                                         
 boolean_literal -> FALSE                                                                        : {booleanLiteral, "false"}.
 
 number_literal -> NUMBER_LITERAL                                                                : {numberLiteral, unwrap('$1'), []}.
-number_literal -> NUMBER_LITERAL ' ' number_unit                                                : {numberLiteral, unwrap('$1'), '$3'}.
+number_literal -> NUMBER_LITERAL number_unit                                                    : {numberLiteral, unwrap('$1'), '$2'}.
 
 number_unit -> WEI                                                                              : {numberUnit, "wei"}.
 number_unit -> SZABO                                                                            : {numberUnit, "szabo"}.

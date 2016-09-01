@@ -8,19 +8,19 @@ Rules.
                                                           : match_bytes(TokenChars, TokenLen).
 
 %% ufixed
-(([u|U][f|F][i|I][x|X][e|E][d|D])|([u|U][f|F][i|I][x|X][e|E][d|D](0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)))
+(([u|U][f|F][i|I][x|X][e|E][d|D])((0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : match_ufixed(TokenChars, TokenLen).
 
 %% fixed
-(([f|F][i|I][x|X][e|E][d|D])|([f|F][i|I][x|X][e|E][d|D](0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)))
+(([f|F][i|I][x|X][e|E][d|D])((0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : match_fixed(TokenChars, TokenLen).
 
 %% uint
-(([u|U][i|I][n|N][t|T])|((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)))
+(([u|U][i|I][n|N][t|T])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : {token, {'UINT', TokenLine, TokenChars}}.
 
 %% int
-(([i|I][n|N][t|T])|((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256)))
+(([i|I][n|N][t|T])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : {token, {'INT', TokenLine, TokenChars}}.
 
 %% number literals
@@ -28,7 +28,7 @@ Rules.
 
 %% identifiers
 (_[a-zA-Z_0-9]+)                                          : {token, {'IDENTIFIER', TokenLine, TokenChars}}.
-([a-zA-Z][a-zA-Z_0-9]*)                                   : match_any(TokenChars, TokenLen, TokenLine, ?TokenPatterns).
+([a-zA-Z][a-zA-Z_0-9]*)                                   : match_any(TokenChars, TokenLen, TokenLine, ?TOKEN_PATTERNS).
 
 %% string literals
 (\"([^\"\r\n\\]|\\.)*\")                                  : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
@@ -46,7 +46,7 @@ Rules.
 (\+|-)                                                    : {token, {list_to_atom(TokenChars), TokenLine}}.
 (<=|>=|<|>)                                               : {token, {list_to_atom(TokenChars), TokenLine}}.
 (==|!=)                                                   : {token, {list_to_atom(TokenChars), TokenLine}}.
-(&&|\|\||\?|:|\s)                                         : {token, {list_to_atom(TokenChars), TokenLine}}.
+(&&|\|\||\?|:)                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
 
 %% white space
 ([\n\r\s\t]+)                                             : skip_token.
@@ -55,10 +55,9 @@ Erlang code.
 
 -export([reserved_keywords/0]).
 
--define(TokenPatterns, [
-
+-define(TOKEN_PATTERNS, [
     {"^(?i)(ADDRESS)$",          'ADDRESS'},
-    {"^(?i)(AFTER)$",            'AFTER'},
+    {"^(?i)(ANONYMOUS)$",        'ANONYMOUS'},
     {"^(?i)(AS)$",               'AS'},
     {"^(?i)(BOOL)$",             'BOOL'},
     {"^(?i)(BREAK)$",            'BREAK'},
@@ -78,13 +77,14 @@ Erlang code.
     {"^(?i)(FROM)$",             'FROM'},
     {"^(?i)(FUNCTION)$",         'FUNCTION'},
     {"^(?i)(HOURS)$",            'HOURS'},
-    {"^(?i)(INTERNAL)$",         'INTERNAL'},
     {"^(?i)(IF)$",               'IF'},
     {"^(?i)(IMPORT)$",           'IMPORT'},
     {"^(?i)(INDEXED)$",          'INDEXED'},
+    {"^(?i)(INTERNAL)$",         'INTERNAL'},
     {"^(?i)(IS)$",               'IS'},
     {"^(?i)(LIBRARY)$",          'LIBRARY'},
     {"^(?i)(MAPPING)$",          'MAPPING'},
+    {"^(?i)(MEMORY)$",           'MEMORY'},
     {"^(?i)(MINUTES)$",          'MINUTES'},
     {"^(?i)(MODIFIER)$",         'MODIFIER'},
     {"^(?i)(NEW)$",              'NEW'},
@@ -93,11 +93,13 @@ Erlang code.
     {"^(?i)(RETURN)$",           'RETURN'},
     {"^(?i)(RETURNS)$",          'RETURNS'},
     {"^(?i)(SECONDS)$",          'SECONDS'},
+    {"^(?i)(STORAGE)$",          'STORAGE'},
     {"^(?i)(STRING)$",           'STRING'},
     {"^(?i)(STRUCT)$",           'STRUCT'},
     {"^(?i)(SZABO)$",            'SZABO'},
     {"^(?i)(THROW)$",            'THROW'},
     {"^(?i)(TRUE)$",             'TRUE'},
+    {"^(?i)(USING)$",            'USING'},
     {"^(?i)(VAR)$",              'VAR'},
     {"^(?i)(WEEKS)$",            'WEEKS'},
     {"^(?i)(WEI)$",              'WEI'},
@@ -114,7 +116,7 @@ Erlang code.
 -define(Dbg(F,A), ok).
 -endif.
 
-reserved_keywords() -> [T || {_, T} <- ?TokenPatterns].
+reserved_keywords() -> [T || {_, T} <- ?TOKEN_PATTERNS].
 
 match_any(TokenChars, TokenLen, _TokenLine, []) ->
     {token, {'IDENTIFIER', TokenLen, TokenChars}};
@@ -145,32 +147,32 @@ match_fixed(TokenChars, TokenLen) ->
     case TokenLen > 7 of
         true ->
             Pos7 = string:substr(TokenCharsLower, 7, 1);
-        _ ->    
+        _ ->
             Pos7 = []
-    end,        
+    end,
     case TokenLen > 8 of
         true ->
             Pos8 = string:substr(TokenCharsLower, 8, 1);
-        _ ->    
+        _ ->
             Pos8 = []
-    end,        
+    end,
     case TokenLen > 9 of
         true ->
             Pos9 = string:substr(TokenCharsLower, 9, 1);
-        _ ->    
+        _ ->
             Pos9 = []
-    end,        
+    end,
     case {Pos7, Pos8, Pos9} of
         {"x", _, _} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 1)), 
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 1)),
             {Size2, _} = string:to_integer(string:substr(TokenChars, 8));
         {_, "x", _} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 2)), 
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 2)),
             {Size2, _} = string:to_integer(string:substr(TokenChars, 9));
         {_, _, "x"} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 3)), 
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 3)),
             {Size2, _} = string:to_integer(string:substr(TokenChars, 10));
-        _ ->    
+        _ ->
             Size1 = 0,
             Size2 = 0
     end,
@@ -186,32 +188,32 @@ match_ufixed(TokenChars, TokenLen) ->
     case TokenLen > 8 of
         true ->
             Pos8 = string:substr(TokenCharsLower, 8, 1);
-        _ ->    
+        _ ->
             Pos8 = []
-    end,        
+    end,
     case TokenLen > 9 of
         true ->
             Pos9 = string:substr(TokenCharsLower, 9, 1);
-        _ ->    
+        _ ->
             Pos9 = []
-    end,        
+    end,
     case TokenLen > 10 of
         true ->
             Pos10 = string:substr(TokenCharsLower, 10, 1);
-        _ ->    
+        _ ->
             Pos10 = []
-    end,        
+    end,
     case {Pos8, Pos9, Pos10} of
         {"x", _, _} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 1)), 
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 1)),
             {Size2, _} = string:to_integer(string:substr(TokenChars, 9));
         {_, "x", _} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 2)), 
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 2)),
             {Size2, _} = string:to_integer(string:substr(TokenChars, 10));
         {_, _, "x"} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 3)), 
+            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 3)),
             {Size2, _} = string:to_integer(string:substr(TokenChars, 11));
-        _ ->    
+        _ ->
             Size1 = 0,
             Size2 = 0
     end,
