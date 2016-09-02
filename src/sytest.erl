@@ -12,13 +12,13 @@
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
--export([source_unit_string/1]).
+-export([ct_string/1]).
 
 %%--------------------------------------------------------------------
 %% Common Test Helper Function.
 %%--------------------------------------------------------------------
 
-source_unit_string(Test) ->
+ct_string(Test) ->
     %?debugFmt("wwe debugging source_unit_string/1 ===> ~n Test: ~p~n", [Test]),
     case syparse:parsetree_with_tokens(Test) of
         {ok, {ParseTree, _Tokens}} ->

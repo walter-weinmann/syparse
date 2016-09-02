@@ -7,6 +7,7 @@
     number_literal
 ]).
 -define(ALL_CONTZRACT_PART, [
+    enum_definition,
     event_definition,
     function_definition,
     modifier_definition,
@@ -20,8 +21,8 @@
     source_unit
 ]).
 -define(ALL_EUNIT,
-%    ?ALL_CONTZRACT_PART ++
-    ?ALL_STATEMENT
+    ?ALL_CONTZRACT_PART ++
+    [import_directive]
 ).
 -define(ALL_STATEMENT, [
     block,
@@ -39,8 +40,7 @@
 -define(CODE_TEMPLATES, code_templates).
 
 -define(MAX_CONTRACT_DEFINITION, 3000).
--define(MAX_CONTRACT_PART, 400).
--define(MAX_ENUM_DEFINITION, 200).
+-define(MAX_CONTRACT_PART, 1000).
 -define(MAX_EXPRESSION, 200).
 -define(MAX_FC_IA_MA, 400).
 -define(MAX_ARRAY_TYPE_NAME, 200).
@@ -58,7 +58,7 @@
 
 -define(PRIME, 61).
 
-% -define(NODEBUG, true).
+-define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,7 +83,6 @@ generate() ->
 
     % generic eunit tests
     ok = file_create_eunit_all(
-        [expression] ++
         ?ALL_EUNIT
     ),
 
@@ -778,12 +777,15 @@ create_code() ->
         "_ident1",
         "_ident2",
         "_ident3",
+        "_ident4",
         "ident1",
         "ident2",
         "ident3",
+        "ident4",
         "Ident1",
         "Ident2",
-        "Ident3"
+        "Ident3",
+        "Ident4"
     ]),
     Identifier_Length = length(Identifier),
     insert_table(identifier, Identifier),
@@ -867,7 +869,9 @@ create_code() ->
     StringLiteral = sort_list_random([
         "\\\"string_1\\\"",
         "\\\"string_2\\\"",
-        "\\\"string_3\\\""
+        "\\\"string_3\\\"",
+        "\\\"string_4\\\"",
+        "\\\"string_5\\\""
     ]),
     StringLiteral_Length = length(StringLiteral),
     insert_table(string_literal, StringLiteral),
@@ -1572,7 +1576,7 @@ create_code() ->
                 5 -> "* " ++
                     "as " ++
                     lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-                    "from " ++
+                    " from " ++
                     lists:nth(rand:uniform(StringLiteral_Length), StringLiteral);
                 6 -> lists:nth(rand:uniform(Identifier_Length), Identifier) ++
                     " as " ++
@@ -1582,21 +1586,21 @@ create_code() ->
                 7 -> "(" ++
                     lists:nth(rand:uniform(Identifier_Length), Identifier) ++
                     ")" ++
-                    " from " ++
+                    "from " ++
                     lists:nth(rand:uniform(StringLiteral_Length), StringLiteral);
                 8 -> "(" ++
                     lists:nth(rand:uniform(Identifier_Length), Identifier) ++
                     " as " ++
                     lists:nth(rand:uniform(Identifier_Length), Identifier) ++
                     ")" ++
-                    " from " ++
+                    "from " ++
                     lists:nth(rand:uniform(StringLiteral_Length), StringLiteral);
                 9 -> "(" ++
                     lists:nth(rand:uniform(Identifier_Length), Identifier) ++
                     "," ++
                     lists:nth(rand:uniform(Identifier_Length), Identifier) ++
                     ")" ++
-                    " from " ++
+                    "from " ++
                     lists:nth(rand:uniform(StringLiteral_Length), StringLiteral);
                 _ -> "(" ++
                     lists:nth(rand:uniform(Identifier_Length), Identifier) ++
@@ -1607,7 +1611,7 @@ create_code() ->
                     " as " ++
                     lists:nth(rand:uniform(Identifier_Length), Identifier) ++
                     ")" ++
-                    " from " ++
+                    "from " ++
                     lists:nth(rand:uniform(StringLiteral_Length), StringLiteral)
             end ++
             ";"
@@ -1672,7 +1676,7 @@ create_code() ->
     EnumDefinition = sort_list_random(sets:to_list(sets:from_list([
             "enum " ++
             lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-            "(" ++
+            "{" ++
             case rand:uniform(?PRIME) rem 5 of
                 1 -> lists:nth(rand:uniform(EnumValue_Length), EnumValue) ++
                     "," ++
@@ -1692,8 +1696,8 @@ create_code() ->
                 4 -> lists:nth(rand:uniform(EnumValue_Length), EnumValue);
                 _ -> []
             end ++
-            ")"
-        || _ <- lists:seq(1, ?MAX_ENUM_DEFINITION)
+            "}"
+        || _ <- lists:seq(1, ?MAX_CONTRACT_PART)
     ]))),
     insert_table(enum_definition, EnumDefinition),
 
@@ -1704,7 +1708,7 @@ create_code() ->
 % ----------------
 % Expression = ...
 % ----------------
-    Expression_Part_1 = sort_list_random(create_code_expression(1, [], [], [])),
+    Expression_Part_1 = sort_list_random(create_code_expression(1, [], [], [], PrimaryExpression)),
     Expression_Part_1_Length = length(Expression_Part_1),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1766,7 +1770,7 @@ create_code() ->
 % ----------------
 % Expression = ...
 % ----------------
-    Expression = sort_list_random(create_code_expression(2, FunctionCall, IndexAccess, MemberAccess)),
+    Expression = sort_list_random(create_code_expression(2, FunctionCall, IndexAccess, MemberAccess, [])),
     Expression_Length = length(Expression),
     insert_table(expression, Expression),
 
@@ -1851,7 +1855,10 @@ create_code() ->
                     lists:nth(rand:uniform(StorageLocation_Length), StorageLocation)
                 end ++
                 "[" ++
-                lists:nth(rand:uniform(Expression_Length), Expression) ++
+                case rand:uniform(?PRIME) rem 4 of
+                    1 -> [];
+                    _ -> lists:nth(rand:uniform(Expression_Length), Expression)
+                end ++
                 "]"
             || _ <- lists:seq(1, ?MAX_ARRAY_TYPE_NAME)
         ]
@@ -1931,8 +1938,6 @@ create_code() ->
     UsingForDeclaration = sort_list_random(sets:to_list(sets:from_list([
             "using " ++
             lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-            " " ++
-            lists:nth(rand:uniform(TypeName_Length), TypeName) ++
             " for " ++
             case rand:uniform(?PRIME) rem 4 of
                 1 -> "*";
@@ -2113,7 +2118,7 @@ create_code() ->
                 _ -> []
             end ++
             ";"
-        || _ <- lists:seq(1, ?MAX_STATEMENT)
+        || _ <- lists:seq(1, ?MAX_CONTRACT_PART)
     ]))),
     insert_table(event_definition, EventDefinition),
 % ------------------------------------------------------------------------------
@@ -2351,37 +2356,35 @@ create_code() ->
                 lists:nth(rand:uniform(Identifier_Length), Identifier);
                 _ -> []
             end ++
-            " " ++
             lists:nth(rand:uniform(ParameterList_Length), ParameterList) ++
+            case rand:uniform(?PRIME) rem 8 of
+                1 -> lists:nth(rand:uniform(FunctionCall_Length), FunctionCall);
+                2 -> lists:nth(rand:uniform(Identifier_Length), Identifier);
+                3 -> "constant";
+                4 -> "external";
+                5 -> "public";
+                6 -> "internal";
+                7 -> "private";
+                _ -> []
+            end ++
             case rand:uniform(?PRIME) rem 2 of
                 1 -> " " ++
+                lists:nth(rand:uniform(FunctionCall_Length), FunctionCall);
+                2 -> " " ++
+                lists:nth(rand:uniform(Identifier_Length), Identifier);
+                3 -> " constant";
+                4 -> " external";
+                5 -> " public";
+                6 -> " internal";
+                7 -> " private";
+                _ -> []
+            end ++
+            case rand:uniform(?PRIME) rem 2 of
+                1 -> " returns" ++
                 lists:nth(rand:uniform(ParameterList_Length), ParameterList);
                 _ -> []
             end ++
-            case rand:uniform(?PRIME) rem 8 of
-                1 -> " " ++
-                lists:nth(rand:uniform(FunctionCall_Length), FunctionCall);
-                2 -> " " ++
-                lists:nth(rand:uniform(Identifier_Length), Identifier);
-                3 -> " constant";
-                4 -> " external";
-                5 -> " public";
-                6 -> " internal";
-                7 -> " private";
-                _ -> []
-            end ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> " " ++
-                lists:nth(rand:uniform(FunctionCall_Length), FunctionCall);
-                2 -> " " ++
-                lists:nth(rand:uniform(Identifier_Length), Identifier);
-                3 -> " constant";
-                4 -> " external";
-                5 -> " public";
-                6 -> " internal";
-                7 -> " private";
-                _ -> []
-            end
+            lists:nth(rand:uniform(Block_Length), Block)
         || _ <- lists:seq(1, ?MAX_CONTRACT_PART)
     ]))),
     insert_table(function_definition, FunctionDefinition),
@@ -2438,17 +2441,17 @@ create_code() ->
             end ++
             lists:nth(rand:uniform(Identifier_Length), Identifier) ++
             case rand:uniform(?PRIME) rem 4 of
-                1 -> "is " ++
+                1 -> " is " ++
                     lists:nth(rand:uniform(InheritanceSpecifier_Length), InheritanceSpecifier) ++
                     "," ++
                     lists:nth(rand:uniform(InheritanceSpecifier_Length), InheritanceSpecifier) ++
                     "," ++
                     lists:nth(rand:uniform(InheritanceSpecifier_Length), InheritanceSpecifier);
-                2 -> "is " ++
+                2 -> " is " ++
                     lists:nth(rand:uniform(InheritanceSpecifier_Length), InheritanceSpecifier) ++
                     "," ++
                     lists:nth(rand:uniform(InheritanceSpecifier_Length), InheritanceSpecifier);
-                3 -> "is " ++
+                3 -> " is " ++
                 lists:nth(rand:uniform(InheritanceSpecifier_Length), InheritanceSpecifier);
                 _ -> []
             end ++
@@ -2554,7 +2557,7 @@ create_code() ->
 %            | PrimaryExpression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-create_code_expression(Run, FunctionCall, IndexAccess, MemberAccess) ->
+create_code_expression(Run, FunctionCall, IndexAccess, MemberAccess, PrimaryExpression) ->
     Expression_Prev = case ets:lookup(?CODE_TEMPLATES, expression) of
                           [{_, Expression_Exist}] -> Expression_Exist;
                           _ -> []
@@ -2567,6 +2570,7 @@ create_code_expression(Run, FunctionCall, IndexAccess, MemberAccess) ->
             FunctionCall ++
             IndexAccess ++
             MemberAccess ++
+            PrimnaryExpression ++
             [
                 case rand:uniform(?PRIME) rem 9 of
                     1 -> lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
@@ -2820,7 +2824,7 @@ file_create_ct(Rule) ->
 file_write_ct(File, []) ->
     file:close(File);
 file_write_ct(File, [H | T]) ->
-    io:format(File, "~s~n", ["    octest" ++ ":ct_string(\"" ++ H ++ "\")" ++ case T of
+    io:format(File, "~s~n", ["    sytest" ++ ":ct_string(\"" ++ H ++ "\")" ++ case T of
                                                                                   [] -> ".";
                                                                                   _ -> ","
                                                                               end]),

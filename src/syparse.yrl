@@ -48,6 +48,8 @@ Nonterminals
  new_expression
  number_literal
  number_unit
+ parameter
+ parameter_commalist
  parameter_list
  place_holder_statement
  primary_expression
@@ -63,8 +65,6 @@ Nonterminals
  struct_definition
  throw
  type_name
- type_name_identifier
- type_name_identifier_commalist
  unary
  using_for_declaration
  variable_declaration
@@ -231,8 +231,9 @@ Left        850 unary.                                  %% unary plus and minus.
 
 source_unit -> import_directive_contract_definition_list                                        : {sourceUnit, '$1'}.
 
-source_unit -> statement                                                                        : '$1'.
-source_unit -> expression                                                                       : '$1'.
+% wwe source_unit -> contract_part                                                                    : '$1'.
+% wwe source_unit -> expression                                                                       : '$1'.
+% wwe source_unit -> statement                                                                        : '$1'.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -248,21 +249,21 @@ import_directive_contract_definition_list -> import_directive_contract_definitio
 %% =====================================================================================================================
 
 contract_definition -> CONTRACT identifier                                    '{'                    '}'
-                                                                                                : {contractDefinition, '$1', '$2', [],   []}.
+                                                                                                : {contractDefinition, "contract", '$2', [],   []}.
 contract_definition -> CONTRACT identifier                                    '{' contract_part_list '}'
-                                                                                                : {contractDefinition, '$1', '$2', [],   '$4'}.
+                                                                                                : {contractDefinition, "contract", '$2', [],   '$4'}.
 contract_definition -> CONTRACT identifier IS inheritance_specifier_commalist '{'                    '}'
-                                                                                                : {contractDefinition, '$1', '$2', '$4', []}.
+                                                                                                : {contractDefinition, "contract", '$2', '$4', []}.
 contract_definition -> CONTRACT identifier IS inheritance_specifier_commalist '{' contract_part_list '}'
-                                                                                                : {contractDefinition, '$1', '$2', '$4', '$6'}.
+                                                                                                : {contractDefinition, "contract", '$2', '$4', '$6'}.
 contract_definition -> LIBRARY  identifier                                    '{'                    '}'
-                                                                                                : {contractDefinition, '$1', '$2', [],   []}.
+                                                                                                : {contractDefinition, "library",  '$2', [],   []}.
 contract_definition -> LIBRARY  identifier                                    '{' contract_part_list '}'
-                                                                                                : {contractDefinition, '$1', '$2', [],   '$4'}.
+                                                                                                : {contractDefinition, "library",  '$2', [],   '$4'}.
 contract_definition -> LIBRARY  identifier IS inheritance_specifier_commalist '{'                    '}'
-                                                                                                : {contractDefinition, '$1', '$2', '$4', []}.
+                                                                                                : {contractDefinition, "library",  '$2', '$4', []}.
 contract_definition -> LIBRARY  identifier IS inheritance_specifier_commalist '{' contract_part_list '}'
-                                                                                                : {contractDefinition, '$1', '$2', '$4', '$6'}.
+                                                                                                : {contractDefinition, "library",  '$2', '$4', '$6'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -274,18 +275,18 @@ contract_part_list ->                    contract_part                          
 contract_part_list -> contract_part_list contract_part                                          : '$1' ++ ['$2'].
 %% =====================================================================================================================
 
-import_directive -> IMPORT STRING_LITERAL                                          ';'          : {importDirective, unwrap('$2'), []}.
-import_directive -> IMPORT STRING_LITERAL as_identifier                            ';'          : {importDirective, unwrap('$2'), '$3'}.
+import_directive -> IMPORT STRING_LITERAL                                          ';'          : {importDirective, unwrap('$2'), [],   []}.
+import_directive -> IMPORT STRING_LITERAL as_identifier                            ';'          : {importDirective, unwrap('$2'), '$3', []}.
 import_directive -> IMPORT '*'                                 FROM STRING_LITERAL ';'          : {importDirective, "*",          [],   unwrap('$4')}.
 import_directive -> IMPORT '*'            as_identifier        FROM STRING_LITERAL ';'          : {importDirective, "*",          '$3', unwrap('$5')}.
 import_directive -> IMPORT identifier                          FROM STRING_LITERAL ';'          : {importDirective, '$2',         [],   unwrap('$4')}.
 import_directive -> IMPORT identifier     as_identifier        FROM STRING_LITERAL ';'          : {importDirective, '$2',         '$3', unwrap('$5')}.
-import_directive -> IMPORT '(' import_identifier_commalist ')' FROM STRING_LITERAL ';'          : {importDirective, "(",          '$3', unwrap('$5')}.
+import_directive -> IMPORT '(' import_identifier_commalist ')' FROM STRING_LITERAL ';'          : {importDirective, "(",          '$3', unwrap('$6')}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-as_identifier -> AS identifier                                                                  : '$1'.
+as_identifier -> AS identifier                                                                  : '$2'.
 
 import_identifier_commalist -> import_identifier                                                : ['$1'].
 import_identifier_commalist -> import_identifier ',' import_identifier_commalist                : ['$1' | '$3'].
@@ -302,7 +303,8 @@ contract_part -> function_definition                                            
 contract_part -> event_definition                                                               : {contractPart, '$1'}.
 contract_part -> enum_definition                                                                : {contractPart, '$1'}.
 
-inheritance_specifier -> identifier '(' expression ')'                                          : {inheritanceSpecifier, '$1', '$3'}.
+inheritance_specifier -> identifier                                                             : {inheritanceSpecifier, '$1', []}.
+inheritance_specifier -> identifier '(' expression_commalist ')'                                : {inheritanceSpecifier, '$1', '$3'}.
 
 state_variable_declaration -> type_name                                       identifier                ';'
                                                                                                 : {stateVariableDeclaration, '$1', [],   '$2', []}.
@@ -321,8 +323,8 @@ state_variable_declaration_visibility -> INTERNAL                               
 state_variable_declaration_visibility -> PRIVATE                                                : "private".
 %% =====================================================================================================================
 
-using_for_declaration -> USING identifier FOR '*'       ';'                                     : {usingDeclaratioon, '$2', "*"}.
-using_for_declaration -> USING identifier FOR type_name ';'                                     : {usingDeclaratioon, '$2', '$4'}.
+using_for_declaration -> USING identifier FOR '*'       ';'                                     : {usingForDeclaration, '$2', "*"}.
+using_for_declaration -> USING identifier FOR type_name ';'                                     : {usingForDeclaration, '$2', '$4'}.
 
 struct_definition -> STRUCT identifier '{'                                    '}'               : {structDefinition, '$2', []}.
 struct_definition -> STRUCT identifier '{' variable_declaration_semicolonlist '}'               : {structDefinition, '$2', '$4'}.
@@ -335,24 +337,24 @@ variable_declaration_semicolonlist -> variable_declaration ';' variable_declarat
                                                                                                 : ['$1' | '$3'].
 %% =====================================================================================================================
 
-modifier_definition -> MODIFIER identifier                block                                 : {modifierDefinition, '$2', [],   [],   [],   '$3'}.
-modifier_definition -> MODIFIER identifier parameter_list block                                 : {modifierDefinition, '$2', '$3', [],   [],   '$4'}.
+modifier_definition -> MODIFIER identifier                block                                 : {modifierDefinition, '$2', [],   '$3'}.
+modifier_definition -> MODIFIER identifier parameter_list block                                 : {modifierDefinition, '$2', '$3', '$4'}.
 
-function_definition -> FUNCTION            parameter_list                                                                 block
+function_definition -> FUNCTION            parameter_list                                                            block
                                                                                                 : {functionDefinition, [],   '$2', [],   [],   '$3'}.
-function_definition -> FUNCTION            parameter_list                                     RETURNS parameter_list      block
+function_definition -> FUNCTION            parameter_list                                     RETURNS parameter_list block
                                                                                                 : {functionDefinition, [],   '$2', [],   '$4', '$5'}.
-function_definition -> FUNCTION            parameter_list function_definition_visibility_list                             block
+function_definition -> FUNCTION            parameter_list function_definition_visibility_list                        block
                                                                                                 : {functionDefinition, [],   '$2', '$3', [],   '$4'}.
-function_definition -> FUNCTION            parameter_list function_definition_visibility_list RETURNS parameter_list      block
+function_definition -> FUNCTION            parameter_list function_definition_visibility_list RETURNS parameter_list block
                                                                                                 : {functionDefinition, [],   '$2', '$3', '$5', '$6'}.
-function_definition -> FUNCTION identifier parameter_list                                                                 block
+function_definition -> FUNCTION identifier parameter_list                                                            block
                                                                                                 : {functionDefinition, '$2', '$3', [],   [],   '$4'}.
-function_definition -> FUNCTION identifier parameter_list                                     RETURNS parameter_list      block
+function_definition -> FUNCTION identifier parameter_list                                     RETURNS parameter_list block
                                                                                                 : {functionDefinition, '$2', '$3', [],   '$5', '$6'}.
-function_definition -> FUNCTION identifier parameter_list function_definition_visibility_list                             block
+function_definition -> FUNCTION identifier parameter_list function_definition_visibility_list                        block
                                                                                                 : {functionDefinition, '$2', '$3', '$4', [],   '$5'}.
-function_definition -> FUNCTION identifier parameter_list function_definition_visibility_list RETURNS parameter_list      block
+function_definition -> FUNCTION identifier parameter_list function_definition_visibility_list RETURNS parameter_list block
                                                                                                 : {functionDefinition, '$2', '$3', '$4', '$6', '$7'}.
 
 %% =====================================================================================================================
@@ -396,21 +398,23 @@ indexed_parameter_list -> '(' indexed_parameter_commalist ')'                   
 indexed_parameter_commalist -> indexed_parameter                                                : ['$1'].
 indexed_parameter_commalist -> indexed_parameter ',' indexed_parameter_commalist                : ['$1' | '$3'].
 
+indexed_parameter -> type_name                                                                  : {'$1', [],        []}.
+indexed_parameter -> type_name         identifier                                               : {'$1', [],        '$2'}.
 indexed_parameter -> type_name INDEXED                                                          : {'$1', "indexed", []}.
 indexed_parameter -> type_name INDEXED identifier                                               : {'$1', "indexed", '$3'}.
 %% ---------------------------------------------------------------------------------------------------------------------
 
-parameter_list -> '('                                ')'                                        : {typeParameterList, []}.
-parameter_list -> '(' type_name_identifier_commalist ')'                                        : {typeParameterList, '$2'}.
+parameter_list -> '('                     ')'                                                   : {parameterList, []}.
+parameter_list -> '(' parameter_commalist ')'                                                   : {parameterList, '$2'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-type_name_identifier_commalist -> type_name_identifier                                          : ['$1'].
-type_name_identifier_commalist -> type_name_identifier ',' type_name_identifier_commalist       : ['$1' | '$3'].
+parameter_commalist -> parameter                                                                : ['$1'].
+parameter_commalist -> parameter ',' parameter_commalist                                        : ['$1' | '$3'].
 
-type_name_identifier -> type_name                                                               : {'$1', []}.
-type_name_identifier -> type_name identifier                                                    : {'$1', '$2'}.
+parameter -> type_name                                                                          : {'$1', []}.
+parameter -> type_name identifier                                                               : {'$1', '$2'}.
 %% ---------------------------------------------------------------------------------------------------------------------
 
 variable_declaration -> type_name identifier                                                    : {variableDeclaration, '$1', '$2'}.
@@ -471,7 +475,7 @@ else_opt -> ELSE statement                                                      
 
 while_statement -> WHILE '(' expression ')' statement                                           : {whileStatement, '$3', '$5'}.
 
-place_holder_statement -> '_'                                                                   : {placeHolderStatement, "_"}.
+place_holder_statement -> '_'                                                                   : {placeHolderStatement, " _ "}.
 
 %% =====================================================================================================================
 %% Helper definitions - redundant.

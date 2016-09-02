@@ -130,16 +130,20 @@ match_any(TokenChars, TokenLen, TokenLine, [{P,T}|TPs]) ->
 
 match_bytes(TokenChars, TokenLen) ->
     TokenCharsLower = string:to_lower(TokenChars),
-    Size = string:substr(TokenChars, 6),
-    case Size of
-        [] ->
-            {token, {'BYTE', TokenLen, TokenCharsLower}};
-        S when S >= "1", S =< "9" ->
-            {token, {'BYTE', TokenLen, TokenCharsLower}};
-        S when S >= "10", S =< "32" ->
-            {token, {'BYTE', TokenLen, TokenCharsLower}};
-        _ ->
-            {token, {'IDENTIFIER', TokenLen, TokenChars}}
+    case length(TokenChars) >= 6 of
+        true ->
+            Size = string:substr(TokenChars, 6),
+            case Size of
+                [] ->
+                    {token, {'BYTE', TokenLen, TokenCharsLower}};
+                S when S >= "1", S =< "9" ->
+                    {token, {'BYTE', TokenLen, TokenCharsLower}};
+                S when S >= "10", S =< "32" ->
+                    {token, {'BYTE', TokenLen, TokenCharsLower}};
+                _ ->
+                    {token, {'IDENTIFIER', TokenLen, TokenChars}}
+            end;
+        _ -> {token, {'BYTE', TokenLen, TokenChars}}
     end.
 
 match_fixed(TokenChars, TokenLen) ->
