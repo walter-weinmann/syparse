@@ -4,6 +4,8 @@
 
 -export([test_sourceunit/3]).
 
+-define(TIMEOUT, 60).
+
 sourceunit_test_() ->
     WCard = case os:getenv("SOURCEUNIT") of
                 Sourceunit when is_list(Sourceunit) -> Sourceunit;
@@ -81,7 +83,7 @@ tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
             tests_gen(TestGroup, Tests, Logs, SelTests,
                 [{TestGroup, I,
                     fun() ->
-                        {timeout, 60, ?MODULE:test_sourceunit(TestGroup, T, Logs)}
+                        {timeout, ?TIMEOUT, ?MODULE:test_sourceunit(TestGroup, T, Logs)}
                     end} | Acc]);
         _ -> Acc
     end.
