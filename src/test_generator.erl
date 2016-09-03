@@ -22,7 +22,9 @@
 ]).
 -define(ALL_EUNIT,
     ?ALL_CONTZRACT_PART ++
-    [import_directive]
+        [expression,
+            import_directive] ++
+        ?ALL_STATEMENT
 ).
 -define(ALL_STATEMENT, [
     block,
@@ -1744,9 +1746,9 @@ create_code() ->
     IndexAccess = sort_list_random(sets:to_list(sets:from_list([
             lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
             "[" ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1);
-                _ -> []
+            case rand:uniform(?PRIME) rem 4 of
+                1 -> [];
+                _ -> lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1)
             end ++
             "]"
         || _ <- lists:seq(1, ?MAX_FC_IA_MA)
@@ -1956,67 +1958,67 @@ create_code() ->
                 "(" ++
                 case rand:uniform(?PRIME) rem 3 of
                     1 -> lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " indexed";
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " indexed"
                         end ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " " ++
-                            lists:nth(rand:uniform(Identifier_Length), Identifier);
-                            _ -> []
-                        end ++
-                        "," ++
-                        lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " indexed";
-                            _ -> []
-                        end ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " " ++
-                            lists:nth(rand:uniform(Identifier_Length), Identifier);
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " " ++
+                            lists:nth(rand:uniform(Identifier_Length), Identifier)
                         end ++
                         "," ++
                         lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " indexed";
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " indexed"
                         end ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " " ++
-                            lists:nth(rand:uniform(Identifier_Length), Identifier);
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " " ++
+                            lists:nth(rand:uniform(Identifier_Length), Identifier)
+                        end ++
+                        "," ++
+                        lists:nth(rand:uniform(TypeName_Length), TypeName) ++
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " indexed"
+                        end ++
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " " ++
+                            lists:nth(rand:uniform(Identifier_Length), Identifier)
                         end;
                     2 -> lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " indexed";
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " indexed"
                         end ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " " ++
-                            lists:nth(rand:uniform(Identifier_Length), Identifier);
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " " ++
+                            lists:nth(rand:uniform(Identifier_Length), Identifier)
                         end ++
                         "," ++
                         lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " indexed";
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " indexed"
                         end ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " " ++
-                            lists:nth(rand:uniform(Identifier_Length), Identifier);
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " " ++
+                            lists:nth(rand:uniform(Identifier_Length), Identifier)
                         end;
                     _ -> lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " indexed";
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " indexed"
                         end ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " " ++
-                            lists:nth(rand:uniform(Identifier_Length), Identifier);
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " " ++
+                            lists:nth(rand:uniform(Identifier_Length), Identifier)
                         end
                 end ++
                 ")"
@@ -2033,43 +2035,43 @@ create_code() ->
                 "(" ++
                 case rand:uniform(?PRIME) rem 3 of
                     1 -> lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " " ++
-                            lists:nth(rand:uniform(Identifier_Length), Identifier);
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " " ++
+                            lists:nth(rand:uniform(Identifier_Length), Identifier)
                         end ++
                         "," ++
                         lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " " ++
-                            lists:nth(rand:uniform(Identifier_Length), Identifier);
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " " ++
+                            lists:nth(rand:uniform(Identifier_Length), Identifier)
                         end ++
                         "," ++
                         lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " " ++
-                            lists:nth(rand:uniform(Identifier_Length), Identifier);
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " " ++
+                            lists:nth(rand:uniform(Identifier_Length), Identifier)
                         end;
                     2 -> lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " " ++
-                            lists:nth(rand:uniform(Identifier_Length), Identifier);
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " " ++
+                            lists:nth(rand:uniform(Identifier_Length), Identifier)
                         end ++
                         "," ++
                         lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                        case rand:uniform(?PRIME) rem 2 of
-                            1 -> " " ++
-                            lists:nth(rand:uniform(Identifier_Length), Identifier);
-                            _ -> []
+                        case rand:uniform(?PRIME) rem 4 of
+                            1 -> [];
+                            _ -> " " ++
+                            lists:nth(rand:uniform(Identifier_Length), Identifier)
                         end;
                     _ -> lists:nth(rand:uniform(TypeName_Length), TypeName) ++
-                    case rand:uniform(?PRIME) rem 2 of
-                        1 -> " " ++
-                        lists:nth(rand:uniform(Identifier_Length), Identifier);
-                        _ -> []
+                    case rand:uniform(?PRIME) rem 4 of
+                        1 -> [];
+                        _ -> " " ++
+                        lists:nth(rand:uniform(Identifier_Length), Identifier)
                     end
                 end ++
                 ")"
@@ -2113,9 +2115,9 @@ create_code() ->
             lists:nth(rand:uniform(Identifier_Length), Identifier) ++
             " " ++
             lists:nth(rand:uniform(IndexedParameterList_Length), IndexedParameterList) ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> " anonymous";
-                _ -> []
+            case rand:uniform(?PRIME) rem 4 of
+                1 -> [];
+                _ -> " anonymous"
             end ++
             ";"
         || _ <- lists:seq(1, ?MAX_CONTRACT_PART)
@@ -2161,10 +2163,10 @@ create_code() ->
 % ------------------------------------------------------------
     VariableDefinition = sort_list_random(sets:to_list(sets:from_list([
             lists:nth(rand:uniform(VariableDeclaration_Length), VariableDeclaration) ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> "=" ++
-                lists:nth(rand:uniform(Expression_Length), Expression);
-                _ -> []
+            case rand:uniform(?PRIME) rem 4 of
+                1 -> [];
+                _ -> "=" ++
+                lists:nth(rand:uniform(Expression_Length), Expression)
             end
         || _ <- lists:seq(1, ?MAX_VARIABLE)
     ]))),
@@ -2229,19 +2231,19 @@ create_code() ->
 % ------------------------------------------------------------------------------------------------------
     ForStatement = sort_list_random(sets:to_list(sets:from_list([
             "for(" ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> lists:nth(rand:uniform(SimpleStatement_Length), SimpleStatement);
-                _ -> []
+            case rand:uniform(?PRIME) rem 4 of
+                1 -> [];
+                _ -> lists:nth(rand:uniform(SimpleStatement_Length), SimpleStatement)
             end ++
             ";" ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> lists:nth(rand:uniform(Expression_Length), Expression);
-                _ -> []
+            case rand:uniform(?PRIME) rem 4 of
+                1 -> [];
+                _ -> lists:nth(rand:uniform(Expression_Length), Expression)
             end ++
             ";" ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> lists:nth(rand:uniform(ExpressionStatement_Length), ExpressionStatement);
-                _ -> []
+            case rand:uniform(?PRIME) rem 4 of
+                1 -> [];
+                _ -> lists:nth(rand:uniform(ExpressionStatement_Length), ExpressionStatement)
             end ++
             ")" ++
             lists:nth(rand:uniform(Statement_Part_1_Length), Statement_Part_1)
@@ -2256,10 +2258,10 @@ create_code() ->
             lists:nth(rand:uniform(Expression_Length), Expression) ++
             ")" ++
             lists:nth(rand:uniform(Statement_Part_1_Length), Statement_Part_1) ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> " else " ++
-                lists:nth(rand:uniform(Statement_Part_1_Length), Statement_Part_1);
-                _ -> []
+            case rand:uniform(?PRIME) rem 4 of
+                1 -> [];
+                _ -> " else " ++
+                lists:nth(rand:uniform(Statement_Part_1_Length), Statement_Part_1)
             end
         || _ <- lists:seq(1, ?MAX_STATEMENT)
     ]))),
@@ -2349,25 +2351,50 @@ create_code() ->
 %                      ( FunctionCall | Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
 %                      ( 'returns' ParameterList )? Block
 % -----------------------------------------------------------------------------------------------------------------
-    FunctionDefinition = sort_list_random(sets:to_list(sets:from_list([
-            "function" ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> " " ++
-                lists:nth(rand:uniform(Identifier_Length), Identifier);
-                _ -> []
-            end ++
-            lists:nth(rand:uniform(ParameterList_Length), ParameterList) ++
-            case rand:uniform(?PRIME) rem 8 of
-                1 -> lists:nth(rand:uniform(FunctionCall_Length), FunctionCall);
-                2 -> lists:nth(rand:uniform(Identifier_Length), Identifier);
-                3 -> "constant";
-                4 -> "external";
-                5 -> "public";
-                6 -> "internal";
-                7 -> "private";
-                _ -> []
-            end ++
-            case rand:uniform(?PRIME) rem 2 of
+
+    FunctionDefinitionVisibility = sort_list_random(sets:to_list(sets:from_list([
+        case rand:uniform(?PRIME) rem 3 of
+            1 -> case rand:uniform(?PRIME) rem 7 of
+                     1 -> lists:nth(rand:uniform(FunctionCall_Length), FunctionCall);
+                     2 -> lists:nth(rand:uniform(Identifier_Length), Identifier);
+                     3 -> "constant";
+                     4 -> "external";
+                     5 -> "public";
+                     6 -> "internal";
+                     _ -> "private"
+                 end ++
+                case rand:uniform(?PRIME) rem 7 of
+                    1 -> " " ++
+                    lists:nth(rand:uniform(FunctionCall_Length), FunctionCall);
+                    2 -> " " ++
+                    lists:nth(rand:uniform(Identifier_Length), Identifier);
+                    3 -> " constant";
+                    4 -> " external";
+                    5 -> " public";
+                    6 -> " internal";
+                    _ -> " private"
+                end ++
+                case rand:uniform(?PRIME) rem 7 of
+                    1 -> " " ++
+                    lists:nth(rand:uniform(FunctionCall_Length), FunctionCall);
+                    2 -> " " ++
+                    lists:nth(rand:uniform(Identifier_Length), Identifier);
+                    3 -> " constant";
+                    4 -> " external";
+                    5 -> " public";
+                    6 -> " internal";
+                    _ -> " private"
+                end;
+            2 -> case rand:uniform(?PRIME) rem 7 of
+                     1 -> lists:nth(rand:uniform(FunctionCall_Length), FunctionCall);
+                     2 -> lists:nth(rand:uniform(Identifier_Length), Identifier);
+                     3 -> "constant";
+                     4 -> "external";
+                     5 -> "public";
+                     6 -> "internal";
+                     _ -> "private"
+                 end ++
+            case rand:uniform(?PRIME) rem 7 of
                 1 -> " " ++
                 lists:nth(rand:uniform(FunctionCall_Length), FunctionCall);
                 2 -> " " ++
@@ -2376,13 +2403,39 @@ create_code() ->
                 4 -> " external";
                 5 -> " public";
                 6 -> " internal";
-                7 -> " private";
-                _ -> []
+                _ -> " private"
+            end;
+            _ -> case rand:uniform(?PRIME) rem 7 of
+                     1 -> lists:nth(rand:uniform(FunctionCall_Length), FunctionCall);
+                     2 -> lists:nth(rand:uniform(Identifier_Length), Identifier);
+                     3 -> "constant";
+                     4 -> "external";
+                     5 -> "public";
+                     6 -> "internal";
+                     _ -> "private"
+                 end
+        end
+        || _ <- lists:seq(1, ?MAX_CONTRACT_PART)
+    ]))),
+    FunctionDefinitionVisibility_Length = length(FunctionDefinitionVisibility),
+
+    FunctionDefinition = sort_list_random(sets:to_list(sets:from_list([
+            "function" ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 -> [];
+                _ -> " " ++
+                lists:nth(rand:uniform(Identifier_Length), Identifier)
             end ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> " returns" ++
-                lists:nth(rand:uniform(ParameterList_Length), ParameterList);
-                _ -> []
+            lists:nth(rand:uniform(ParameterList_Length), ParameterList) ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 -> [];
+                _ -> " " ++
+                lists:nth(rand:uniform(FunctionDefinitionVisibility_Length), FunctionDefinitionVisibility)
+            end ++
+            case rand:uniform(?PRIME) rem 3 of
+                1 -> [];
+                _ -> " returns" ++
+                lists:nth(rand:uniform(ParameterList_Length), ParameterList)
             end ++
             lists:nth(rand:uniform(Block_Length), Block)
         || _ <- lists:seq(1, ?MAX_CONTRACT_PART)
@@ -2394,10 +2447,10 @@ create_code() ->
     ModifierDefinition = sort_list_random(sets:to_list(sets:from_list([
             "modifier " ++
             lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-            case rand:uniform(?PRIME) rem 2 of
-                1 -> " " ++
-                lists:nth(rand:uniform(ParameterList_Length), ParameterList);
-                _ -> []
+            case rand:uniform(?PRIME) rem 4 of
+                1 -> [];
+                _ -> " " ++
+                lists:nth(rand:uniform(ParameterList_Length), ParameterList)
             end ++
             " " ++
             lists:nth(rand:uniform(Block_Length), Block)
@@ -2455,7 +2508,7 @@ create_code() ->
                 lists:nth(rand:uniform(InheritanceSpecifier_Length), InheritanceSpecifier);
                 _ -> []
             end ++
-            "{ " ++
+            "{" ++
             case rand:uniform(?PRIME) rem 4 of
                 1 -> lists:nth(rand:uniform(ContractPart_Length), ContractPart) ++
                     " " ++
@@ -2570,28 +2623,35 @@ create_code_expression(Run, FunctionCall, IndexAccess, MemberAccess, PrimaryExpr
             FunctionCall ++
             IndexAccess ++
             MemberAccess ++
-            PrimnaryExpression ++
+            PrimaryExpression ++
             [
-                case rand:uniform(?PRIME) rem 9 of
+                case rand:uniform(?PRIME) rem 11 of
                     1 -> lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
-                    "--";
+                    "-- ";
                     2 -> lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
-                    "++";
-                    3 -> "!" ++
+                    "++ ";
+                    3 -> " !" ++
                     lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    4 -> "~" ++
+                    4 -> " ~" ++
                     lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    5 -> "delete" ++
-                        " " ++
-                        lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    6 -> "++" ++
+                    5 -> "delete " ++
                     lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    7 -> "--" ++
+                    6 -> " ++" ++
                     lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    8 -> "+" ++
+                    7 -> " --" ++
                     lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    _ -> "-" ++
-                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev)
+                    8 -> " +" ++
+                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
+                    9 -> " -" ++
+                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
+                    10 -> "(" ++
+                        lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
+                        ")";
+                    _ -> lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
+                        "?" ++
+                        lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
+                        ":" ++
+                        lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev)
                 end
                 || _ <- lists:seq(1, ?MAX_EXPRESSION * Run div 3)
             ]
@@ -2603,10 +2663,10 @@ create_code_expression(Run, FunctionCall, IndexAccess, MemberAccess, PrimaryExpr
         [
             case rand:uniform(?PRIME) rem 33 of
                 1 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++
-                    "**" ++
+                    " ** " ++
                     lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary);
                 2 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++
-                    "*" ++
+                    " * " ++
                     lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary);
                 3 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++
                     "/" ++

@@ -231,9 +231,9 @@ Left        850 unary.                                  %% unary plus and minus.
 
 source_unit -> import_directive_contract_definition_list                                        : {sourceUnit, '$1'}.
 
-% wwe source_unit -> contract_part                                                                    : '$1'.
-% wwe source_unit -> expression                                                                       : '$1'.
-% wwe source_unit -> statement                                                                        : '$1'.
+source_unit -> expression                                                                       : '$1'.
+source_unit -> statement                                                                        : '$1'.
+source_unit -> contract_part                                                                    : '$1'.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -528,35 +528,35 @@ unary -> '+'                                                                    
 unary -> '-'                                                                                    : "-".
 %% ---------------------------------------------------------------------------------------------------------------------
 
-expression -> expression '**'  expression                                                       : {expression, '$1', "**", '$3'}.
+expression -> expression '**'  expression                                                       : {expression, '$1', "**",  '$3'}.
 
-expression -> expression '*'   expression                                                       : {expression, '$1', "*", '$3'}.
-expression -> expression '/'   expression                                                       : {expression, '$1', "/", '$3'}.
-expression -> expression '%'   expression                                                       : {expression, '$1', "%", '$3'}.
+expression -> expression '*'   expression                                                       : {expression, '$1', "*",   '$3'}.
+expression -> expression '/'   expression                                                       : {expression, '$1', "/",   '$3'}.
+expression -> expression '%'   expression                                                       : {expression, '$1', "%",   '$3'}.
 
-expression -> expression '+'   expression                                                       : {expression, '$1', "+", '$3'}.
-expression -> expression '-'   expression                                                       : {expression, '$1', "-", '$3'}.
+expression -> expression '+'   expression                                                       : {expression, '$1', "+",   '$3'}.
+expression -> expression '-'   expression                                                       : {expression, '$1', "-",   '$3'}.
 
 expression -> expression '<<'  expression                                                       : {expression, '$1', "<<",  '$3'}.
 expression -> expression '>>'  expression                                                       : {expression, '$1', ">>",  '$3'}.
 expression -> expression '>>>' expression                                                       : {expression, '$1', ">>>", '$3'}.
 
-expression -> expression '&'   expression                                                       : {expression, '$1', "&", '$3'}.
+expression -> expression '&'   expression                                                       : {expression, '$1', "&",   '$3'}.
 
-expression -> expression '^'   expression                                                       : {expression, '$1', "^", '$3'}.
+expression -> expression '^'   expression                                                       : {expression, '$1', "^",   '$3'}.
 
-expression -> expression '|'   expression                                                       : {expression, '$1', "|", '$3'}.
+expression -> expression '|'   expression                                                       : {expression, '$1', "|",   '$3'}.
 
-expression -> expression '<'   expression                                                       : {expression, '$1', "<",  '$3'}.
-expression -> expression '>'   expression                                                       : {expression, '$1', ">",  '$3'}.
-expression -> expression '<='  expression                                                       : {expression, '$1', "<=", '$3'}.
-expression -> expression '>='  expression                                                       : {expression, '$1', ">=", '$3'}.
+expression -> expression '<'   expression                                                       : {expression, '$1', "<",   '$3'}.
+expression -> expression '>'   expression                                                       : {expression, '$1', ">",   '$3'}.
+expression -> expression '<='  expression                                                       : {expression, '$1', "<=",  '$3'}.
+expression -> expression '>='  expression                                                       : {expression, '$1', ">=",  '$3'}.
 
-expression -> expression '=='  expression                                                       : {expression, '$1', "==", '$3'}.
-expression -> expression '!='  expression                                                       : {expression, '$1', "!=", '$3'}.
+expression -> expression '=='  expression                                                       : {expression, '$1', "==",  '$3'}.
+expression -> expression '!='  expression                                                       : {expression, '$1', "!=",  '$3'}.
 
-expression -> expression '&&'  expression                                                       : {expression, '$1', "&&", '$3'}.
-expression -> expression '||'  expression                                                       : {expression, '$1', "||", '$3'}.
+expression -> expression '&&'  expression                                                       : {expression, '$1', "&&",  '$3'}.
+expression -> expression '||'  expression                                                       : {expression, '$1', "||",  '$3'}.
 
 expression -> expression '?'   expression ':' expression                                        : {expression, '$1', "?", '$3', '$5'}.
 

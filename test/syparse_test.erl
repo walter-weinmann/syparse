@@ -120,42 +120,51 @@ test_sourceunit(TestGroup, Test, Logs) ->
             %?debugFmt("wwe debugging test_sourceunit/3 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
             ?D2("~n~p", [ParseTree]),
             NSourceunit = case syparse:parsetree_to_string_td(ParseTree) of
-                          {error, Error} ->
-                              throw({error, Error});
-                          NS ->
-                              %?debugFmt("wwe debugging test_sourceunit/3 ===> ~n NS: ~p~n", [NS]),
-                              NS
-                      end,
+                              {error, Error} ->
+                                  throw({error, Error});
+                              NS ->
+                                  %?debugFmt("wwe debugging test_sourceunit/3 ===> ~n NS: ~p~n", [NS]),
+                                  NS
+                          end,
             ?D3("~n ~ts~n", [NSourceunit]),
             {ok, {NPTree, NToks}}
                 = try
                       {ok, {NPT, NT}} = syparse:parsetree_with_tokens(NSourceunit),
                       {ok, {NPT, NT}}
-                  catch _:_ -> ?D_("Error : ~p syparse:parsetree_with_tokens(~s)", [TestGroup, NSourceunit])
+                  catch
+                      _:_ ->
+                          ?D_("Error syparse:parsetree_with_tokens : Test       ~n > ~p", [Test]),
+                          ?D_("Error syparse:parsetree_with_tokens : TestGroup  ~n > ~p", [TestGroup]),
+                          ?D_("Error syparse:parsetree_with_tokens : NSourceunit~n > ~p", [NSourceunit]),
+                          throw({error, "Error syparse:parsetree_with_tokens"})
                   end,
             try
                 ParseTree = NPTree
             catch
                 _:_ ->
-                    ?debugFmt("wwe debugging test_sourceunit/3 ===> ~n NPTree: ~p~n NToks: ~p~n", [NPTree, NToks]),
-                    ?D_("~n > ~p", [NPTree]),
-                    ?D_("~n > ~p", [Tokens]),
-                    ?D_("~n > ~p", [NToks])
+                    ?D_("[catch ParseTree = NPTree] : Test  ~n > ~p", [Test]),
+                    ?D_("[catch ParseTree = NPTree] : NPTree~n > ~p", [NPTree]),
+                    ?D_("[catch ParseTree = NPTree] : Tokens~n > ~p", [Tokens]),
+                    ?D_("[catch ParseTree = NPTree] : NToks ~n > ~p", [NToks]),
+                    throw({error, "Error catch ParseTree = NPTree"})
             end,
             try
                 ?assertEqual(ParseTree, NPTree)
             catch
                 _:_ ->
-                    ?debugFmt("wwe debugging test_sourceunit/3 ===> not equal~n ParseTree: ~p~n NPTree: ~p~n", [ParseTree, NPTree])
+                    ?D_("[catch ?assertEqual(ParseTree, NPTree)] : Test     ~n > ~p", [Test]),
+                    ?D_("[catch ?assertEqual(ParseTree, NPTree)] : ParseTree~n > ~p", [ParseTree]),
+                    ?D_("[catch ?assertEqual(ParseTree, NPTree)] : NPTree   ~n > ~p", [NPTree]),
+                    throw({error, "Error catch ?assertEqual(ParseTree, NPTree)"})
             end,
             ?D4("~n ~p~n", [ParseTree]);
         {lex_error, Error} ->
-            ?debugFmt("wwe debugging test_sourceunit/3 ===> Failed lexer~n Error: ~p~n", [Error]),
-            ?D_("Failed lexer ~p", [Error]),
+            ?D_("Failed lex_error : Test ~n > ~p", [Test]),
+            ?D_("Failed lex_error : Error~n > ~p", [Error]),
             ?assertEqual(ok, Error);
         {parse_error, {Error, _Tokens}} ->
-            ?debugFmt("wwe debugging test_sourceunit/3 parser ===> ~n Error: ~p~n Tokens: ~p~n", [Error, _Tokens]),
-            ?D_("Failed parser ~p", [Error]),
-            % ?D_("~nFailed: ~p~nTest: ~s~nTokens ~p", [Error, Test, Tokens]),
+            ?D_("Failed parse_error : Test  ~n > ~p", [Test]),
+            ?D_("Failed parse_error : Error ~n > ~p", [Error]),
+            ?D_("Failed parse_error : Tokens~n > ~p", [_Tokens]),
             ?assertEqual(ok, Error)
     end.
