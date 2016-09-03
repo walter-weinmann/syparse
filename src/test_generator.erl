@@ -22,7 +22,8 @@
 ]).
 -define(ALL_EUNIT,
     ?ALL_CONTZRACT_PART ++
-        [expression,
+        [contract_definition,
+            expression,
             import_directive] ++
         ?ALL_STATEMENT
 ).
@@ -1774,7 +1775,6 @@ create_code() ->
 % ----------------
     Expression = sort_list_random(create_code_expression(2, FunctionCall, IndexAccess, MemberAccess, [])),
     Expression_Length = length(Expression),
-    insert_table(expression, Expression),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 7.1

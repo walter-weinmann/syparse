@@ -467,7 +467,10 @@ fold(FType, Fun, Ctx, Lvl, {expression, [], UnaryOp, Value} = ST)
               "delete" -> [];
               _ -> " "
           end ++ UnaryOp ++ case UnaryOp of
-                                "delete" -> " ";
+                                "delete" -> case string:sub_string(ValueNew, 1, 1) of
+                                                " " -> [];
+                                                _ -> " "
+                                            end;
                                 _ -> []
                             end ++ ValueNew, NewCtx2},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
@@ -536,7 +539,13 @@ fold(FType, Fun, Ctx, Lvl, {expression, Value1, BinaryOp, Value2} = ST)
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {Value1New ++ " " ++ BinaryOp ++ " " ++ Value2New, NewCtx4},
+    RT = {Value1New ++ case string:sub_string(Value1New, length(Value1New), length(Value1New)) of
+                           " " -> [];
+                           _ -> " "
+                       end ++ BinaryOp ++ case string:sub_string(Value2New, 1, 1) of
+                                              " " -> [];
+                                              _ -> " "
+                                          end ++ Value2New, NewCtx4},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {expression, Value1, "?" = TenaryOp, Value2, Value3} = ST) ->
@@ -632,7 +641,7 @@ fold(FType, Fun, Ctx, Lvl, {forStatement, [], [], [], Value4} = ST) ->
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {"for (;;) " ++ Value4New, NewCtx2},
+    RT = {"for (;;)" ++ Value4New, NewCtx2},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {forStatement, [], [], Value3, Value4} = ST) ->
@@ -651,7 +660,7 @@ fold(FType, Fun, Ctx, Lvl, {forStatement, [], [], Value3, Value4} = ST) ->
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"for (;;" ++ Value3New ++ ") " ++ Value4New, NewCtx4},
+    RT = {"for (;;" ++ Value3New ++ ")" ++ Value4New, NewCtx4},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {forStatement, [], Value2, [], Value4} = ST) ->
@@ -670,7 +679,7 @@ fold(FType, Fun, Ctx, Lvl, {forStatement, [], Value2, [], Value4} = ST) ->
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"for (;" ++ Value2New ++ ";) " ++ Value4New, NewCtx4},
+    RT = {"for (;" ++ Value2New ++ ";)" ++ Value4New, NewCtx4},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {forStatement, [], Value2, Value3, Value4} = ST) ->
@@ -694,7 +703,7 @@ fold(FType, Fun, Ctx, Lvl, {forStatement, [], Value2, Value3, Value4} = ST) ->
                   top_down -> NewCtx5;
                   bottom_up -> Fun(ST, NewCtx5)
               end,
-    RT = {"for (;" ++ Value2New ++ ";" ++ Value3New ++ ") " ++ Value4New, NewCtx6},
+    RT = {"for (;" ++ Value2New ++ ";" ++ Value3New ++ ")" ++ Value4New, NewCtx6},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, [], [], Value4} = ST) ->
@@ -713,7 +722,7 @@ fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, [], [], Value4} = ST) ->
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"for (" ++ Value1New ++ ";;) " ++ Value4New, NewCtx4},
+    RT = {"for (" ++ Value1New ++ ";;)" ++ Value4New, NewCtx4},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, [], Value3, Value4} = ST) ->
@@ -737,7 +746,7 @@ fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, [], Value3, Value4} = ST) ->
                   top_down -> NewCtx5;
                   bottom_up -> Fun(ST, NewCtx5)
               end,
-    RT = {"for (" ++ Value1New ++ ";;" ++ Value3New ++ ") " ++ Value4New, NewCtx6},
+    RT = {"for (" ++ Value1New ++ ";;" ++ Value3New ++ ")" ++ Value4New, NewCtx6},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, Value2, [], Value4} = ST) ->
@@ -761,7 +770,7 @@ fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, Value2, [], Value4} = ST) ->
                   top_down -> NewCtx5;
                   bottom_up -> Fun(ST, NewCtx5)
               end,
-    RT = {"for (" ++ Value1New ++ ";" ++ Value2New ++ ";) " ++ Value4New, NewCtx6},
+    RT = {"for (" ++ Value1New ++ ";" ++ Value2New ++ ";)" ++ Value4New, NewCtx6},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, Value2, Value3, Value4} = ST) ->
@@ -790,7 +799,7 @@ fold(FType, Fun, Ctx, Lvl, {forStatement, Value1, Value2, Value3, Value4} = ST) 
                   top_down -> NewCtx7;
                   bottom_up -> Fun(ST, NewCtx7)
               end,
-    RT = {"for (" ++ Value1New ++ ";" ++ Value2New ++ ";" ++ Value3New ++ ") " ++ Value4New, NewCtx8},
+    RT = {"for (" ++ Value1New ++ ";" ++ Value2New ++ ";" ++ Value3New ++ ")" ++ Value4New, NewCtx8},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -1121,7 +1130,7 @@ fold(FType, Fun, Ctx, Lvl, {ifStatement, Value1, Value2, []} = ST) ->
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"if (" ++ Value1New ++ ") " ++ Value2New, NewCtx4},
+    RT = {"if (" ++ Value1New ++ ")" ++ Value2New, NewCtx4},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 fold(FType, Fun, Ctx, Lvl, {ifStatement, Value1, Value2, Value3} = ST) ->
@@ -1145,7 +1154,13 @@ fold(FType, Fun, Ctx, Lvl, {ifStatement, Value1, Value2, Value3} = ST) ->
                   top_down -> NewCtx5;
                   bottom_up -> Fun(ST, NewCtx5)
               end,
-    RT = {"if (" ++ Value1New ++ ") " ++ Value2New ++ " else " ++ Value3New, NewCtx6},
+    RT = {"if (" ++ Value1New ++ ")" ++ Value2New ++ case string:sub_string(Value2New, length(Value2New), length(Value2New)) of
+                                                         " " -> [];
+                                                         _ -> " "
+                                                     end ++ "else" ++ case string:sub_string(Value3New, 1, 1) of
+                                                                          " " -> [];
+                                                                          _ -> " "
+                                                                      end ++ Value3New, NewCtx6},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -1770,7 +1785,10 @@ fold(FType, Fun, Ctx, Lvl, {return, Value} = ST) ->
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {"return " ++ ValueNew, NewCtx2},
+    RT = {"return" ++ case string:sub_string(ValueNew, 1, 1) of
+                          " " -> [];
+                          _ -> " "
+                      end ++ ValueNew, NewCtx2},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -2233,7 +2251,7 @@ fold(FType, Fun, Ctx, Lvl, {whileStatement, Value1, Value2} = ST) ->
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"while (" ++ Value1New ++ ") " ++ Value2New, NewCtx4},
+    RT = {"while (" ++ Value1New ++ ")" ++ Value2New, NewCtx4},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
