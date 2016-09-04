@@ -33,9 +33,9 @@ Nonterminals
  identifier
  if_statement
  import_directive
- import_directive_contract_definition_list
  import_identifier
  import_identifier_commalist
+ contract_definition_import_pragma_directive_list
  index_access
  indexed_parameter
  indexed_parameter_commalist
@@ -52,6 +52,7 @@ Nonterminals
  parameter_commalist
  parameter_list
  place_holder_statement
+ pragma_directive
  primary_expression
  return
  simple_statement
@@ -114,6 +115,7 @@ Terminals
  MODIFIER
  NEW
  NUMBER_LITERAL
+ PRAGMA
  PRIVATE
  PUBLIC
  RETURN
@@ -229,7 +231,7 @@ Left        850 unary.                                  %% unary plus and minus.
 %% Grammar rules.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-source_unit -> import_directive_contract_definition_list                                        : {sourceUnit, '$1'}.
+source_unit -> contract_definition_import_pragma_directive_list                                       : {sourceUnit, '$1'}.
 
 % wwe source_unit -> expression                                                                       : '$1'.
 % wwe source_unit -> statement                                                                        : '$1'.
@@ -238,14 +240,40 @@ source_unit -> import_directive_contract_definition_list                        
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-import_directive_contract_definition_list ->                                           import_directive
+contract_definition_import_pragma_directive_list ->                                                  import_directive
                                                                                                 :         ['$1'].
-import_directive_contract_definition_list ->                                           contract_definition
+contract_definition_import_pragma_directive_list ->                                                  contract_definition
                                                                                                 :         ['$1'].
-import_directive_contract_definition_list -> import_directive_contract_definition_list import_directive
+contract_definition_import_pragma_directive_list ->                                                  pragma_directive
+                                                                                                :         ['$1'].
+contract_definition_import_pragma_directive_list -> contract_definition_import_pragma_directive_list import_directive
                                                                                                 : '$1' ++ ['$2'].
-import_directive_contract_definition_list -> import_directive_contract_definition_list contract_definition
+contract_definition_import_pragma_directive_list -> contract_definition_import_pragma_directive_list contract_definition
                                                                                                 : '$1' ++ ['$2'].
+contract_definition_import_pragma_directive_list -> contract_definition_import_pragma_directive_list pragma_directive
+                                                                                                : '$1' ++ ['$2'].
+%% =====================================================================================================================
+
+pragma_directive -> PRAGMA identifier expression ';'                                            : {pragmaDirective, '$2', '$3'}. 
+
+import_directive -> IMPORT STRING_LITERAL                                          ';'          : {importDirective, unwrap('$2'), [],   []}.
+import_directive -> IMPORT STRING_LITERAL as_identifier                            ';'          : {importDirective, unwrap('$2'), '$3', []}.
+import_directive -> IMPORT '*'                                 FROM STRING_LITERAL ';'          : {importDirective, "*",          [],   unwrap('$4')}.
+import_directive -> IMPORT '*'            as_identifier        FROM STRING_LITERAL ';'          : {importDirective, "*",          '$3', unwrap('$5')}.
+import_directive -> IMPORT identifier                          FROM STRING_LITERAL ';'          : {importDirective, '$2',         [],   unwrap('$4')}.
+import_directive -> IMPORT identifier     as_identifier        FROM STRING_LITERAL ';'          : {importDirective, '$2',         '$3', unwrap('$5')}.
+import_directive -> IMPORT '(' import_identifier_commalist ')' FROM STRING_LITERAL ';'          : {importDirective, "(",          '$3', unwrap('$6')}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+as_identifier -> AS identifier                                                                  : '$2'.
+
+import_identifier_commalist -> import_identifier                                                : ['$1'].
+import_identifier_commalist -> import_identifier ',' import_identifier_commalist                : ['$1' | '$3'].
+
+import_identifier -> identifier                                                                 : {'$1', []}.
+import_identifier -> identifier as_identifier                                                   : {'$1', '$2'}.
 %% =====================================================================================================================
 
 contract_definition -> CONTRACT identifier                                    '{'                    '}'
@@ -273,26 +301,6 @@ inheritance_specifier_commalist -> inheritance_specifier ',' inheritance_specifi
 
 contract_part_list ->                    contract_part                                          :         ['$1'].
 contract_part_list -> contract_part_list contract_part                                          : '$1' ++ ['$2'].
-%% =====================================================================================================================
-
-import_directive -> IMPORT STRING_LITERAL                                          ';'          : {importDirective, unwrap('$2'), [],   []}.
-import_directive -> IMPORT STRING_LITERAL as_identifier                            ';'          : {importDirective, unwrap('$2'), '$3', []}.
-import_directive -> IMPORT '*'                                 FROM STRING_LITERAL ';'          : {importDirective, "*",          [],   unwrap('$4')}.
-import_directive -> IMPORT '*'            as_identifier        FROM STRING_LITERAL ';'          : {importDirective, "*",          '$3', unwrap('$5')}.
-import_directive -> IMPORT identifier                          FROM STRING_LITERAL ';'          : {importDirective, '$2',         [],   unwrap('$4')}.
-import_directive -> IMPORT identifier     as_identifier        FROM STRING_LITERAL ';'          : {importDirective, '$2',         '$3', unwrap('$5')}.
-import_directive -> IMPORT '(' import_identifier_commalist ')' FROM STRING_LITERAL ';'          : {importDirective, "(",          '$3', unwrap('$6')}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-as_identifier -> AS identifier                                                                  : '$2'.
-
-import_identifier_commalist -> import_identifier                                                : ['$1'].
-import_identifier_commalist -> import_identifier ',' import_identifier_commalist                : ['$1' | '$3'].
-
-import_identifier -> identifier                                                                 : {'$1', []}.
-import_identifier -> identifier as_identifier                                                   : {'$1', '$2'}.
 %% =====================================================================================================================
 
 contract_part -> state_variable_declaration                                                     : {contractPart, '$1'}.

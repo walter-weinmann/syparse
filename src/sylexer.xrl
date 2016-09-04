@@ -88,6 +88,7 @@ Erlang code.
     {"^(?i)(MINUTES)$",          'MINUTES'},
     {"^(?i)(MODIFIER)$",         'MODIFIER'},
     {"^(?i)(NEW)$",              'NEW'},
+    {"^(?i)(PRAGMA)$",           'PRAGMA'},
     {"^(?i)(PRIVATE)$",          'PRIVATE'},
     {"^(?i)(PUBLIC)$",           'PUBLIC'},
     {"^(?i)(RETURN)$",           'RETURN'},

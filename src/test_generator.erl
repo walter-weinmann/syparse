@@ -18,13 +18,15 @@
 -define(ALL_CT, [
     contract_definition,
     import_directive,
+    pragma_directive,
     source_unit
 ]).
 -define(ALL_EUNIT,
     ?ALL_CONTZRACT_PART ++
         [contract_definition,
             expression,
-            import_directive] ++
+            import_directive,
+            pragma_directive] ++
         ?ALL_STATEMENT
 ).
 -define(ALL_STATEMENT, [
@@ -42,12 +44,11 @@
 
 -define(CODE_TEMPLATES, code_templates).
 
--define(MAX_CONTRACT_DEFINITION, 3000).
+-define(MAX_CONTRACT_DEFINITION, 5000).
 -define(MAX_CONTRACT_PART, 1000).
--define(MAX_EXPRESSION, 200).
+-define(MAX_EXPRESSION, 400).
 -define(MAX_FC_IA_MA, 400).
 -define(MAX_ARRAY_TYPE_NAME, 200).
--define(MAX_IMPORT_DIRECTIVE, 1000).
 -define(MAX_INHERITANCE_SPECIFIER, 400).
 -define(MAX_MAPPING, 200).
 -define(MAX_NUMBER_LITERAL, 200).
@@ -1618,7 +1619,7 @@ create_code() ->
                     lists:nth(rand:uniform(StringLiteral_Length), StringLiteral)
             end ++
             ";"
-        || _ <- lists:seq(1, ?MAX_IMPORT_DIRECTIVE)
+        || _ <- lists:seq(1, ?MAX_CONTRACT_DEFINITION)
     ]))),
     insert_table(import_directive, ImportDirective),
 % ----------------------------------------------
@@ -1775,6 +1776,23 @@ create_code() ->
 % ----------------
     Expression = sort_list_random(create_code_expression(2, FunctionCall, IndexAccess, MemberAccess, [])),
     Expression_Length = length(Expression),
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 7.0
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% ----------------------------------------------------
+% PragmaDirective = 'pragma' Identifier Expression ';'
+% ----------------------------------------------------
+    PragmaDirective = sort_list_random(sets:to_list(sets:from_list([
+            "pragma " ++
+            lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+            " " ++
+            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            ";"
+        || _ <- lists:seq(1, ?MAX_CONTRACT_DEFINITION)
+    ]))),
+    insert_table(pragma_directive, PragmaDirective),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 7.1
@@ -2530,12 +2548,13 @@ create_code() ->
 %% Level 20
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ----------------------------------------------------
-% SourceUnit = (ImportDirective | ContractDefinition)*
-% ----------------------------------------------------
+% ----------------------------------------------------------------------
+% SourceUnit = (PragmaDirective | ImportDirective | ContractDefinition)*
+% ----------------------------------------------------------------------
     SourceUnit_Base = sort_list_random(
-        ImportDirective ++
-        ContractDefinition
+        ContractDefinition ++
+            ImportDirective ++
+            PragmaDirective
     ),
     SourceUnit_Base_Length = length(SourceUnit_Base),
 
