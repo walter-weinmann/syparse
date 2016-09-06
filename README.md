@@ -234,35 +234,13 @@ The documentation for **syparse** is available here: [Wiki](https://github.com/w
 
 ## 3. Known issues
 
-### SinmpleStatement
+### NumberLiteral
 
 ```
-SimpleStatement = VariableDefinition | ExpressionStatement
+NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
 ```
 
-is reduced to
-
-```
-SimpleStatement =  ExpressionStatement
-```
-
-to avoid redundancy.
-
-### Statement
-
-```
-Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement |
-            ( Continue | Break | Return | Throw | SimpleStatement | ExpressionStatement ) ';'
-```
-
-is reduced to
-
-```
-Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement |
-            ( Continue | Break | Return | Throw | SimpleStatement ) ';'
-```
-
-to avoid redundancy.
+The ' ' can not be enforced with the parser tools leex and yecc.
 
 ## 4. Acknowledgement
 
@@ -277,6 +255,43 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 5. Create new Pull Request
 
 ## 6. Release Notes
+
+### Version 1.0.1
+
+Release Date: 11.09.2016 - Grammar as of 06.09.2016
+
+#### Grammar changes
+
+- **ExpressionStatement**
+
+```
+New: ExpressionStatement = Expression
+
+Old: ExpressionStatement = Expression | VariableDefinition
+```
+
+- **FunctionCall**
+
+```
+New: FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' Expression? ( ',' Expression )* ')'
+
+Old: FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
+```
+
+- **Statement**
+
+```
+New: Statement = Statement = IfStatement | WhileStatement | ForStatement | Block |
+                             ( PlaceholderStatement | Continue | Break | Return |
+                               Throw | SimpleStatement ) ';'
+
+Old: Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement |
+                 ( Continue | Break | Return | Throw | SimpleStatement | ExpressionStatement ) ';'
+```
+
+#### New features
+
+1. Additional test data based on Solidity documentation.
 
 ### Version 1.0.0
 

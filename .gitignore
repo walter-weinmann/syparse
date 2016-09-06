@@ -26,6 +26,7 @@ deps/
 /test/generic_state_variable_declaration.tst
 /test/generic_statement_break.tst
 /test/generic_statement_continue.tst
+/test/generic_statement_place_holder_statement.tst
 /test/generic_statement_return.tst
 /test/generic_statement_simple_statement.tst
 /test/generic_statement_throw.tst

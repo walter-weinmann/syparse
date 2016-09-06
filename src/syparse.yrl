@@ -201,6 +201,7 @@ Endsymbol
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Nonassoc    100 expression_commalist.
+Nonassoc    100 primary_expression.
 
 Right       200 '=' '|=' '^=' '&=' '<<=' '>>='  '+=' '-=' '*=' '/=' '%='.
                                                         %% assignment operators.
@@ -254,7 +255,7 @@ contract_definition_import_pragma_directive_list -> contract_definition_import_p
                                                                                                 : '$1' ++ ['$2'].
 %% =====================================================================================================================
 
-pragma_directive -> PRAGMA identifier expression ';'                                            : {pragmaDirective, '$2', '$3'}. 
+pragma_directive -> PRAGMA identifier expression ';'                                            : {pragmaDirective, '$2', '$3'}.
 
 import_directive -> IMPORT STRING_LITERAL                                          ';'          : {importDirective, unwrap('$2'), [],   []}.
 import_directive -> IMPORT STRING_LITERAL as_identifier                            ';'          : {importDirective, unwrap('$2'), '$3', []}.
@@ -428,6 +429,7 @@ parameter -> type_name identifier                                               
 variable_declaration -> type_name identifier                                                    : {variableDeclaration, '$1', '$2'}.
 
 type_name -> elementary_type_name                                                               : {typeName, '$1', []}.
+type_name -> identifier                                                                         : {typeName, '$1', []}.
 type_name -> identifier           storage_location                                              : {typeName, '$1', '$2'}.
 type_name -> mapping                                                                            : {typeName, '$1', []}.
 type_name -> array_type_name                                                                    : {typeName, '$1', []}.
@@ -456,7 +458,7 @@ statement -> if_statement                                                       
 statement -> while_statement                                                                    : {statement, '$1'}.
 statement -> for_statement                                                                      : {statement, '$1'}.
 statement -> block                                                                              : {statement, '$1'}.
-statement -> place_holder_statement                                                             : {statement, '$1'}.
+statement -> place_holder_statement ';'                                                         : {statement, '$1'}.
 statement -> continue         ';'                                                               : {statement, '$1'}.
 statement -> break            ';'                                                               : {statement, '$1'}.
 statement -> return           ';'                                                               : {statement, '$1'}.

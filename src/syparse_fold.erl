@@ -1200,13 +1200,10 @@ fold(FType, Fun, Ctx, Lvl, {ifStatement, Value1, Value2, Value3} = ST) ->
                   top_down -> NewCtx5;
                   bottom_up -> Fun(ST, NewCtx5)
               end,
-    RT = {"if (" ++ Value1New ++ ")" ++ Value2New ++ case string:sub_string(Value2New, length(Value2New), length(Value2New)) of
-                                                         " " -> [];
-                                                         _ -> " "
-                                                     end ++ "else" ++ case string:sub_string(Value3New, 1, 1) of
-                                                                          " " -> [];
-                                                                          _ -> " "
-                                                                      end ++ Value3New, NewCtx6},
+    RT = {"if (" ++ Value1New ++ ")" ++ Value2New ++ "else" ++ case string:sub_string(Value3New, 1, 1) of
+                                                                   " " -> [];
+                                                                   _ -> " "
+                                                               end ++ Value3New, NewCtx6},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -1883,9 +1880,8 @@ fold(FType, Fun, Ctx, Lvl, {Type, {SubType, _} = Value} = ST)
     RT = {ValueNew ++ case Type of
                           statement ->
                               case SubType of
-                                  return -> ";";
-                                  simpleStatement -> ";";
-                                  _ -> []
+                                  block -> [];
+                                  _ -> ";"
                               end;
                           _ -> []
                       end, NewCtx2},
