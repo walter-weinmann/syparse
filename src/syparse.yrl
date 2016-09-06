@@ -31,6 +31,7 @@ Nonterminals
  function_definition_visibility
  function_definition_visibility_list
  identifier
+ identifier_expression_list
  if_statement
  import_directive
  import_identifier
@@ -200,8 +201,8 @@ Endsymbol
 %% Operator precedences.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Nonassoc    100 array_type_name.
 Nonassoc    100 expression_commalist.
-Nonassoc    100 primary_expression.
 
 Right       200 '=' '|=' '^=' '&=' '<<=' '>>='  '+=' '-=' '*=' '/=' '%='.
                                                         %% assignment operators.
@@ -223,20 +224,17 @@ Left        710 '*' '/' '%'.                            %% multiplication, divis
 Left        720 '+' '-'.                                %% addition and subtraction.
 
 Left        800 '++' '--'.                              %% increment and decrement.
-Nonassoc    810 '(' ')'.                                %% function-like call.
-Nonassoc    820 '[' ']'.                                %% array subscripting.
-Nonassoc    830 '.'.                                    %% member access.
-Left        850 unary.                                  %% unary plus and minus.
+Left        810 unary.                                  %% unary plus and minus.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-source_unit -> contract_definition_import_pragma_directive_list                                       : {sourceUnit, '$1'}.
+source_unit -> contract_definition_import_pragma_directive_list                                 : {sourceUnit, '$1'}.
 
-% wwe source_unit -> expression                                                                       : '$1'.
-% wwe source_unit -> statement                                                                        : '$1'.
-% wwe source_unit -> contract_part                                                                    : '$1'.
+source_unit -> expression                                                                       : '$1'.
+source_unit -> statement                                                                        : '$1'.
+source_unit -> contract_part                                                                    : '$1'.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -315,14 +313,27 @@ contract_part -> enum_definition                                                
 inheritance_specifier -> identifier                                                             : {inheritanceSpecifier, '$1', []}.
 inheritance_specifier -> identifier '(' expression_commalist ')'                                : {inheritanceSpecifier, '$1', '$3'}.
 
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+state_variable_declaration -> identifier                                      identifier                ';'
+                                                                                                : {stateVariableDeclaration, {typeName, '$1', []}, [],   '$2', []}.
+state_variable_declaration -> identifier                                      identifier '=' expression ';'
+                                                                                                : {stateVariableDeclaration, {typeName, '$1', []}, [],   '$2', '$4'}.
+state_variable_declaration -> identifier state_variable_declaration_visibility identifier                ';'
+                                                                                                : {stateVariableDeclaration, {typeName, '$1', []}, '$2', '$3', []}.
+state_variable_declaration -> identifier state_variable_declaration_visibility identifier '=' expression ';'
+                                                                                                : {stateVariableDeclaration, {typeName, '$1', []}, '$2', '$3', '$5'}.
+%% =====================================================================================================================
+
 state_variable_declaration -> type_name                                       identifier                ';'
-                                                                                                : {stateVariableDeclaration, '$1', [],   '$2', []}.
+                                                                                                : {stateVariableDeclaration, '$1',                 [],   '$2', []}.
 state_variable_declaration -> type_name                                       identifier '=' expression ';'
-                                                                                                : {stateVariableDeclaration, '$1', [],   '$2', '$4'}.
-state_variable_declaration -> type_name state_variable_declaration_visibility identifier                ';'
-                                                                                                : {stateVariableDeclaration, '$1', '$2', '$3', []}.
-state_variable_declaration -> type_name state_variable_declaration_visibility identifier '=' expression ';'
-                                                                                                : {stateVariableDeclaration, '$1', '$2', '$3', '$5'}.
+                                                                                                : {stateVariableDeclaration, '$1',                 [],   '$2', '$4'}.
+state_variable_declaration -> type_name  state_variable_declaration_visibility identifier                ';'
+                                                                                                : {stateVariableDeclaration, '$1',                 '$2', '$3', []}.
+state_variable_declaration -> type_name  state_variable_declaration_visibility identifier '=' expression ';'
+                                                                                                : {stateVariableDeclaration, '$1',                 '$2', '$3', '$5'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
@@ -332,8 +343,15 @@ state_variable_declaration_visibility -> INTERNAL                               
 state_variable_declaration_visibility -> PRIVATE                                                : "private".
 %% =====================================================================================================================
 
-using_for_declaration -> USING identifier FOR '*'       ';'                                     : {usingForDeclaration, '$2', "*"}.
-using_for_declaration -> USING identifier FOR type_name ';'                                     : {usingForDeclaration, '$2', '$4'}.
+using_for_declaration -> USING identifier FOR '*'        ';'                                    : {usingForDeclaration, '$2', "*"}.
+
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+using_for_declaration -> USING identifier FOR identifier ';'                                    : {usingForDeclaration, '$2', {typeName, '$4', []}}.
+%% =====================================================================================================================
+
+using_for_declaration -> USING identifier FOR type_name  ';'                                    : {usingForDeclaration, '$2', '$4'}.
 
 struct_definition -> STRUCT identifier '{'                                    '}'               : {structDefinition, '$2', []}.
 struct_definition -> STRUCT identifier '{' variable_declaration_semicolonlist '}'               : {structDefinition, '$2', '$4'}.
@@ -407,10 +425,19 @@ indexed_parameter_list -> '(' indexed_parameter_commalist ')'                   
 indexed_parameter_commalist -> indexed_parameter                                                : ['$1'].
 indexed_parameter_commalist -> indexed_parameter ',' indexed_parameter_commalist                : ['$1' | '$3'].
 
-indexed_parameter -> type_name                                                                  : {'$1', [],        []}.
-indexed_parameter -> type_name         identifier                                               : {'$1', [],        '$2'}.
-indexed_parameter -> type_name INDEXED                                                          : {'$1', "indexed", []}.
-indexed_parameter -> type_name INDEXED identifier                                               : {'$1', "indexed", '$3'}.
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+indexed_parameter -> identifier                                                                 : {{typeName, '$1', []}, [],        []}.
+indexed_parameter -> identifier         identifier                                              : {{typeName, '$1', []}, [],        '$2'}.
+indexed_parameter -> identifier INDEXED                                                         : {{typeName, '$1', []}, "indexed", []}.
+indexed_parameter -> identifier INDEXED identifier                                              : {{typeName, '$1', []}, "indexed", '$3'}.
+%% ---------------------------------------------------------------------------------------------------------------------
+
+indexed_parameter -> type_name                                                                  : {'$1',                 [],        []}.
+indexed_parameter -> type_name          identifier                                              : {'$1',                 [],        '$2'}.
+indexed_parameter -> type_name  INDEXED                                                         : {'$1',                 "indexed", []}.
+indexed_parameter -> type_name  INDEXED identifier                                              : {'$1',                 "indexed", '$3'}.
 %% ---------------------------------------------------------------------------------------------------------------------
 
 parameter_list -> '('                     ')'                                                   : {parameterList, []}.
@@ -422,24 +449,58 @@ parameter_list -> '(' parameter_commalist ')'                                   
 parameter_commalist -> parameter                                                                : ['$1'].
 parameter_commalist -> parameter ',' parameter_commalist                                        : ['$1' | '$3'].
 
-parameter -> type_name                                                                          : {'$1', []}.
-parameter -> type_name identifier                                                               : {'$1', '$2'}.
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+parameter -> identifier                                                                         : {{typeName, '$1', []}, []}.
+parameter -> identifier identifier                                                              : {{typeName, '$1', []}, '$2'}.
 %% ---------------------------------------------------------------------------------------------------------------------
 
-variable_declaration -> type_name identifier                                                    : {variableDeclaration, '$1', '$2'}.
+parameter -> type_name                                                                          : {'$1',            []}.
+parameter -> type_name  identifier                                                              : {'$1',            '$2'}.
+%% ---------------------------------------------------------------------------------------------------------------------
+
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+variable_declaration -> identifier identifier                                                   : {variableDeclaration, {typeName, '$1', []}, '$2'}.
+%% ---------------------------------------------------------------------------------------------------------------------
+
+variable_declaration -> type_name  identifier                                                   : {variableDeclaration, '$1',                 '$2'}.
 
 type_name -> elementary_type_name                                                               : {typeName, '$1', []}.
-type_name -> identifier                                                                         : {typeName, '$1', []}.
+
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+% wwe type_name -> identifier                                                                         : {typeName, '$1', []}.
+%% ---------------------------------------------------------------------------------------------------------------------
+
 type_name -> identifier           storage_location                                              : {typeName, '$1', '$2'}.
 type_name -> mapping                                                                            : {typeName, '$1', []}.
 type_name -> array_type_name                                                                    : {typeName, '$1', []}.
 
-mapping -> MAPPING '(' elementary_type_name '=>' type_name ')'                                  : {mapping, '$3', '$5'}.
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+mapping -> MAPPING '(' elementary_type_name '=>' identifier ')'                                 : {mapping, '$3', {typeName, '$5', []}}.
+%% ---------------------------------------------------------------------------------------------------------------------
 
-array_type_name -> type_name                   '['            ']'                               : {arrayTypeName, '$1', [],   []}.
-array_type_name -> type_name                   '[' expression ']'                               : {arrayTypeName, '$1', [],   '$3'}.
-array_type_name -> type_name storage_location  '['            ']'                               : {arrayTypeName, '$1', '$2', []}.
-array_type_name -> type_name storage_location  '[' expression ']'                               : {arrayTypeName, '$1', '$2', '$4'}.
+mapping -> MAPPING '(' elementary_type_name '=>' type_name  ')'                                 : {mapping, '$3', '$5'}.
+
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+array_type_name -> identifier                   '['            ']'                              : {arrayTypeName, {typeName, '$1', []}, [],   []}.
+array_type_name -> identifier                   '[' expression ']'                              : {arrayTypeName, {typeName, '$1', []}, [],   '$3'}.
+array_type_name -> identifier storage_location  '['            ']'                              : {arrayTypeName, {typeName, '$1', []}, '$2', []}.
+array_type_name -> identifier storage_location  '[' expression ']'                              : {arrayTypeName, {typeName, '$1', []}, '$2', '$4'}.
+%% ---------------------------------------------------------------------------------------------------------------------
+
+array_type_name -> type_name                    '['            ']'                              : {arrayTypeName, '$1',                 [],   []}.
+array_type_name -> type_name                    '[' expression ']'                              : {arrayTypeName, '$1',                 [],   '$3'}.
+array_type_name -> type_name  storage_location  '['            ']'                              : {arrayTypeName, '$1',                 '$2', []}.
+array_type_name -> type_name  storage_location  '[' expression ']'                              : {arrayTypeName, '$1',                 '$2', '$4'}.
 
 storage_location -> MEMORY                                                                      : {storageLocation, "memory"}.
 storage_location -> STORAGE                                                                     : {storageLocation, "storage"}.
@@ -459,20 +520,13 @@ statement -> while_statement                                                    
 statement -> for_statement                                                                      : {statement, '$1'}.
 statement -> block                                                                              : {statement, '$1'}.
 statement -> place_holder_statement ';'                                                         : {statement, '$1'}.
-statement -> continue         ';'                                                               : {statement, '$1'}.
-statement -> break            ';'                                                               : {statement, '$1'}.
-statement -> return           ';'                                                               : {statement, '$1'}.
-statement -> throw            ';'                                                               : {statement, '$1'}.
-statement -> simple_statement ';'                                                               : {statement, '$1'}.
-
-%% =====================================================================================================================
-%% Helper definitions - redundant.
-%% ---------------------------------------------------------------------------------------------------------------------
-% wwe statement -> expression_statement                                                               : {statement, '$1'}.
-%% =====================================================================================================================
+statement -> continue               ';'                                                         : {statement, '$1'}.
+statement -> break                  ';'                                                         : {statement, '$1'}.
+statement -> return                 ';'                                                         : {statement, '$1'}.
+statement -> throw                  ';'                                                         : {statement, '$1'}.
+statement -> simple_statement       ';'                                                         : {statement, '$1'}.
 
 expression_statement -> expression                                                              : {expressionStatement, '$1'}.
-expression_statement -> variable_definition                                                     : {expressionStatement, '$1'}.
 
 if_statement -> IF '(' expression ')' statement else_opt                                        : {ifStatement, '$3', '$5', '$6'}.
 
@@ -487,12 +541,7 @@ while_statement -> WHILE '(' expression ')' statement                           
 
 place_holder_statement -> '_'                                                                   : {placeHolderStatement, " _ "}.
 
-%% =====================================================================================================================
-%% Helper definitions - redundant.
-%% ---------------------------------------------------------------------------------------------------------------------
-% wwe simple_statement -> variable_definition                                                         : {simpleStatement, '$1'}.
-%% =====================================================================================================================
-
+simple_statement -> variable_definition                                                         : {simpleStatement, '$1'}.
 simple_statement -> expression_statement                                                        : {simpleStatement, '$1'}.
 
 for_statement -> FOR '('                  ';'            ';'                      ')' statement : {forStatement, [],   [],   [],   '$6'}.
@@ -592,16 +641,55 @@ expression_commalist -> expression ',' expression_commalist                     
 expression ->            ','   expression                                                       : {expression, [],   "," ,  '$2'}.
 expression -> expression ','   expression                                                       : {expression, '$1', "," ,  '$3'}.
 
-expression -> primary_expression                                                                : {expression, '$1'}.
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+expression -> identifier                                                                        : {expression, '$1'}.
+%% ---------------------------------------------------------------------------------------------------------------------
 
-primary_expression -> identifier                                                                : {primaryExpression, '$1'}.
+expression -> primary_expression                                                                : {expression, {primaryExpression, '$1'}}.
+
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+% wwe primary_expression -> identifier                                                                : {primaryExpression, '$1'}.
+%% ---------------------------------------------------------------------------------------------------------------------
+
 primary_expression -> boolean_literal                                                           : {primaryExpression, '$1'}.
 primary_expression -> number_literal                                                            : {primaryExpression, '$1'}.
 primary_expression -> string_literal                                                            : {primaryExpression, '$1'}.
 primary_expression -> new_expression                                                            : {primaryExpression, '$1'}.
 
-function_call -> identifier '('                      ')'                                        : {functionCall, '$1', []}.
-function_call -> identifier '(' expression_commalist ')'                                        : {functionCall, '$1', '$3'}.
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+function_call -> identifier                                    '('                      ')'     : {functionCall, {typeName, '$1', []},      [],   []}.
+function_call -> identifier                                    '(' expression_commalist ')'     : {functionCall, {typeName, '$1', []},      [],   '$3'}.
+function_call -> identifier         identifier_expression_list '('                      ')'     : {functionCall, {typeName, '$1', []},      '$2', []}.
+function_call -> identifier         identifier_expression_list '(' expression_commalist ')'     : {functionCall, {typeName, '$1', []},      '$2', '$4'}.
+%% ---------------------------------------------------------------------------------------------------------------------
+
+function_call -> primary_expression                            '('                      ')'     : {functionCall, {primaryExpression, '$1'}, [],   []}.
+function_call -> primary_expression                            '(' expression_commalist ')'     : {functionCall, {primaryExpression, '$1'}, [],   '$3'}.
+function_call -> primary_expression identifier_expression_list '('                      ')'     : {functionCall, {primaryExpression, '$1'}, '$2', []}.
+function_call -> primary_expression identifier_expression_list '(' expression_commalist ')'     : {functionCall, {primaryExpression, '$1'}, '$2', '$4'}.
+function_call -> new_expression                                '('                      ')'     : {functionCall, '$1',                      [],   []}.
+function_call -> new_expression                                '(' expression_commalist ')'     : {functionCall, '$1',                      [],   '$3'}.
+function_call -> new_expression     identifier_expression_list '('                      ')'     : {functionCall, '$1',                      '$2', []}.
+function_call -> new_expression     identifier_expression_list '(' expression_commalist ')'     : {functionCall, '$1',                      '$2', '$4'}.
+function_call -> type_name                                     '('                      ')'     : {functionCall, '$1',                      [],   []}.
+function_call -> type_name                                     '(' expression_commalist ')'     : {functionCall, '$1',                      [],   '$3'}.
+function_call -> type_name          identifier_expression_list '('                      ')'     : {functionCall, '$1',                      '$2', []}.
+function_call -> type_name          identifier_expression_list '(' expression_commalist ')'     : {functionCall, '$1',                      '$2', '$4'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+identifier_expression_list -> '.' identifier                                                    : [{".", '$2'}].
+identifier_expression_list -> '[' expression ']'                                                : [{"[", '$2'}].
+identifier_expression_list -> '.' identifier     identifier_expression_list                     : [{".", '$2'} | '$3'].
+identifier_expression_list -> '[' expression ']' identifier_expression_list                     : [{"[", '$2'} | '$4'].
+%% ---------------------------------------------------------------------------------------------------------------------
 
 new_expression -> NEW identifier                                                                : {newExpression, '$2'}.
 

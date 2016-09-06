@@ -502,6 +502,7 @@ create_code() ->
             "new " ++ I
         || I <- Identifier
     ]),
+    NewExpression_Length = length(NewExpression),
     insert_table(new_expression, NewExpression),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -517,6 +518,7 @@ create_code() ->
             NumberLiteral ++
             StringLiteral
     ),
+    PrimaryExpression_Length = length(PrimaryExpression),
     insert_table(primary_expression, PrimaryExpression),
     insert_table(expression, PrimaryExpression),
 % ----------------------------------------------------------------------
@@ -567,8 +569,42 @@ create_code() ->
 % -----------------------------------------------------------------
 % FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
 % -----------------------------------------------------------------
-    FunctionCall = sort_list_random(sets:to_list(sets:from_list([
-            lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+    IdentifierExpressionList_Part_1 = sort_list_random(sets:to_list(sets:from_list([
+            case rand:uniform(?PRIME) rem 8 of
+                1 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+                2 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+                3 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+                4 -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
+                    "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
+                    "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]";
+                5 -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
+                    "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]";
+                6 -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]";
+                7 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                    "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
+                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+                _ -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
+                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                    "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]"
+            end ++
+            ")"
+        || _ <- lists:seq(1, ?MAX_FC_IA_MA)
+    ]))),
+    IdentifierExpressionList_Part_1_Length = length(IdentifierExpressionList_Part_1),
+
+    FunctionCall_Part_1 = sort_list_random(sets:to_list(sets:from_list([
+            case rand:uniform(?PRIME) rem 4 of
+                1 -> lists:nth(rand:uniform(NewExpression_Length), NewExpression);
+                2 -> [];
+                _ -> lists:nth(rand:uniform(PrimaryExpression_Length), PrimaryExpression)
+            end ++
+            case rand:uniform(?PRIME) rem 5 of
+                1 -> [];
+                _ -> lists:nth(rand:uniform(IdentifierExpressionList_Part_1_Length), IdentifierExpressionList_Part_1)
+            end ++
             "(" ++
             case rand:uniform(?PRIME) rem 4 of
                 1 -> lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
@@ -585,8 +621,6 @@ create_code() ->
             ")"
         || _ <- lists:seq(1, ?MAX_FC_IA_MA)
     ]))),
-    FunctionCall_Length = length(FunctionCall),
-    insert_table(function_call, FunctionCall),
 % --------------------------------------------
 % IndexAccess = Expression '[' Expression? ']'
 % --------------------------------------------
@@ -619,7 +653,7 @@ create_code() ->
 % ----------------
 % Expression = ...
 % ----------------
-    Expression = sort_list_random(create_code_expression(2, FunctionCall, IndexAccess, MemberAccess, [])),
+    Expression = sort_list_random(create_code_expression(2, FunctionCall_Part_1, IndexAccess, MemberAccess, [])),
     Expression_Length = length(Expression),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1041,15 +1075,11 @@ create_code() ->
 %% Level 10
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% -----------------------------------------------------
-% ExpressionStatement = Expression | VariableDefinition
-% -----------------------------------------------------
+% --------------------------------
+% ExpressionStatement = Expression
+% --------------------------------
     ExpressionStatement = sort_list_random(sets:to_list(sets:from_list([
-        case rand:uniform(?PRIME) rem 2 of
-            1 -> lists:nth(rand:uniform(Expression_Length), Expression);
-            _ ->
-                lists:nth(rand:uniform(VariableDefinition_Length), VariableDefinition)
-        end
+        lists:nth(rand:uniform(Expression_Length), Expression)
         || _ <- lists:seq(1, ?MAX_STATEMENT)
     ]))),
     ExpressionStatement_Length = length(ExpressionStatement),
@@ -1079,7 +1109,7 @@ create_code() ->
 % --------------------------------------------------------------------------------------------
 % Statement = IfStatement | WhileStatement | ForStatement | Block |
 %             ( PlaceholderStatement | Continue | Break | Return |
-%               Throw | SimpleStatement | ExpressionStatement ) ';'
+%               Throw | SimpleStatement ) ';'
 % --------------------------------------------------------------------------------------------
     Statement_Part_1 = sort_list_random(
         [Elem ++ ";" || Elem <- PlaceholderStatement ++ Continue ++ Break ++ Return ++ Throw ++ SimpleStatement]
@@ -1210,6 +1240,71 @@ create_code() ->
 %% Level 17
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% -----------------------------------------------------------------
+% FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
+% -----------------------------------------------------------------
+    IdentifierExpressionList = sort_list_random(sets:to_list(sets:from_list([
+            case rand:uniform(?PRIME) rem 8 of
+                1 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+                2 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+                3 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+                4 -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
+                    "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
+                    "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]";
+                5 -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
+                    "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]";
+                6 -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]";
+                7 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                    "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
+                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+                _ -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
+                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                    "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]"
+            end ++
+            ")"
+        || _ <- lists:seq(1, ?MAX_FC_IA_MA)
+    ]))),
+    IdentifierExpressionList_Length = length(IdentifierExpressionList),
+
+    FunctionCall = sort_list_random(sets:to_list(sets:from_list(
+        FunctionCall_Part_1 ++
+        [
+                case rand:uniform(?PRIME) rem 6 of
+                    1 -> lists:nth(rand:uniform(PrimaryExpression_Length), PrimaryExpression);
+                    2 -> lists:nth(rand:uniform(NewExpression_Length), NewExpression);
+                    3 -> [];
+                    _ -> lists:nth(rand:uniform(TypeName_Length), TypeName)
+                end ++
+                case rand:uniform(?PRIME) rem 5 of
+                    1 -> [];
+                    _ -> lists:nth(rand:uniform(IdentifierExpressionList_Length), IdentifierExpressionList)
+                end ++
+                "(" ++
+                case rand:uniform(?PRIME) rem 4 of
+                    1 -> lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        "," ++
+                        lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        "," ++
+                        lists:nth(rand:uniform(Expression_Length), Expression);
+                    2 -> lists:nth(rand:uniform(Expression_Length), Expression) ++
+                        "," ++
+                        lists:nth(rand:uniform(Expression_Length), Expression);
+                    3 -> lists:nth(rand:uniform(Expression_Length), Expression);
+                    _ -> []
+                end ++
+                ")"
+            || _ <- lists:seq(1, ?MAX_FC_IA_MA)
+        ]))),
+    FunctionCall_Length = length(FunctionCall),
+    insert_table(function_call, FunctionCall),
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 18
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % -----------------------------------------------------------------------------------------------------------------
 % FunctionDefinition = 'function' Identifier? ParameterList
 %                      ( FunctionCall | Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
@@ -1323,7 +1418,7 @@ create_code() ->
     insert_table(modifier_definition, ModifierDefinition),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 18
+%% Level 19
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % ------------------------------------------------------------------------------------------------------------
@@ -1343,7 +1438,7 @@ create_code() ->
     insert_table(contract_part, ContractPart),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 19
+%% Level 20
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % --------------------------------------------------------------------------------
@@ -1391,7 +1486,7 @@ create_code() ->
     insert_table(contract_definition, ContractDefinition),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 20
+%% Level 21
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % ----------------------------------------------------------------------
