@@ -27,6 +27,7 @@
     statement_continue,
     for_statement,
     if_statement,
+    statement,
     statement_place_holder_statement,
     statement_return,
     statement_simple_statement,

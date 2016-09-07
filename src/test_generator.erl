@@ -467,6 +467,15 @@ create_code() ->
         || _ <- lists:seq(1, ?MAX_CONTRACT_DEFINITION)
     ]))),
     insert_table(import_directive, ImportDirective),
+% --------------------------------
+% NewExpression = 'new' Identifier
+% --------------------------------
+    NewExpression = sort_list_random([
+            "new " ++ I
+        || I <- Identifier
+    ]),
+    NewExpression_Length = length(NewExpression),
+    insert_table(new_expression, NewExpression),
 % ----------------------------------------------
 % NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
 % ----------------------------------------------
@@ -495,20 +504,6 @@ create_code() ->
         || _ <- lists:seq(1, ?MAX_NUMBER_LITERAL)
     ]))),
     insert_table(number_literal, NumberLiteral),
-% --------------------------------
-% NewExpression = 'new' Identifier
-% --------------------------------
-    NewExpression = sort_list_random([
-            "new " ++ I
-        || I <- Identifier
-    ]),
-    NewExpression_Length = length(NewExpression),
-    insert_table(new_expression, NewExpression),
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level 3
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 % -------------------------------------------------------------------------------
 % PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
 % --------------------------------------------------------------------------------
@@ -520,7 +515,11 @@ create_code() ->
     ),
     PrimaryExpression_Length = length(PrimaryExpression),
     insert_table(primary_expression, PrimaryExpression),
-    insert_table(expression, PrimaryExpression),
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Level 3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % ----------------------------------------------------------------------
 % EnumDefinition = 'enum' Identifier '{' EnumValue? (',' EnumValue)* '}'
 % ----------------------------------------------------------------------
@@ -570,41 +569,39 @@ create_code() ->
 % FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
 % -----------------------------------------------------------------
     IdentifierExpressionList_Part_1 = sort_list_random(sets:to_list(sets:from_list([
-            case rand:uniform(?PRIME) rem 8 of
-                1 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
-                2 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
-                3 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
-                4 -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
-                    "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
-                    "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]";
-                5 -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
-                    "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]";
-                6 -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]";
-                7 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-                    "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
-                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
-                _ -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
-                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-                    "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]"
-            end ++
-            ")"
+        case rand:uniform(?PRIME) rem 8 of
+            1 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+            2 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+            3 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+            4 -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
+                "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
+                "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]";
+            5 -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
+                "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]";
+            6 -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]";
+            7 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
+                "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+            _ -> "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]" ++
+                "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                "[" ++ lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++ "]"
+        end
         || _ <- lists:seq(1, ?MAX_FC_IA_MA)
     ]))),
     IdentifierExpressionList_Part_1_Length = length(IdentifierExpressionList_Part_1),
 
     FunctionCall_Part_1 = sort_list_random(sets:to_list(sets:from_list([
-            case rand:uniform(?PRIME) rem 4 of
+            case rand:uniform(?PRIME) rem 2 of
                 1 -> lists:nth(rand:uniform(NewExpression_Length), NewExpression);
-                2 -> [];
                 _ -> lists:nth(rand:uniform(PrimaryExpression_Length), PrimaryExpression)
             end ++
-            case rand:uniform(?PRIME) rem 5 of
-                1 -> [];
-                _ -> lists:nth(rand:uniform(IdentifierExpressionList_Part_1_Length), IdentifierExpressionList_Part_1)
-            end ++
+%%            case rand:uniform(?PRIME) rem 5 of
+%%                1 -> [];
+%%                _ -> lists:nth(rand:uniform(IdentifierExpressionList_Part_1_Length), IdentifierExpressionList_Part_1)
+%%            end ++
             "(" ++
             case rand:uniform(?PRIME) rem 4 of
                 1 -> lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
@@ -1244,27 +1241,26 @@ create_code() ->
 % FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
 % -----------------------------------------------------------------
     IdentifierExpressionList = sort_list_random(sets:to_list(sets:from_list([
-            case rand:uniform(?PRIME) rem 8 of
-                1 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
-                2 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
-                3 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
-                4 -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
-                    "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
-                    "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]";
-                5 -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
-                    "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]";
-                6 -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]";
-                7 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-                    "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
-                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
-                _ -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
-                    "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-                    "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]"
-            end ++
-            ")"
+        case rand:uniform(?PRIME) rem 8 of
+            1 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+            2 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+            3 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+            4 -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
+                "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
+                "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]";
+            5 -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
+                "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]";
+            6 -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]";
+            7 -> "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
+                "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier);
+            _ -> "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]" ++
+                "." ++ lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+                "[" ++ lists:nth(rand:uniform(Expression_Length), Expression) ++ "]"
+        end
         || _ <- lists:seq(1, ?MAX_FC_IA_MA)
     ]))),
     IdentifierExpressionList_Length = length(IdentifierExpressionList),
@@ -1272,16 +1268,15 @@ create_code() ->
     FunctionCall = sort_list_random(sets:to_list(sets:from_list(
         FunctionCall_Part_1 ++
         [
-                case rand:uniform(?PRIME) rem 6 of
+                case rand:uniform(?PRIME) rem 3 of
                     1 -> lists:nth(rand:uniform(PrimaryExpression_Length), PrimaryExpression);
                     2 -> lists:nth(rand:uniform(NewExpression_Length), NewExpression);
-                    3 -> [];
                     _ -> lists:nth(rand:uniform(TypeName_Length), TypeName)
                 end ++
-                case rand:uniform(?PRIME) rem 5 of
-                    1 -> [];
-                    _ -> lists:nth(rand:uniform(IdentifierExpressionList_Length), IdentifierExpressionList)
-                end ++
+%%                case rand:uniform(?PRIME) rem 5 of
+%%                    1 -> [];
+%%                    _ -> lists:nth(rand:uniform(IdentifierExpressionList_Length), IdentifierExpressionList)
+%%                end ++
                 "(" ++
                 case rand:uniform(?PRIME) rem 4 of
                     1 -> lists:nth(rand:uniform(Expression_Length), Expression) ++
@@ -1574,47 +1569,47 @@ create_code_expression(Run, FunctionCall, IndexAccess, MemberAccess, PrimaryExpr
     Expression_Prev = case ets:lookup(?CODE_TEMPLATES, expression) of
                           [{_, Expression_Exist}] -> Expression_Exist;
                           _ -> []
-                      end,
+                      end ++
+        FunctionCall ++
+        IndexAccess ++
+        MemberAccess ++
+        PrimaryExpression,
 
     Expression_Prev_Length = length(Expression_Prev),
 
     Expression_Unary = sets:to_list(sets:from_list(
         Expression_Prev ++
-            FunctionCall ++
-            IndexAccess ++
-            MemberAccess ++
-            PrimaryExpression ++
-            [
-                case rand:uniform(?PRIME) rem 11 of
-                    1 -> lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
-                    "-- ";
-                    2 -> lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
-                    "++ ";
-                    3 -> " !" ++
-                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    4 -> " ~" ++
-                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    5 -> "delete " ++
-                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    6 -> " ++" ++
-                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    7 -> " --" ++
-                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    8 -> " +" ++
-                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    9 -> " -" ++
-                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
-                    10 -> "(" ++
-                        lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
-                        ")";
-                    _ -> lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
-                        "?" ++
-                        lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
-                        ":" ++
-                        lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev)
-                end
-                || _ <- lists:seq(1, ?MAX_EXPRESSION * Run div 3)
-            ]
+        [
+            case rand:uniform(?PRIME) rem 11 of
+                1 -> lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
+                "-- ";
+                2 -> lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
+                "++ ";
+                3 -> " !" ++
+                lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
+                4 -> " ~" ++
+                lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
+                5 -> "delete " ++
+                lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
+                6 -> " ++" ++
+                lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
+                7 -> " --" ++
+                lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
+                8 -> " +" ++
+                lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
+                9 -> " -" ++
+                lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
+                10 -> "(" ++
+                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
+                    ")";
+                _ -> lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
+                    "?" ++
+                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev) ++
+                    ":" ++
+                    lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev)
+            end
+            || _ <- lists:seq(1, ?MAX_EXPRESSION * Run div 3)
+        ]
     )),
     Expression_Unary_Length = length(Expression_Unary),
 
