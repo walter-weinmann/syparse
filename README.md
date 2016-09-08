@@ -242,6 +242,14 @@ NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
 
 The ' ' can not be enforced with the parser tools leex and yecc.
 
+### TypeName
+
+```
+TypeName = Identifier
+```
+
+This rule results in a reduce/reduce conflict.
+
 ## 4. Acknowledgement
 
 This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH/sqlparse) project of the company [K2 Informatics GmbH](http://www.k2informatics.ch).

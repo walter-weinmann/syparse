@@ -36,8 +36,6 @@ Nonterminals
  function_definition_visibility
  function_definition_visibility_list
  identifier
- identifier_expression
- identifier_expression_list
  if_statement
  import_directive
  import_identifier
@@ -207,7 +205,6 @@ Endsymbol
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Nonassoc    100 expression_commalist.
-Nonassoc    100 primary_expression.
 
 Right       200 '=' '|=' '^=' '&=' '<<=' '>>='  '+=' '-=' '*=' '/=' '%='.
                                                         %% assignment operators.
@@ -229,9 +226,9 @@ Left        710 '*' '/' '%'.                            %% multiplication, divis
 Left        720 '+' '-'.                                %% addition and subtraction.
 
 Left        800 '++' '--'.                              %% increment and decrement.
-Left        810 '(' ')'.                                %% function-like call.
-Left        820 '[' ']'.                                %% array subscripting.
-Left        830 '.'.                                    %% member access.
+Nonassoc    810 '(' ')'.                                %% function-like call.
+Nonassoc    820 '[' ']'.                                %% array subscripting.
+Nonassoc    830 '.'.                                    %% member access.
 Left        850 unary.                                  %% unary plus and minus.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -240,8 +237,8 @@ Left        850 unary.                                  %% unary plus and minus.
 
 source_unit -> contract_definition_import_pragma_directive_list                                       : {sourceUnit, '$1'}.
 
-source_unit -> expression                                                                       : '$1'.
-source_unit -> statement                                                                        : '$1'.
+% wwe source_unit -> expression                                                                       : '$1'.
+% wwe source_unit -> statement                                                                        : '$1'.
 % wwe source_unit -> contract_part                                                                    : '$1'.
 
 %% =====================================================================================================================
@@ -435,7 +432,13 @@ parameter -> type_name identifier                                               
 variable_declaration -> type_name identifier                                                    : {variableDeclaration, '$1', '$2'}.
 
 type_name -> elementary_type_name                                                               : {typeName, '$1', []}.
-type_name -> identifier                                                                         : {typeName, '$1', []}.
+
+%% =====================================================================================================================
+%% Helper definitions - reduce/reduce conflict.
+%% ---------------------------------------------------------------------------------------------------------------------
+% wwe type_name -> identifier                                                                         : {typeName, '$1', []}.
+%% ---------------------------------------------------------------------------------------------------------------------
+
 type_name -> identifier           storage_location                                              : {typeName, '$1', '$2'}.
 type_name -> mapping                                                                            : {typeName, '$1', []}.
 type_name -> array_type_name                                                                    : {typeName, '$1', []}.
@@ -598,28 +601,8 @@ primary_expression -> number_literal                                            
 primary_expression -> string_literal                                                            : {primaryExpression, '$1'}.
 primary_expression -> new_expression                                                            : {primaryExpression, '$1'}.
 
-function_call -> primary_expression                            '('                      ')'     : {functionCall, '$1', [],   []}.
-function_call -> primary_expression                            '(' expression_commalist ')'     : {functionCall, '$1', [],   '$3'}.
-function_call -> new_expression                                '('                      ')'     : {functionCall, '$1', [],   []}.
-function_call -> new_expression                                '(' expression_commalist ')'     : {functionCall, '$1', [],   '$3'}.
-function_call -> type_name                                     '('                      ')'     : {functionCall, '$1', [],   []}.
-function_call -> type_name                                     '(' expression_commalist ')'     : {functionCall, '$1', [],   '$3'}.
-function_call -> primary_expression identifier_expression_list '('                      ')'     : {functionCall, '$1', '$2', []}.
-function_call -> primary_expression identifier_expression_list '(' expression_commalist ')'     : {functionCall, '$1', '$2', '$3'}.
-function_call -> new_expression     identifier_expression_list '('                      ')'     : {functionCall, '$1', '$2', []}.
-function_call -> new_expression     identifier_expression_list '(' expression_commalist ')'     : {functionCall, '$1', '$2', '$3'}.
-function_call -> type_name          identifier_expression_list '('                      ')'     : {functionCall, '$1', '$2', []}.
-function_call -> type_name          identifier_expression_list '(' expression_commalist ')'     : {functionCall, '$1', '$2', '$3'}.
-
-%% =====================================================================================================================
-%% Helper definitions.
-%% ---------------------------------------------------------------------------------------------------------------------
-identifier_expression_list -> identifier_expression                                             : ['$1'].
-identifier_expression_list -> identifier_expression identifier_expression_list                  : ['$1' | '$2'].
-
-identifier_expression -> '.' identifier                                                         : '$2'.
-% identifier_expression -> '[' expression ']'                                                     : '$2'.
-%% ---------------------------------------------------------------------------------------------------------------------
+function_call -> identifier '('                      ')'                                        : {functionCall, '$1', []}.
+function_call -> identifier '(' expression_commalist ')'                                        : {functionCall, '$1', '$3'}.
 
 new_expression -> NEW identifier                                                                : {newExpression, '$2'}.
 
