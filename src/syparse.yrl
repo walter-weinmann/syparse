@@ -601,8 +601,12 @@ primary_expression -> number_literal                                            
 primary_expression -> string_literal                                                            : {primaryExpression, '$1'}.
 primary_expression -> new_expression                                                            : {primaryExpression, '$1'}.
 
-function_call -> identifier '('                      ')'                                        : {functionCall, '$1', []}.
-function_call -> identifier '(' expression_commalist ')'                                        : {functionCall, '$1', '$3'}.
+function_call -> primary_expression                            '('                      ')'     : {functionCall, '$1', [],   []}.
+function_call -> primary_expression                            '(' expression_commalist ')'     : {functionCall, '$1', [],   '$3'}.
+function_call -> new_expression                                '('                      ')'     : {functionCall, '$1', [],   []}.
+function_call -> new_expression                                '(' expression_commalist ')'     : {functionCall, '$1', [],   '$3'}.
+function_call -> type_name                                     '('                      ')'     : {functionCall, '$1', [],   []}.
+function_call -> type_name                                     '(' expression_commalist ')'     : {functionCall, '$1', [],   '$3'}.
 
 new_expression -> NEW identifier                                                                : {newExpression, '$2'}.
 

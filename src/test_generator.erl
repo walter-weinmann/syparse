@@ -598,10 +598,10 @@ create_code() ->
                 1 -> lists:nth(rand:uniform(NewExpression_Length), NewExpression);
                 _ -> lists:nth(rand:uniform(PrimaryExpression_Length), PrimaryExpression)
             end ++
-            case rand:uniform(?PRIME) rem 5 of
-                1 -> [];
-                _ -> lists:nth(rand:uniform(IdentifierExpressionList_Part_1_Length), IdentifierExpressionList_Part_1)
-            end ++
+%%            case rand:uniform(?PRIME) rem 5 of
+%%                1 -> [];
+%%                _ -> lists:nth(rand:uniform(IdentifierExpressionList_Part_1_Length), IdentifierExpressionList_Part_1)
+%%            end ++
             "(" ++
             case rand:uniform(?PRIME) rem 4 of
                 1 -> lists:nth(rand:uniform(Expression_Part_1_Length), Expression_Part_1) ++
@@ -1274,10 +1274,10 @@ create_code() ->
                     2 -> lists:nth(rand:uniform(NewExpression_Length), NewExpression);
                     _ -> lists:nth(rand:uniform(TypeName_Length), TypeName)
                 end ++
-                case rand:uniform(?PRIME) rem 5 of
-                    1 -> [];
-                    _ -> lists:nth(rand:uniform(IdentifierExpressionList_Length), IdentifierExpressionList)
-                end ++
+%%                case rand:uniform(?PRIME) rem 5 of
+%%                    1 -> [];
+%%                    _ -> lists:nth(rand:uniform(IdentifierExpressionList_Length), IdentifierExpressionList)
+%%                end ++
                 "(" ++
                 case rand:uniform(?PRIME) rem 4 of
                     1 -> lists:nth(rand:uniform(Expression_Length), Expression) ++
@@ -1426,8 +1426,7 @@ create_code() ->
             UsingForDeclaration ++
             StructDefinition ++
             ModifierDefinition ++
-            % wwe ???
-            % FunctionDefinition ++
+            FunctionDefinition ++
             EventDefinition ++
             EnumDefinition
     ),
@@ -1572,8 +1571,7 @@ create_code_expression(Run, FunctionCall, IndexAccess, MemberAccess, PrimaryExpr
                           [{_, Expression_Exist}] -> Expression_Exist;
                           _ -> []
                       end ++
-        % wwe ???
-        % FunctionCall ++
+        FunctionCall ++
         IndexAccess ++
         MemberAccess ++
         PrimaryExpression,
