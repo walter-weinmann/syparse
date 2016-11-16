@@ -234,6 +234,14 @@ The documentation for **syparse** is available here: [Wiki](https://github.com/w
 
 ## 3. Known issues
 
+### Expression
+
+```
+Expression = Expression ',' Expression
+```
+
+This rule results in a reduce/reduce conflict with `InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?`, for example.
+
 ### NumberLiteral
 
 ```
@@ -248,7 +256,7 @@ The ' ' can not be enforced with the parser tools leex and yecc.
 TypeName = Identifier
 ```
 
-This rule results in a reduce/reduce conflict.
+This rule results in a reduce/reduce conflict with `PrimaryExpression = Identifier`, for Example.
 
 ## 4. Acknowledgement
 
@@ -270,6 +278,14 @@ Release Date: 11.09.2016 - Grammar as of 06.09.2016
 
 #### Grammar changes
 
+- **DoWhileStatement**
+
+```
+New: DoWhileStatement = 'do' Statement 'while' '(' Expression ')' ';'
+
+Old: n/a
+```
+
 - **ExpressionStatement**
 
 ```
@@ -286,12 +302,28 @@ New: FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Ide
 Old: FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
 ```
 
+- **HexLiteral**
+
+```
+New: HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
+
+Old: n/a
+```
+
+- **PrimaryExpression**
+
+```
+New: PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | HexLiteral | StringLiteral
+
+Old: PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
+```
+
 - **Statement**
 
 ```
-New: Statement = Statement = IfStatement | WhileStatement | ForStatement | Block |
-                             ( PlaceholderStatement | Continue | Break | Return |
-                               Throw | SimpleStatement ) ';'
+New: Statement = IfStatement | WhileStatement | DoWhileStatement | ForStatement | Block |
+                 ( PlaceholderStatement | Continue | Break | Return |
+                   Throw | SimpleStatement ) ';'
 
 Old: Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement |
                  ( Continue | Break | Return | Throw | SimpleStatement | ExpressionStatement ) ';'
@@ -299,7 +331,8 @@ Old: Statement = IfStatement | WhileStatement | ForStatement | Block | Placehold
 
 #### New features
 
-1. Additional test data based on Solidity documentation.
+1. Support of rebar3.
+2. Additional test data based on Solidity documentation.
 
 ### Version 1.0.0
 

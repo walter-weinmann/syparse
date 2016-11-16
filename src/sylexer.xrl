@@ -23,6 +23,10 @@ Rules.
 (([iI][nN][tT])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : {token, {'INT', TokenLine, TokenChars}}.
 
+%% hex literals
+(hex(\"([0-9a-fA-F])*\"))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
+(hex(\'([0-9a-fA-F])*\'))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
+
 %% number literals
 ((0x)?[0-9]+)                                             : {token, {'NUMBER_LITERAL', TokenLine, TokenChars}}.
 
@@ -39,10 +43,10 @@ Rules.
 
 %% punctuation
 (,|{|}|\(|\)|;|_|=>|\[|\]|\.)                             : {token, {list_to_atom(TokenChars), TokenLine}}.
-(=|\|=|\^=|&=|<<=|>>=|>>>=|\+=|-=|\*=|/=|%=)              : {token, {list_to_atom(TokenChars), TokenLine}}.
+(=|\|=|\^=|&=|<<=|>>=|\+=|-=|\*=|/=|%=)                   : {token, {list_to_atom(TokenChars), TokenLine}}.
 (!|~|\+\+|--)                                             : {token, {list_to_atom(TokenChars), TokenLine}}.
 (\*\*|\*|/|%)                                             : {token, {list_to_atom(TokenChars), TokenLine}}.
-(\||\^|&|<<|>>|>>>)                                       : {token, {list_to_atom(TokenChars), TokenLine}}.
+(\||\^|&|<<|>>)                                           : {token, {list_to_atom(TokenChars), TokenLine}}.
 (\+|-)                                                    : {token, {list_to_atom(TokenChars), TokenLine}}.
 (<=|>=|<|>)                                               : {token, {list_to_atom(TokenChars), TokenLine}}.
 (==|!=)                                                   : {token, {list_to_atom(TokenChars), TokenLine}}.
@@ -66,6 +70,7 @@ Erlang code.
     {"^(?i)(CONTRACT)$",         'CONTRACT'},
     {"^(?i)(DAYS)$",             'DAYS'},
     {"^(?i)(DELETE)$",           'DELETE'},
+    {"^(?i)(DO)$",               'DO'},
     {"^(?i)(ELSE)$",             'ELSE'},
     {"^(?i)(ENUM)$",             'ENUM'},
     {"^(?i)(ETHER)$",            'ETHER'},
@@ -121,9 +126,9 @@ reserved_keywords() -> [T || {_, T} <- ?TOKEN_PATTERNS].
 
 match_any(TokenChars, TokenLen, _TokenLine, []) ->
     {token, {'IDENTIFIER', TokenLen, TokenChars}};
-match_any(TokenChars, TokenLen, TokenLine, [{P,T}|TPs]) ->
+match_any(TokenChars, TokenLen, TokenLine, [{P, T} | TPs]) ->
     case re:run(TokenChars, P, [{capture, first, list}]) of
-        {match,[_]} ->
+        {match, [_]} ->
             {token, {T, TokenLine}};
         nomatch ->
             match_any(TokenChars, TokenLen, TokenLine, TPs)
@@ -149,38 +154,43 @@ match_bytes(TokenChars, TokenLen) ->
 
 match_fixed(TokenChars, TokenLen) ->
     TokenCharsLower = string:to_lower(TokenChars),
-    case TokenLen > 7 of
-        true ->
-            Pos7 = string:substr(TokenCharsLower, 7, 1);
-        _ ->
-            Pos7 = []
-    end,
-    case TokenLen > 8 of
-        true ->
-            Pos8 = string:substr(TokenCharsLower, 8, 1);
-        _ ->
-            Pos8 = []
-    end,
-    case TokenLen > 9 of
-        true ->
-            Pos9 = string:substr(TokenCharsLower, 9, 1);
-        _ ->
-            Pos9 = []
-    end,
-    case {Pos7, Pos8, Pos9} of
-        {"x", _, _} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 1)),
-            {Size2, _} = string:to_integer(string:substr(TokenChars, 8));
-        {_, "x", _} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 2)),
-            {Size2, _} = string:to_integer(string:substr(TokenChars, 9));
-        {_, _, "x"} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 6, 3)),
-            {Size2, _} = string:to_integer(string:substr(TokenChars, 10));
-        _ ->
-            Size1 = 0,
-            Size2 = 0
-    end,
+    Pos7 = case TokenLen > 7 of
+               true ->
+                   string:substr(TokenCharsLower, 7, 1);
+               _ ->
+                   []
+           end,
+    Pos8 = case TokenLen > 8 of
+               true ->
+                   string:substr(TokenCharsLower, 8, 1);
+               _ ->
+                   []
+           end,
+    Pos9 = case TokenLen > 9 of
+               true ->
+                   string:substr(TokenCharsLower, 9, 1);
+               _ ->
+                   []
+           end,
+    {{Size1, _}, {Size2, _}} = case {Pos7, Pos8, Pos9} of
+                                   {"x", _, _} ->
+                                       {
+                                           string:to_integer(string:substr(TokenChars, 6, 1)),
+                                           string:to_integer(string:substr(TokenChars, 8))
+                                       };
+                                   {_, "x", _} ->
+                                       {
+                                           string:to_integer(string:substr(TokenChars, 6, 2)),
+                                           string:to_integer(string:substr(TokenChars, 9))
+                                       };
+                                   {_, _, "x"} ->
+                                       {
+                                           string:to_integer(string:substr(TokenChars, 6, 3)),
+                                           string:to_integer(string:substr(TokenChars, 10))
+                                       };
+                                   _ ->
+                                       {{0, []}, {0, []}}
+                               end,
     case 256 - Size1 - Size2 >= 0 of
         true ->
             {token, {'FIXED', TokenLen, TokenCharsLower}};
@@ -190,38 +200,43 @@ match_fixed(TokenChars, TokenLen) ->
 
 match_ufixed(TokenChars, TokenLen) ->
     TokenCharsLower = string:to_lower(TokenChars),
-    case TokenLen > 8 of
-        true ->
-            Pos8 = string:substr(TokenCharsLower, 8, 1);
-        _ ->
-            Pos8 = []
-    end,
-    case TokenLen > 9 of
-        true ->
-            Pos9 = string:substr(TokenCharsLower, 9, 1);
-        _ ->
-            Pos9 = []
-    end,
-    case TokenLen > 10 of
-        true ->
-            Pos10 = string:substr(TokenCharsLower, 10, 1);
-        _ ->
-            Pos10 = []
-    end,
-    case {Pos8, Pos9, Pos10} of
-        {"x", _, _} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 1)),
-            {Size2, _} = string:to_integer(string:substr(TokenChars, 9));
-        {_, "x", _} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 2)),
-            {Size2, _} = string:to_integer(string:substr(TokenChars, 10));
-        {_, _, "x"} ->
-            {Size1, _} = string:to_integer(string:substr(TokenChars, 7, 3)),
-            {Size2, _} = string:to_integer(string:substr(TokenChars, 11));
-        _ ->
-            Size1 = 0,
-            Size2 = 0
-    end,
+    Pos8 = case TokenLen > 8 of
+               true ->
+                   string:substr(TokenCharsLower, 8, 1);
+               _ ->
+                   []
+           end,
+    Pos9 = case TokenLen > 9 of
+               true ->
+                   string:substr(TokenCharsLower, 9, 1);
+               _ ->
+                   []
+           end,
+    Pos10 = case TokenLen > 10 of
+                true ->
+                    string:substr(TokenCharsLower, 10, 1);
+                _ ->
+                    []
+            end,
+    {{Size1, _}, {Size2, _}} = case {Pos8, Pos9, Pos10} of
+                                   {"x", _, _} ->
+                                       {
+                                           string:to_integer(string:substr(TokenChars, 7, 1)),
+                                           string:to_integer(string:substr(TokenChars, 9))
+                                       };
+                                   {_, "x", _} ->
+                                       {
+                                           string:to_integer(string:substr(TokenChars, 7, 2)),
+                                           string:to_integer(string:substr(TokenChars, 10))
+                                       };
+                                   {_, _, "x"} ->
+                                       {
+                                           string:to_integer(string:substr(TokenChars, 7, 3)),
+                                           string:to_integer(string:substr(TokenChars, 11))
+                                       };
+                                   _ ->
+                                       {{0, []}, {0, []}}
+                               end,
     case 256 - Size1 - Size2 >= 0 of
         true ->
             {token, {'UFIXED', TokenLen, TokenCharsLower}};

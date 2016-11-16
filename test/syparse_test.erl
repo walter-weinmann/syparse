@@ -24,7 +24,7 @@ sourceunit_test_() ->
            end,
     io:format(user, "File = ~s, Logs = ~p~n", [WCard, Logs]),
     {ok, Cwd} = file:get_cwd(),
-    [_ | RootPath] = lists:reverse(filename:split(Cwd)),
+    RootPath = lists:reverse(filename:split(Cwd)),
     TestDir = filename:join(lists:reverse(["test" | RootPath])),
     TestFiles = lists:sort([filename:join(TestDir, T)
         || T <- filelib:wildcard(WCard, TestDir)]),
@@ -76,7 +76,7 @@ tests_gen(TestGroup, Tests, Opts, Logs) ->
     tests_gen(TestGroup, Tests, Logs, SelTests, []).
 
 tests_gen(_TestGroup, [], _Logs, _SelTests, Acc) ->
-    {inparallel, lists:reverse(Acc)};
+    {inorder, lists:reverse(Acc)};
 tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
     case lists:member(I, SelTests) of
         true ->
