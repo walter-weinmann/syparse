@@ -256,7 +256,7 @@ The ' ' can not be enforced with the parser tools leex and yecc.
 TypeName = Identifier
 ```
 
-This rule results in a reduce/reduce conflict with `PrimaryExpression = Identifier`, for Example.
+This rule results in a reduce/reduce conflict with `PrimaryExpression = Identifier`, for example.
 
 ## 4. Acknowledgement
 
