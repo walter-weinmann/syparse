@@ -24,7 +24,7 @@ sourceunit_test_() ->
            end,
     io:format(user, "File = ~s, Logs = ~p~n", [WCard, Logs]),
     {ok, Cwd} = file:get_cwd(),
-    [_ | RootPath] = lists:reverse(filename:split(Cwd)),
+    RootPath = lists:reverse(filename:split(Cwd)),
     TestDir = filename:join(lists:reverse(["test" | RootPath])),
     TestFiles = lists:sort([filename:join(TestDir, T)
         || T <- filelib:wildcard(WCard, TestDir)]),
@@ -76,7 +76,7 @@ tests_gen(TestGroup, Tests, Opts, Logs) ->
     tests_gen(TestGroup, Tests, Logs, SelTests, []).
 
 tests_gen(_TestGroup, [], _Logs, _SelTests, Acc) ->
-    {inparallel, lists:reverse(Acc)};
+    {inorder, lists:reverse(Acc)};
 tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
     case lists:member(I, SelTests) of
         true ->
@@ -115,17 +115,17 @@ tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
 
 test_sourceunit(TestGroup, Test, Logs) ->
     ?D1("~n ~s", [Test]),
-    %?debugFmt("~n", []),
-    %?debugFmt("wwe debugging test_sourceunit/3 ===> ~n Test: ~p~n", [Test]),
+    % ?debugFmt("~n", []),
+    % ?debugFmt("wwe debugging test_sourceunit ===> ~n Test: ~p~n", [Test]),
     case syparse:parsetree_with_tokens(Test) of
         {ok, {ParseTree, Tokens}} ->
-            %?debugFmt("wwe debugging test_sourceunit/3 ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
+            % ?debugFmt("wwe debugging test_sourceunit ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
             ?D2("~n~p", [ParseTree]),
             NSourceunit = case syparse:parsetree_to_string_td(ParseTree) of
                               {error, Error} ->
                                   throw({error, Error});
                               NS ->
-                                  %?debugFmt("wwe debugging test_sourceunit/3 ===> ~n NS: ~p~n", [NS]),
+                                  % ?debugFmt("wwe debugging test_sourceunit ===> ~n NS: ~p~n", [NS]),
                                   NS
                           end,
             ?D3("~n ~ts~n", [NSourceunit]),

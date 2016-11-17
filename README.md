@@ -234,35 +234,29 @@ The documentation for **syparse** is available here: [Wiki](https://github.com/w
 
 ## 3. Known issues
 
-### SinmpleStatement
+### Expression
 
 ```
-SimpleStatement = VariableDefinition | ExpressionStatement
+Expression = Expression ',' Expression
 ```
 
-is reduced to
+This rule results in a reduce/reduce conflict with `InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?`, for example.
+
+### NumberLiteral
 
 ```
-SimpleStatement =  ExpressionStatement
+NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
 ```
 
-to avoid redundancy.
+The ' ' can not be enforced with the parser tools leex and yecc.
 
-### Statement
-
-```
-Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement |
-            ( Continue | Break | Return | Throw | SimpleStatement | ExpressionStatement ) ';'
-```
-
-is reduced to
+### TypeName
 
 ```
-Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement |
-            ( Continue | Break | Return | Throw | SimpleStatement ) ';'
+TypeName = Identifier
 ```
 
-to avoid redundancy.
+This rule results in a reduce/reduce conflict with `PrimaryExpression = Identifier`, for Example.
 
 ## 4. Acknowledgement
 
@@ -277,6 +271,76 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 5. Create new Pull Request
 
 ## 6. Release Notes
+
+### Version 1.0.1
+
+Release Date: 17.11.2016 - Grammar as of 15.11.2016
+
+#### Grammar changes
+
+- **DoWhileStatement**
+
+```
+New: DoWhileStatement = 'do' Statement 'while' '(' Expression ')' ';'
+
+Old: n/a
+```
+
+- **Expression**
+
+```
+New: | Expression ('<<' | '>>')
+
+Old: | Expression ('<<' | '>>' | '>>>')
+```
+
+- **ExpressionStatement**
+
+```
+New: ExpressionStatement = Expression
+
+Old: ExpressionStatement = Expression | VariableDefinition
+```
+
+- **FunctionCall**
+
+```
+New: FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' Expression? ( ',' Expression )* ')'
+
+Old: FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
+```
+
+- **HexLiteral**
+
+```
+New: HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
+
+Old: n/a
+```
+
+- **PrimaryExpression**
+
+```
+New: PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | HexLiteral | StringLiteral
+
+Old: PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
+```
+
+- **Statement**
+
+```
+New: Statement = IfStatement | WhileStatement | DoWhileStatement | ForStatement | Block |
+                 ( PlaceholderStatement | Continue | Break | Return |
+                   Throw | SimpleStatement ) ';'
+
+Old: Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement |
+                 ( Continue | Break | Return | Throw | SimpleStatement | ExpressionStatement ) ';'
+```
+
+#### New features
+
+1. Support of rebar3.
+2. Additional test data based on Solidity documentation.
 
 ### Version 1.0.0
 

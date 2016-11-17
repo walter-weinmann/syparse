@@ -41,15 +41,17 @@ ArrayTypeName = TypeName StorageLocation? '[' Expression? ']'
 StorageLocation = 'memory' | 'storage'
 
 Block = '{' Statement* '}'
-Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement |
-            ( Continue | Break | Return | Throw | SimpleStatement | ExpressionStatement ) ';'
+Statement = IfStatement | WhileStatement | ForStatement | Block |
+            ( DoWhileStatement | PlaceholderStatement | Continue | Break | Return |
+              Throw | SimpleStatement ) ';'
 
-ExpressionStatement = Expression | VariableDefinition
+ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 WhileStatement = 'while' '(' Expression ')' Statement
 PlaceholderStatement = '_'
 SimpleStatement = VariableDefinition | ExpressionStatement
 ForStatement = 'for' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
+DoWhileStatement = 'do' Statement 'while' '(' Expression ')'
 Continue = 'continue'
 Break = 'break'
 Return = 'return' Expression?
@@ -63,7 +65,7 @@ Expression =
   | Expression '**' Expression
   | Expression ('*' | '/' | '%') Expression
   | Expression ('+' | '-') Expression
-  | Expression ('<<' | '>>' | '>>>')
+  | Expression ('<<' | '>>')
   | Expression '&' Expression
   | Expression '^' Expression
   | Expression '|' Expression
@@ -76,9 +78,9 @@ Expression =
   | Expression? (',' Expression)
   | PrimaryExpression
 
-PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
+PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | HexLiteral | StringLiteral
 
-FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
+FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
@@ -87,8 +89,8 @@ BooleanLiteral = 'true' | 'false'
 NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
 NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
            | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
+HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
 StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
-
 Identifier = [a-zA-Z_] [a-zA-Z_0-9]*
 
 ElementaryTypeName = 'address' | 'bool' | 'string' | 'var'
