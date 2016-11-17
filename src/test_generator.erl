@@ -1292,12 +1292,11 @@ create_code() ->
             lists:nth(rand:uniform(Expression_Length), Expression) ++
             ")" ++
             lists:nth(rand:uniform(Statement_Part_1_Length), Statement_Part_1) ++
-            []
-%%            case rand:uniform(?PRIME) rem 4 of
-%%                1 -> [];
-%%                _ -> " else " ++
-%%                lists:nth(rand:uniform(Statement_Part_1_Length), Statement_Part_1)
-%%            end
+            case rand:uniform(?PRIME) rem 4 of
+                1 -> [];
+                _ -> " else " ++
+                lists:nth(rand:uniform(Statement_Part_1_Length), Statement_Part_1)
+            end
         || _ <- lists:seq(1, ?MAX_STATEMENT)
     ]))),
     insert_table(if_statement, IfStatement),

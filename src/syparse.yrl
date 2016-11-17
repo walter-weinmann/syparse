@@ -18,6 +18,7 @@ Nonterminals
  contract_part_list
  do_while_statement
  elementary_type_name
+ else_opt
  enum_definition
  enum_value
  enum_value_commalist
@@ -328,6 +329,13 @@ inheritance_specifier -> identifier '(' expression_commalist ')'                
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
 expression_commalist -> expression                                                              : ['$1'].
+%% =====================================================================================================================
+%% reduce/reduce conflict
+%%
+% expression_commalist -> expression ',' expression_commalist                                     : ['$1' | '$3'].
+% expression -> expression ',' expression                                                         : {expression, '$1', "," ,  '$3'}.
+%%
+%% =====================================================================================================================
 expression_commalist -> expression ',' expression_commalist                                     : ['$1' | '$3'].
 % ---------------------------------------------------------------------------------------------------------------------
 
@@ -493,8 +501,14 @@ statement -> simple_statement       ';'                                         
 
 expression_statement -> expression                                                              : {expressionStatement, '$1'}.
 
-if_statement -> IF '(' expression ')' statement                                                 : {ifStatement, '$3', '$5', []}.
-if_statement -> IF '(' expression ')' statement ELSE statement                                  : {ifStatement, '$3', '$5', '$7'}.
+if_statement -> IF '(' expression ')' statement else_opt                                        : {ifStatement, '$3', '$5', '$6'}.
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+else_opt -> '$empty'                                                                            : [].
+else_opt -> ELSE statement                                                                      : '$2'.
+%% =====================================================================================================================
 
 while_statement -> WHILE '(' expression ')' statement                                           : {whileStatement, '$3', '$5'}.
 

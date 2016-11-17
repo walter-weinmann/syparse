@@ -274,7 +274,7 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 
 ### Version 1.0.1
 
-Release Date: 11.09.2016 - Grammar as of 06.09.2016
+Release Date: 17.11.2016 - Grammar as of 15.11.2016
 
 #### Grammar changes
 
@@ -284,6 +284,14 @@ Release Date: 11.09.2016 - Grammar as of 06.09.2016
 New: DoWhileStatement = 'do' Statement 'while' '(' Expression ')' ';'
 
 Old: n/a
+```
+
+- **Expression**
+
+```
+New: | Expression ('<<' | '>>')
+
+Old: | Expression ('<<' | '>>' | '>>>')
 ```
 
 - **ExpressionStatement**
