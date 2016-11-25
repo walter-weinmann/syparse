@@ -36,6 +36,7 @@ group_gen(TestFiles, Logs) ->
             case TestFiles of
                 [] -> [];
                 [TestFile | RestTestFiles] ->
+                    % ?debugFmt("wwe debugging group_gen ===> ~n TestFile: ~p~n RestTestFiles: ~p~n", [TestFile, RestTestFiles]),
                     {ok, [Opts | Tests]} = file:consult(TestFile),
                     {ok, TestFileBin} = file:read_file(TestFile),
                     TestLines = [begin

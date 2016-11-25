@@ -784,13 +784,11 @@ create_code() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % ----------------------------------------------------
-% PragmaDirective = 'pragma' Identifier Expression ';'
+% PragmaDirective = 'pragma' Expression (anything) ';'
 % ----------------------------------------------------
     PragmaDirective = sort_list_random(sets:to_list(sets:from_list([
             "pragma " ++
-            lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-            " " ++
-            lists:nth(rand:uniform(Expression_Length), Expression) ++
+            string:strip(lists:nth(rand:uniform(Expression_Length), Expression), left) ++
             ";"
         || _ <- lists:seq(1, ?MAX_CONTRACT_DEFINITION)
     ]))),
@@ -1733,7 +1731,7 @@ create_code_expression(Run, FunctionCall, IndexAccess, MemberAccess, PrimaryExpr
                 4 -> " ~" ++
                 lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
                 5 -> "delete " ++
-                lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
+                string:strip(lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev), left);
                 6 -> " ++" ++
                 lists:nth(rand:uniform(Expression_Prev_Length), Expression_Prev);
                 7 -> " --" ++
@@ -1760,24 +1758,24 @@ create_code_expression(Run, FunctionCall, IndexAccess, MemberAccess, PrimaryExpr
         Expression_Unary ++
         [
             case rand:uniform(?PRIME) rem 32 of
-                1 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++
+                1 -> string:strip(lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary), right) ++
                     " ** " ++
-                    lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary);
-                2 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++
+                    string:strip(lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary), left);
+                2 -> string:strip(lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary), right) ++
                     " * " ++
-                    lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary);
+                    string:strip(lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary), left);
                 3 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++
                     "/" ++
                     lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary);
                 4 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++
                     "%" ++
                     lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary);
-                5 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++
+                5 -> string:strip(lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary), right) ++
                     " + " ++
-                    lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary);
-                6 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++
+                    string:strip(lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary), left);
+                6 -> string:strip(lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary), right) ++
                     " - " ++
-                    lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary);
+                    string:strip(lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary), left);
                 7 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++ "<< ";
                 8 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++ ">> ";
                 9 -> lists:nth(rand:uniform(Expression_Unary_Length), Expression_Unary) ++

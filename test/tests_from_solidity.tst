@@ -9,7 +9,7 @@
 %%
 
 % ================================================================================
-% document : common-patterns.rst
+% document : Common Patterns
 % case     : Restricting Access
 "
             pragma solidity ^0.4.0;
@@ -86,9 +86,10 @@
                     // refund overpaid fees
                 }
             }
+        
 ".
 % ================================================================================
-% document : common-patterns.rst
+% document : Common Patterns
 % case     : State Machine
 "
             pragma solidity ^0.4.0;
@@ -173,11 +174,11 @@
                 {
                 }
             }
+        
 ".
-
 % ================================================================================
-% document : common-patterns.rst
-% case     : Withdrawal from Contracts (1)
+% document : Common Patterns
+% case     : Withdrawal from Contracts 1
 "
             pragma solidity ^0.4.0;
 
@@ -216,11 +217,11 @@
                     }
                 }
             }
+        
 ".
-
 % ================================================================================
-% document : common-patterns.rst
-% case     : Withdrawal from Contracts (2)
+% document : Common Patterns
+% case     : Withdrawal from Contracts 2
 "
             pragma solidity ^0.4.0;
 
@@ -249,59 +250,5 @@
                     }
                 }
             }
-".
-
-% ================================================================================
-% document : introduction-to-smart-contracts.rst
-% case     : Storage
-"
-            pragma solidity ^0.4.0;
-
-            contract SimpleStorage {
-                uint storedData;
-
-                function set(uint x) {
-                    storedData = x;
-                }
-
-                function get() constant returns (uint) {
-                    return storedData;
-                }
-            }
-".
-
-% ================================================================================
-% document : introduction-to-smart-contracts.rst
-% case     : Subcurrency Example
-"
-            pragma solidity ^0.4.0;
-
-            contract Coin {
-                // The keyword \"public\" makes those variables
-                // readable from outside.
-                address public minter;
-                mapping (address => uint) public balances;
-
-                // Events allow light clients to react on
-                // changes efficiently.
-                event Sent(address from, address to, uint amount);
-
-                // This is the constructor whose code is
-                // run only when the contract is created.
-                function Coin() {
-                    minter = msg.sender;
-                }
-
-                function mint(address receiver, uint amount) {
-                    if (msg.sender != minter) return;
-                    balances[receiver] += amount;
-                }
-
-                function send(address receiver, uint amount) {
-                    if (balances[msg.sender] < amount) return;
-                    balances[msg.sender] -= amount;
-                    balances[receiver] += amount;
-                    Sent(msg.sender, receiver, amount);
-                }
-            }
+        
 ".

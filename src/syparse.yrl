@@ -121,7 +121,7 @@ Terminals
  MODIFIER
  NEW
  NUMBER_LITERAL
- PRAGMA
+ PRAGMA_DIRECTIVE
  PRIVATE
  PUBLIC
  RETURN
@@ -267,7 +267,7 @@ contract_definition_import_pragma_directive_list -> contract_definition_import_p
                                                                                                 : '$1' ++ ['$2'].
 %% =====================================================================================================================
 
-pragma_directive -> PRAGMA identifier expression ';'                                            : {pragmaDirective, '$2', '$3'}.
+pragma_directive -> PRAGMA_DIRECTIVE                                                            : {pragmaDirective, unwrap('$1')}.
 
 import_directive -> IMPORT STRING_LITERAL                                          ';'          : {importDirective, unwrap('$2'), [],   []}.
 import_directive -> IMPORT STRING_LITERAL AS identifier                            ';'          : {importDirective, unwrap('$2'), '$4', []}.

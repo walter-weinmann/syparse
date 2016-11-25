@@ -626,6 +626,8 @@
     {"Common Patterns",
         "Restricting Access",
         "
+            pragma solidity ^0.4.0;
+
             contract AccessRestriction {
                 // These will be assigned at the construction
                 // phase, where `msg.sender` is the account
@@ -643,10 +645,10 @@
                 {
                     if (msg.sender != _account)
                         throw;
-                    // Do not forget the \"_\"! It will
+                    // Do not forget the \"_;\"! It will
                     // be replaced by the actual function
-                    // body when the modifier is invoked.
-                    _
+                    // body when the modifier is used.
+                    _;
                 }
 
                 /// Make `_newOwner` the new owner of this
@@ -659,7 +661,7 @@
 
                 modifier onlyAfter(uint _time) {
                     if (now < _time) throw;
-                    _
+                    _;
                 }
 
                 /// Erase ownership information.
@@ -676,13 +678,12 @@
                 // fee being associated with a function call.
                 // If the caller sent too much, he or she is
                 // refunded, but only after the function body.
-                // This is dangerous, because if the function
-                // uses `return` explicitly, this will not be
-                // done! This behavior will be fixed in Version 0.4.0.
+                // This was dangerous before Solidity version 0.4.0,
+                // where it was possible to skip the part after `_;`.
                 modifier costs(uint _amount) {
                     if (msg.value < _amount)
                         throw;
-                    _
+                    _;
                     if (msg.value > _amount)
                         msg.sender.send(msg.value - _amount);
                 }
@@ -693,10 +694,10 @@
                     owner = _newOwner;
                     // just some example condition
                     if (uint(owner) & 0 == 1)
-                        // in this case, overpaid fees will not
-                        // be refunded
+                        // This did not refund for Solidity
+                        // before version 0.4.0.
                         return;
-                    // otherwise, refund overpaid fees
+                    // refund overpaid fees
                 }
             }
         "
@@ -704,6 +705,8 @@
     {"Common Patterns",
         "State Machine",
         "
+            pragma solidity ^0.4.0;
+
             contract StateMachine {
                 enum Stages {
                     AcceptingBlindedBids,
@@ -720,7 +723,7 @@
 
                 modifier atStage(Stages _stage) {
                     if (stage != _stage) throw;
-                    _
+                    _;
                 }
 
                 function nextStage() internal {
@@ -738,11 +741,12 @@
                             now >= creationTime + 12 days)
                         nextStage();
                     // The other stages transition by transaction
-                    _
+                    _;
                 }
 
                 // Order of the modifiers matters here!
                 function bid()
+                    payable
                     timedTransitions
                     atStage(Stages.AcceptingBlindedBids)
                 {
@@ -757,12 +761,9 @@
 
                 // This modifier goes to the next stage
                 // after the function is done.
-                // If you use `return` in the function,
-                // `nextStage` will not be called
-                // automatically.
                 modifier transitionNext()
                 {
-                    _
+                    _;
                     nextStage();
                 }
 
@@ -771,8 +772,6 @@
                     atStage(Stages.AnotherStage)
                     transitionNext
                 {
-                    // If you want to use `return` here,
-                    // you have to call `nextStage()` manually.
                 }
 
                 function h()
@@ -793,18 +792,20 @@
     {"Common Patterns",
         "Withdrawal from Contracts 1",
         "
+            pragma solidity ^0.4.0;
+
             contract WithdrawalContract {
                 address public richest;
                 uint public mostSent;
 
                 mapping (address => uint) pendingWithdrawals;
 
-                function WithdrawalContract() {
+                function WithdrawalContract() payable {
                     richest = msg.sender;
                     mostSent = msg.value;
                 }
 
-                function becomeRichest() returns (bool) {
+                function becomeRichest() payable returns (bool) {
                     if (msg.value > mostSent) {
                         pendingWithdrawals[richest] += msg.value;
                         richest = msg.sender;
@@ -833,11 +834,13 @@
     {"Common Patterns",
         "Withdrawal from Contracts 2",
         "
+            pragma solidity ^0.4.0;
+
             contract SendContract {
                 address public richest;
                 uint public mostSent;
 
-                function SendContract() {
+                function SendContract() payable {
                     richest = msg.sender;
                     mostSent = msg.value;
                 }

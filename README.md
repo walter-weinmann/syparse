@@ -242,6 +242,14 @@ Expression = Expression ',' Expression
 
 This rule results in a reduce/reduce conflict with `InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?`, for example.
 
+### Keyword 'from'
+
+```
+ImportDirective = ... | 'import' ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral ';' | ...
+```
+
+The keyword `from` cannot be used as an identifier.
+
 ### NumberLiteral
 
 ```

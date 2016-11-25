@@ -265,7 +265,7 @@ fold(FType, Fun, Ctx, Lvl, {contractDefinitionImportPragmaDirectiveList, Values}
                             0 -> [];
                             _ -> " "
                         end ++ SubAcc, CtxAcc1};
-            {pragmaDirective, _, _} ->
+            {pragmaDirective, _} ->
                 ?debugFmt("wwe debugging fold/5 ===> ~n F: ~p~n", [F]),
                 {SubAcc, CtxAcc1} = fold(FType, Fun, CtxAcc, Lvl + 1, F),
                 {Acc ++ case length(Acc) of
@@ -359,10 +359,7 @@ fold(FType, Fun, Ctx, Lvl, {doWhileStatement, Value1, Value2} = ST) ->
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {"do" ++ case string:sub_string(Value1New, 1, 1) of
-                      " " -> [];
-                      _ -> " "
-                  end ++ Value1New ++ " while(" ++ Value2New ++ ");", NewCtx4},
+    RT = {"do " ++ string:strip(Value1New, left) ++ " while(" ++ Value2New ++ ");", NewCtx4},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -1324,10 +1321,7 @@ fold(FType, Fun, Ctx, Lvl, {ifStatement, Value1, Value2, Value3} = ST) ->
                   top_down -> NewCtx5;
                   bottom_up -> Fun(ST, NewCtx5)
               end,
-    RT = {"if (" ++ Value1New ++ ")" ++ Value2New ++ "else" ++ case string:sub_string(Value3New, 1, 1) of
-                                                                   " " -> [];
-                                                                   _ -> " "
-                                                               end ++ Value3New, NewCtx6},
+    RT = {"if(" ++ Value1New ++ ")" ++ Value2New ++ "else " ++ string:strip(Value3New, left), NewCtx6},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -1888,26 +1882,17 @@ fold(FType, Fun, Ctx, Lvl, {parameterCommalist, Values} = ST)
 % pragmaDirective
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-fold(FType, Fun, Ctx, Lvl, {pragmaDirective, Value1, Value2} = ST) ->
-    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+fold(FType, Fun, Ctx, _Lvl, {pragmaDirective, Value} = ST) ->
+    ?debugFmt("wwe debugging fold/5 ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
                  bottom_up -> Ctx
              end,
-    {Value1New, NewCtx1} = fold(FType, Fun, NewCtx, Lvl + 1, Value1),
-    NewCtx2 = case FType of
-                  top_down -> NewCtx1;
-                  bottom_up -> Fun(ST, NewCtx1)
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
               end,
-    {Value2New, NewCtx3} = fold(FType, Fun, NewCtx2, Lvl + 1, Value2),
-    NewCtx4 = case FType of
-                  top_down -> NewCtx3;
-                  bottom_up -> Fun(ST, NewCtx3)
-              end,
-    RT = {"pragma " ++ Value1New ++ case string:sub_string(Value2New, 1, 1) of
-                                        " " -> [];
-                                        _ -> " "
-                                    end ++ Value2New ++ ";", NewCtx4},
+    RT = {"pragma " ++ string:sub_string(Value, 8), NewCtx1},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 
@@ -1939,10 +1924,7 @@ fold(FType, Fun, Ctx, Lvl, {return, Value} = ST) ->
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {"return" ++ case string:sub_string(ValueNew, 1, 1) of
-                          " " -> [];
-                          _ -> " "
-                      end ++ ValueNew, NewCtx2},
+    RT = {"return " ++ string:strip(ValueNew, left), NewCtx2},
     ?debugFmt("wwe debugging fold/5 ===> ~n RT: ~p~n", [RT]),
     RT;
 

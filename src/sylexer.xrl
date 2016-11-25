@@ -41,6 +41,9 @@ Rules.
 ((//).*[\n\r]?)                                           : skip_token.
 ((/\*)(.|\n|\r)*(\*/))                                    : skip_token.
 
+%% pragma directive
+(((P|p)(R|r)(A|a)(G|g)(M|m)(A|a)\s)[^;]+;)                : {token, {'PRAGMA_DIRECTIVE', TokenLine, TokenChars}}.
+
 %% punctuation
 (,|{|}|\(|\)|;|_|=>|\[|\]|\.)                             : {token, {list_to_atom(TokenChars), TokenLine}}.
 (=|\|=|\^=|&=|<<=|>>=|\+=|-=|\*=|/=|%=)                   : {token, {list_to_atom(TokenChars), TokenLine}}.
