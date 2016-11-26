@@ -1107,7 +1107,7 @@ create_code() ->
 % Return = 'return' Expression?
 % -----------------------------
     Return = sort_list_random(sets:to_list(sets:from_list(
-        ["return"] ++
+        ["return", "return", "return", "return", "return", "return", "return", "return", "return", "return"] ++
         [
                 "return " ++
                 lists:nth(rand:uniform(Expression_Length), Expression)

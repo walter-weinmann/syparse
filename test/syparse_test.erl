@@ -36,8 +36,9 @@ group_gen(TestFiles, Logs) ->
             case TestFiles of
                 [] -> [];
                 [TestFile | RestTestFiles] ->
-                    % ?debugFmt("wwe debugging group_gen ===> ~n TestFile: ~p~n RestTestFiles: ~p~n", [TestFile, RestTestFiles]),
+                    ?debugFmt("wwe debugging group_gen ===> ~n TestFile: ~p~n RestTestFiles: ~p~n", [TestFile, RestTestFiles]),
                     {ok, [Opts | Tests]} = file:consult(TestFile),
+                    ?debugFmt("wwe debugging group_gen ===> ~n Opts: ~p~n Tests: ~p~n", [Opts, Tests]),
                     {ok, TestFileBin} = file:read_file(TestFile),
                     TestLines = [begin
                                      TRe = re:replace(T, "(.*)(\")(.*)", "\\1\\\\\"\\3"
@@ -116,11 +117,11 @@ tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
 
 test_sourceunit(TestGroup, Test, Logs) ->
     ?D1("~n ~s", [Test]),
-    % ?debugFmt("~n", []),
-    % ?debugFmt("wwe debugging test_sourceunit ===> ~n Test: ~p~n", [Test]),
+    ?debugFmt("~n", []),
+    ?debugFmt("wwe debugging test_sourceunit ===> ~n Test: ~p~n", [Test]),
     case syparse:parsetree_with_tokens(Test) of
         {ok, {ParseTree, Tokens}} ->
-            % ?debugFmt("wwe debugging test_sourceunit ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
+            ?debugFmt("wwe debugging test_sourceunit ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
             ?D2("~n~p", [ParseTree]),
             NSourceunit = case syparse:parsetree_to_string_td(ParseTree) of
                               {error, Error} ->

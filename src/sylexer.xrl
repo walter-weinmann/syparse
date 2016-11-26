@@ -3,29 +3,39 @@ Definitions.
 
 Rules.
 
+% comments
+((//).*[\n\r]?)                                           : skip_token.
+((/\*)(.|\n|\r)*(\*/))                                    : skip_token.
+
+%% string literals
+(\"([^\"\r\n\\]|\\.)*\")                                  : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
+
 %% bytes
 (([bB][yY][tT][eE])|([bB][yY][tT][eE][sS][1-9]?)|([bB][yY][tT][eE][sS][12][0-9])|([bB][yY][tT][eE][sS]3[0-2]))
                                                           : match_bytes(TokenChars, TokenLen).
-
-%% ufixed
-(([uU][fF][iI][xX][eE][dD])((0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
-                                                          : match_ufixed(TokenChars, TokenLen).
 
 %% fixed
 (([fF][iI][xX][eE][dD])((0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : match_fixed(TokenChars, TokenLen).
 
-%% uint
-(([uU][iI][nN][tT])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
-                                                          : {token, {'UINT', TokenLine, TokenChars}}.
+%% hex literals
+(hex(\"([0-9a-fA-F])*\"))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
+(hex(\'([0-9a-fA-F])*\'))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
 
 %% int
 (([iI][nN][tT])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : {token, {'INT', TokenLine, TokenChars}}.
 
-%% hex literals
-(hex(\"([0-9a-fA-F])*\"))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
-(hex(\'([0-9a-fA-F])*\'))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
+%% pragma directive
+(((P|p)(R|r)(A|a)(G|g)(M|m)(A|a)\s)[^;]+;)                : {token, {'PRAGMA_DIRECTIVE', TokenLine, TokenChars}}.
+
+%% ufixed
+(([uU][fF][iI][xX][eE][dD])((0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
+                                                          : match_ufixed(TokenChars, TokenLen).
+
+%% uint
+(([uU][iI][nN][tT])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
+                                                          : {token, {'UINT', TokenLine, TokenChars}}.
 
 %% number literals
 ((0x)?[0-9]+)                                             : {token, {'NUMBER_LITERAL', TokenLine, TokenChars}}.
@@ -33,16 +43,6 @@ Rules.
 %% identifiers
 (_[a-zA-Z_0-9]+)                                          : {token, {'IDENTIFIER', TokenLine, TokenChars}}.
 ([a-zA-Z][a-zA-Z_0-9]*)                                   : match_any(TokenChars, TokenLen, TokenLine, ?TOKEN_PATTERNS).
-
-%% string literals
-(\"([^\"\r\n\\]|\\.)*\")                                  : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
-
-% comments
-((//).*[\n\r]?)                                           : skip_token.
-((/\*)(.|\n|\r)*(\*/))                                    : skip_token.
-
-%% pragma directive
-(((P|p)(R|r)(A|a)(G|g)(M|m)(A|a)\s)[^;]+;)                : {token, {'PRAGMA_DIRECTIVE', TokenLine, TokenChars}}.
 
 %% punctuation
 (,|{|}|\(|\)|;|_|=>|\[|\]|\.)                             : {token, {list_to_atom(TokenChars), TokenLine}}.

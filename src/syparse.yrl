@@ -627,8 +627,8 @@ expression -> primary_expression                                                
 %% =====================================================================================================================
 %% reduce / reduce conflict
 %%
-%type_name -> identifier                                                                         : {typeName, '$1', []}.
-%primary_expression -> identifier                                                                : {primaryExpression, '$1'}.
+% type_name -> identifier                                                                         : {typeName, '$1', []}.
+% primary_expression -> identifier                                                                : {primaryExpression, '$1'}.
 %%
 %% ---------------------------------------------------------------------------------------------------------------------
 primary_expression -> identifier                                                                : {primaryExpression, '$1'}.
@@ -729,7 +729,7 @@ Erlang code.
          parsetree_with_tokens/1
         ]).
 
-% -define(NODEBUG, true).
+-define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 
 -define(Dbg(__Rule, __Production),

@@ -31,7 +31,7 @@
                 {
                     if (msg.sender != _account)
                         throw;
-                    // Do not forget the "_;"! It will
+                    // Do not forget the \"_;\"! It will
                     // be replaced by the actual function
                     // body when the modifier is used.
                     _;
