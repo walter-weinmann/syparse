@@ -1,6 +1,6 @@
--module(test_generator).
+-module(syparse_generator).
 
--include("test_generator.hrl").
+-include("syparse_generator.hrl").
 
 -export([generate/0]).
 

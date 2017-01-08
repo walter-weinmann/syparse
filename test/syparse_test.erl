@@ -1,5 +1,6 @@
 -module(syparse_test).
 
+-define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 
 -export([test_sourceunit/3]).
@@ -11,6 +12,7 @@ sourceunit_test_() ->
                 Sourceunit when is_list(Sourceunit) -> Sourceunit;
                 _ -> "*"
             end ++ ".tst",
+    ?debugFmt("wwe debugging sourceunit_test_ ===> ~n WCard: ~p~n", [WCard]),
     Logs = case os:getenv("LOG") of
                V when length(V) > 0 ->
                    case lists:map(
@@ -24,10 +26,14 @@ sourceunit_test_() ->
            end,
     io:format(user, "File = ~s, Logs = ~p~n", [WCard, Logs]),
     {ok, Cwd} = file:get_cwd(),
+    ?debugFmt("wwe debugging sourceunit_test_ ===> ~n Cwd: ~p~n", [Cwd]),
     RootPath = lists:reverse(filename:split(Cwd)),
+    ?debugFmt("wwe debugging sourceunit_test_ ===> ~n RootPath: ~p~n", [RootPath]),
     TestDir = filename:join(lists:reverse(["test" | RootPath])),
+    ?debugFmt("wwe debugging sourceunit_test_ ===> ~n TestDir: ~p~n", [TestDir]),
     TestFiles = lists:sort([filename:join(TestDir, T)
         || T <- filelib:wildcard(WCard, TestDir)]),
+    ?debugFmt("wwe debugging sourceunit_test_ ===> ~n TestFiles: ~p~n", [TestFiles]),
     group_gen(TestFiles, Logs).
 
 group_gen(TestFiles, Logs) ->
@@ -115,13 +121,13 @@ tests_gen(TestGroup, [{I, T} | Tests], Logs, SelTests, Acc) ->
 -define(D5(__Msg), ?D(5, __Msg)).
 -define(D5(__Fmt, __Args), ?D(5, __Fmt, __Args)).
 
-test_sourceunit(TestGroup, Test, Logs) ->
+test_sourceunit(_TestGroup, Test, Logs) ->
     ?D1("~n ~s", [Test]),
     ?debugFmt("~n", []),
     ?debugFmt("wwe debugging test_sourceunit ===> ~n Test: ~p~n", [Test]),
     case syparse:parsetree_with_tokens(Test) of
-        {ok, {ParseTree, Tokens}} ->
-            ?debugFmt("wwe debugging test_sourceunit ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, Tokens]),
+        {ok, {ParseTree, _Tokens}} ->
+            ?debugFmt("wwe debugging test_sourceunit ===> ~n ParseTree: ~p~n Tokens: ~p~n", [ParseTree, _Tokens]),
             ?D2("~n~p", [ParseTree]),
             NSourceunit = case syparse:parsetree_to_string_td(ParseTree) of
                               {error, Error} ->
@@ -131,14 +137,14 @@ test_sourceunit(TestGroup, Test, Logs) ->
                                   NS
                           end,
             ?D3("~n ~ts~n", [NSourceunit]),
-            {ok, {NPTree, NToks}}
+            {ok, {NPTree, _NToks}}
                 = try
                       {ok, {NPT, NT}} = syparse:parsetree_with_tokens(NSourceunit),
                       {ok, {NPT, NT}}
                   catch
                       _:_ ->
                           ?D_("Error syparse:parsetree_with_tokens : Test       ~n > ~p", [Test]),
-                          ?D_("Error syparse:parsetree_with_tokens : TestGroup  ~n > ~p", [TestGroup]),
+                          ?D_("Error syparse:parsetree_with_tokens : TestGroup  ~n > ~p", [_TestGroup]),
                           ?D_("Error syparse:parsetree_with_tokens : NSourceunit~n > ~p", [NSourceunit]),
                           throw({error, "Error syparse:parsetree_with_tokens"})
                   end,
@@ -149,7 +155,7 @@ test_sourceunit(TestGroup, Test, Logs) ->
                     ?D_("[catch ParseTree = NPTree] : Test  ~n > ~p", [Test]),
                     ?D_("[catch ParseTree = NPTree] : NPTree~n > ~p", [NPTree]),
                     ?D_("[catch ParseTree = NPTree] : Tokens~n > ~p", [Tokens]),
-                    ?D_("[catch ParseTree = NPTree] : NToks ~n > ~p", [NToks]),
+                    ?D_("[catch ParseTree = NPTree] : NToks ~n > ~p", [_NToks]),
                     throw({error, "Error catch ParseTree = NPTree"})
             end,
             try

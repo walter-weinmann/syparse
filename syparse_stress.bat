@@ -15,8 +15,8 @@ MD ct\logs
 
 FOR /L %%G IN (1,1,%no_runs%) DO (
    ECHO ----------------------------------------------------------------------------
-   ECHO !TIME! %%G Step: test_generator.bat
-   CALL test_generator.bat
+   ECHO !TIME! %%G Step: syparse_generator.bat
+   CALL syparse_generator.bat
    ECHO !TIME! %%G Step: rebar ct
    CALL rebar.cmd ct
 )

@@ -33,8 +33,8 @@ Nonterminals
  function_definition_visibility_list
  hex_literal
  identifier
-% identifier_expression
-% identifier_expression_list
+ identifier_expression
+ identifier_expression_list
  if_statement
  import_directive
  import_identifier
@@ -60,6 +60,7 @@ Nonterminals
  return
  simple_statement
  source_unit
+ square_bracket_expression
  state_variable_declaration
  state_variable_declaration_visibility
  statement
@@ -205,11 +206,13 @@ Endsymbol
 %% Operator precedences.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Nonassoc    0010 array_type_name.
+Nonassoc    0020 identifier_expression.
+
 Right       0110 unary_right.                           %% postfix
-Nonassoc    0120 function_call.
-Nonassoc    0130 index_access.
-Nonassoc    0140 member_access.
-Nonassoc    0150 '(' ')'.                               %% Parentheses.
+Nonassoc    0120 index_access.
+Nonassoc    0130 member_access.
+Nonassoc    0140 '(' ')'.                               %% Parentheses.
 
 Left        0210 unary_left.                            %% prefix
 Left        0240 '!'.                                   %% logical NOT.
@@ -470,9 +473,16 @@ type_name -> array_type_name                                                    
 mapping -> MAPPING '(' elementary_type_name '=>' type_name ')'                                  : {mapping, '$3', '$5'}.
 
 array_type_name -> type_name                   '['            ']'                               : {arrayTypeName, '$1', [],   []}.
-array_type_name -> type_name                   '[' expression ']'                               : {arrayTypeName, '$1', [],   '$3'}.
+array_type_name -> type_name                   square_bracket_expression                        : {arrayTypeName, '$1', [],   '$2'}.
 array_type_name -> type_name storage_location  '['            ']'                               : {arrayTypeName, '$1', '$2', []}.
-array_type_name -> type_name storage_location  '[' expression ']'                               : {arrayTypeName, '$1', '$2', '$4'}.
+array_type_name -> type_name storage_location  square_bracket_expression                        : {arrayTypeName, '$1', '$2', '$3'}.
+
+
+%% =====================================================================================================================
+%% Helper definitions.
+%% ---------------------------------------------------------------------------------------------------------------------
+square_bracket_expression -> '[' expression ']'                                                 : '$2'.
+%% ---------------------------------------------------------------------------------------------------------------------
 
 storage_location -> MEMORY                                                                      : {storageLocation, "memory"}.
 storage_location -> STORAGE                                                                     : {storageLocation, "storage"}.
@@ -644,21 +654,21 @@ function_call -> new_expression                                '('              
 function_call -> new_expression                                '(' expression_commalist ')'     : {functionCall, '$1', [],   '$3'}.
 function_call -> type_name                                     '('                      ')'     : {functionCall, '$1', [],   []}.
 function_call -> type_name                                     '(' expression_commalist ')'     : {functionCall, '$1', [],   '$3'}.
-% function_call -> primary_expression identifier_expression_list '('                      ')'     : {functionCall, '$1', '$2', []}.
-% function_call -> primary_expression identifier_expression_list '(' expression_commalist ')'     : {functionCall, '$1', '$2', '$4'}.
-% function_call -> new_expression     identifier_expression_list '('                      ')'     : {functionCall, '$1', '$2', []}.
-% function_call -> new_expression     identifier_expression_list '(' expression_commalist ')'     : {functionCall, '$1', '$2', '$4'}.
-% function_call -> type_name          identifier_expression_list '('                      ')'     : {functionCall, '$1', '$2', []}.
-% function_call -> type_name          identifier_expression_list '(' expression_commalist ')'     : {functionCall, '$1', '$2', '$4'}.
+function_call -> primary_expression identifier_expression_list '('                      ')'     : {functionCall, '$1', '$2', []}.
+function_call -> primary_expression identifier_expression_list '(' expression_commalist ')'     : {functionCall, '$1', '$2', '$4'}.
+function_call -> new_expression     identifier_expression_list '('                      ')'     : {functionCall, '$1', '$2', []}.
+function_call -> new_expression     identifier_expression_list '(' expression_commalist ')'     : {functionCall, '$1', '$2', '$4'}.
+function_call -> type_name          identifier_expression_list '('                      ')'     : {functionCall, '$1', '$2', []}.
+function_call -> type_name          identifier_expression_list '(' expression_commalist ')'     : {functionCall, '$1', '$2', '$4'}.
 
 %% =====================================================================================================================
 %% Helper definitions.
 %% ---------------------------------------------------------------------------------------------------------------------
-% identifier_expression_list -> identifier_expression                                             : ['$1'].
-% identifier_expression_list -> identifier_expression identifier_expression_list                  : ['$1' | '$2'].
+identifier_expression_list -> identifier_expression                                             : ['$1'].
+identifier_expression_list -> identifier_expression identifier_expression_list                  : ['$1' | '$2'].
 
-% identifier_expression -> '.' identifier                                                         : '$2'.
-% identifier_expression -> '[' expression ']'                                                     : '$2'.
+identifier_expression -> '.' identifier                                                         : '$2'.
+identifier_expression -> square_bracket_expression                                              : '$1'.
 %% ---------------------------------------------------------------------------------------------------------------------
 
 new_expression -> NEW identifier                                                                : {newExpression, '$2'}.
@@ -666,7 +676,7 @@ new_expression -> NEW identifier                                                
 member_access -> expression '.' identifier                                                      : {memberAccess, '$1', '$3'}.
 
 index_access -> expression '['            ']'                                                   : {indexAccess, '$1', []}.
-index_access -> expression '[' expression ']'                                                   : {indexAccess, '$1', '$3'}.
+index_access -> expression square_bracket_expression                                            : {indexAccess, '$1', '$2'}.
 
 boolean_literal -> TRUE                                                                         : {booleanLiteral, "true"}.
 boolean_literal -> FALSE                                                                        : {booleanLiteral, "false"}.

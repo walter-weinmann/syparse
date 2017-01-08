@@ -116,7 +116,7 @@ Erlang code.
     {"^(?i)(YEARS)$",            'YEARS'}
 ]).
 
-% -define(NODEBUG, true).
+-define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 
 -ifdef(DEBUG).
