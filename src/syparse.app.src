@@ -1,8 +1,21 @@
 {application, syparse,
-    [{description, "LALR grammar based Solidity parser"},
-        {vsn, "1.0.1"},
-        {registered, []},
-        {applications, [kernel, stdlib]},
+    [
+        {applications,
+            [
+                kernel,
+                stdlib
+            ]
+        },
+        {description, "LALR grammar based Solidity parser"},
         {mod, {syparse, []}},
-        {env, []},
-        {modules, [sylexer, syparse, syparse_fold, sytest]}]}.
+        {modules,
+            [
+                sylexer,
+                syparse,
+                syparse_fold,
+                sytest
+            ]
+        },
+        {vsn, "1.0.1"}
+    ]
+}.

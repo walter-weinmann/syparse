@@ -3,43 +3,49 @@ Definitions.
 
 Rules.
 
+% comments
+((//).*[\n\r]?)                                           : skip_token.
+((/\*)(.|\n|\r)*(\*/))                                    : skip_token.
+
+%% string literals
+(\"([^\"\r\n\\]|\\.)*\")                                  : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
+
 %% bytes
 (([bB][yY][tT][eE])|([bB][yY][tT][eE][sS][1-9]?)|([bB][yY][tT][eE][sS][12][0-9])|([bB][yY][tT][eE][sS]3[0-2]))
                                                           : match_bytes(TokenChars, TokenLen).
-
-%% ufixed
-(([uU][fF][iI][xX][eE][dD])((0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
-                                                          : match_ufixed(TokenChars, TokenLen).
 
 %% fixed
 (([fF][iI][xX][eE][dD])((0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : match_fixed(TokenChars, TokenLen).
 
-%% uint
-(([uU][iI][nN][tT])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
-                                                          : {token, {'UINT', TokenLine, TokenChars}}.
+%% hex literals
+(hex(\"([0-9a-fA-F])*\"))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
+(hex(\'([0-9a-fA-F])*\'))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
 
 %% int
 (([iI][nN][tT])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : {token, {'INT', TokenLine, TokenChars}}.
 
-%% hex literals
-(hex(\"([0-9a-fA-F])*\"))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
-(hex(\'([0-9a-fA-F])*\'))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
+%% pragma directive
+([^;]+;)                                                  : {token, {'PRAGMA_DIRECTIVE', TokenLine, TokenChars}}.
 
-%% number literals
-((0x)?[0-9]+)                                             : {token, {'NUMBER_LITERAL', TokenLine, TokenChars}}.
+%% ufixed
+(([uU][fF][iI][xX][eE][dD])((0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
+                                                          : match_ufixed(TokenChars, TokenLen).
+
+%% uint
+(([uU][iI][nN][tT])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
+                                                          : {token, {'UINT', TokenLine, TokenChars}}.
+
+%% hex numbers
+(0x[0-9a-fA-F]+)                                          : {token, {'HEX_NUMBER', TokenLine, TokenChars}}.
+
+%% decimal numbers
+([0-9]+)                                                   : {token, {'DECIMAL_NUMBER', TokenLine, TokenChars}}.
 
 %% identifiers
 (_[a-zA-Z_0-9]+)                                          : {token, {'IDENTIFIER', TokenLine, TokenChars}}.
 ([a-zA-Z][a-zA-Z_0-9]*)                                   : match_any(TokenChars, TokenLen, TokenLine, ?TOKEN_PATTERNS).
-
-%% string literals
-(\"([^\"\r\n\\]|\\.)*\")                                  : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
-
-% comments
-((//).*[\n\r]?)                                           : skip_token.
-((/\*)(.|\n|\r)*(\*/))                                    : skip_token.
 
 %% punctuation
 (,|{|}|\(|\)|;|_|=>|\[|\]|\.)                             : {token, {list_to_atom(TokenChars), TokenLine}}.
@@ -63,6 +69,7 @@ Erlang code.
     {"^(?i)(ADDRESS)$",          'ADDRESS'},
     {"^(?i)(ANONYMOUS)$",        'ANONYMOUS'},
     {"^(?i)(AS)$",               'AS'},
+    {"^(?i)(ASSEMBLY)$",         'ASSEMBLY'},
     {"^(?i)(BOOL)$",             'BOOL'},
     {"^(?i)(BREAK)$",            'BREAK'},
     {"^(?i)(CONSTANT)$",         'CONSTANT'},
@@ -87,12 +94,14 @@ Erlang code.
     {"^(?i)(INDEXED)$",          'INDEXED'},
     {"^(?i)(INTERNAL)$",         'INTERNAL'},
     {"^(?i)(IS)$",               'IS'},
+    {"^(?i)(LET)$",              'LET'},
     {"^(?i)(LIBRARY)$",          'LIBRARY'},
     {"^(?i)(MAPPING)$",          'MAPPING'},
     {"^(?i)(MEMORY)$",           'MEMORY'},
     {"^(?i)(MINUTES)$",          'MINUTES'},
     {"^(?i)(MODIFIER)$",         'MODIFIER'},
     {"^(?i)(NEW)$",              'NEW'},
+    {"^(?i)(PAYABLE)$",          'PAYABLE'},
     {"^(?i)(PRAGMA)$",           'PRAGMA'},
     {"^(?i)(PRIVATE)$",          'PRIVATE'},
     {"^(?i)(PUBLIC)$",           'PUBLIC'},
@@ -113,7 +122,7 @@ Erlang code.
     {"^(?i)(YEARS)$",            'YEARS'}
 ]).
 
-% -define(NODEBUG, true).
+-define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 
 -ifdef(DEBUG).
