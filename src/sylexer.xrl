@@ -27,7 +27,7 @@ Rules.
                                                           : {token, {'INT', TokenLine, TokenChars}}.
 
 %% pragma directive
-(((P|p)(R|r)(A|a)(G|g)(M|m)(A|a)\s)[^;]+;)                : {token, {'PRAGMA_DIRECTIVE', TokenLine, TokenChars}}.
+([^;]+;)                                                  : {token, {'PRAGMA_DIRECTIVE', TokenLine, TokenChars}}.
 
 %% ufixed
 (([uU][fF][iI][xX][eE][dD])((0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
@@ -37,8 +37,11 @@ Rules.
 (([uU][iI][nN][tT])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : {token, {'UINT', TokenLine, TokenChars}}.
 
-%% number literals
-((0x)?[0-9]+)                                             : {token, {'NUMBER_LITERAL', TokenLine, TokenChars}}.
+%% hex numbers
+(0x[0-9a-fA-F]+)                                          : {token, {'HEX_NUMBER', TokenLine, TokenChars}}.
+
+%% decimal numbers
+([0-9]+)                                                   : {token, {'DECIMAL_NUMBER', TokenLine, TokenChars}}.
 
 %% identifiers
 (_[a-zA-Z_0-9]+)                                          : {token, {'IDENTIFIER', TokenLine, TokenChars}}.
@@ -66,6 +69,7 @@ Erlang code.
     {"^(?i)(ADDRESS)$",          'ADDRESS'},
     {"^(?i)(ANONYMOUS)$",        'ANONYMOUS'},
     {"^(?i)(AS)$",               'AS'},
+    {"^(?i)(ASSEMBLY)$",         'ASSEMBLY'},
     {"^(?i)(BOOL)$",             'BOOL'},
     {"^(?i)(BREAK)$",            'BREAK'},
     {"^(?i)(CONSTANT)$",         'CONSTANT'},
@@ -90,12 +94,14 @@ Erlang code.
     {"^(?i)(INDEXED)$",          'INDEXED'},
     {"^(?i)(INTERNAL)$",         'INTERNAL'},
     {"^(?i)(IS)$",               'IS'},
+    {"^(?i)(LET)$",              'LET'},
     {"^(?i)(LIBRARY)$",          'LIBRARY'},
     {"^(?i)(MAPPING)$",          'MAPPING'},
     {"^(?i)(MEMORY)$",           'MEMORY'},
     {"^(?i)(MINUTES)$",          'MINUTES'},
     {"^(?i)(MODIFIER)$",         'MODIFIER'},
     {"^(?i)(NEW)$",              'NEW'},
+    {"^(?i)(PAYABLE)$",          'PAYABLE'},
     {"^(?i)(PRAGMA)$",           'PRAGMA'},
     {"^(?i)(PRIVATE)$",          'PRIVATE'},
     {"^(?i)(PUBLIC)$",           'PUBLIC'},

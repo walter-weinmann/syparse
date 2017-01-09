@@ -282,9 +282,49 @@ This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH
 
 ### Version 1.0.1
 
-Release Date: 17.11.2016 - Grammar as of 15.11.2016
+Release Date: 17.11.2016 - Grammar as of 08.01.2017
 
 #### Grammar changes
+
+- **ArrayTypeName**
+
+```
+New: ArrayTypeName = TypeName '[' Expression? ']' StorageLocation?
+
+Old: ArrayTypeName = TypeName StorageLocation? '[' Expression? ']'
+```
+
+- **AssemblyAssignment**
+
+```
+New: AssemblyAssignment = Identifier ':=' FunctionalAssemblyExpression | '=:' Identifier
+
+Old: n/a
+```
+
+- **AssemblyLocalBinding**
+
+```
+New: AssemblyLocalBinding = 'let' Identifier ':=' FunctionalAssemblyExpression
+
+Old: n/a
+```
+
+- **AssemblyItem**
+
+```
+New: AssemblyItem = Identifier | FunctionalAssemblyExpression | InlineAssemblyBlock | AssemblyLocalBinding | AssemblyAssignment | NumberLiteral | StringLiteral | HexLiteral
+
+Old: n/a
+```
+
+- **DecimalNumber**
+
+```
+New: DecimalNumber = [0-9]+
+
+Old: n/a
+```
 
 - **DoWhileStatement**
 
@@ -294,10 +334,18 @@ New: DoWhileStatement = 'do' Statement 'while' '(' Expression ')' ';'
 Old: n/a
 ```
 
+- **ElementaryTypeNameExpression**
+
+```
+New: ElementaryTypeNameExpression = ElementaryTypeName
+
+Old: n/a
+```
+
 - **Expression**
 
 ```
-New: | Expression ('<<' | '>>')
+New: | Expression ('<<' | '>>') Expression
 
 Old: | Expression ('<<' | '>>' | '>>>')
 ```
@@ -310,12 +358,41 @@ New: ExpressionStatement = Expression
 Old: ExpressionStatement = Expression | VariableDefinition
 ```
 
+- **FunctionalAssemblyExpression**
+
+```
+New: FunctionalAssemblyExpression = Identifier '(' AssemblyItem? ( ',' AssemblyItem )* ')'
+
+Old: n/a
+```
+
 - **FunctionCall**
 
 ```
 New: FunctionCall = ( PrimaryExpression | NewExpression | TypeName ) ( ( '.' Identifier ) | ( '[' Expression ']' ) )* '(' Expression? ( ',' Expression )* ')'
 
 Old: FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
+```
+
+- **FunctionDefinition**
+
+```
+New: FunctionDefinition = 'function' Identifier? ParameterList
+                          ( FunctionCall | Identifier | 'constant' | 'payable' | 'external' | 'public' | 'internal' | 'private' )*
+                          ( 'returns' ParameterList )? ( ';' | Block )
+
+Old: FunctionDefinition = 'function' Identifier? ParameterList
+                          ( FunctionCall | Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
+                          ( 'returns' ParameterList )? Block
+```
+
+- **FunctionTypeName**
+
+```
+New: FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | 'constant' | 'payable' )*
+                        ( 'returns' TypeNameList )?
+
+Old: n/a
 ```
 
 - **HexLiteral**
@@ -326,10 +403,63 @@ New: HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\''
 Old: n/a
 ```
 
+- **HexNumber**
+
+```
+New: HexNumber = '0x' [0-9a-fA-F]+
+
+Old: n/a
+```
+
+- **InheritanceSpecifier**
+
+```
+New: InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
+
+Old: InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
+```
+
+- **InlineAssemblyBlock**
+
+```
+New: InlineAssemblyBlock = '{' AssemblyItem* '}'
+
+Old: n/a
+```
+
+- **InlineAssemblyStatement**
+
+```
+New: InlineAssemblyStatement = 'assembly' InlineAssemblyBlock
+
+Old: n/a
+```
+
+- **NumberLiteral**
+
+```
+New: NumberLiteral = ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
+
+Old: NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
+```
+
+- **PragmaDirective**
+
+```
+New: PragmaDirective = 'pragma' Identifier ([^;]+) ';'
+
+Old: PragmaDirective = 'pragma' Identifier Expression ';'
+```
+
 - **PrimaryExpression**
 
 ```
-New: PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | HexLiteral | StringLiteral
+New: PrimaryExpression = Identifier
+                       | BooleanLiteral
+                       | NumberLiteral
+                       | HexLiteral
+                       | StringLiteral
+                       | ElementaryTypeNameExpression
 
 Old: PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
 ```
@@ -337,12 +467,40 @@ Old: PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLit
 - **Statement**
 
 ```
-New: Statement = IfStatement | WhileStatement | DoWhileStatement | ForStatement | Block |
-                 ( PlaceholderStatement | Continue | Break | Return |
+New: Statement = IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
+                 ( DoWhileStatement | PlaceholderStatement | Continue | Break | Return |
                    Throw | SimpleStatement ) ';'
 
 Old: Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement |
                  ( Continue | Break | Return | Throw | SimpleStatement | ExpressionStatement ) ';'
+```
+
+- **TypeName**
+
+```
+New: TypeName = ElementaryTypeName
+              | UserDefinedTypeName StorageLocation?
+              | Mapping
+              | ArrayTypeName
+              | FunctionTypeName
+
+Old: TypeName = ElementaryTypeName | Identifier StorageLocation? | Mapping | ArrayTypeName
+```
+
+- **TypeNameList**
+
+```
+New: TypeNameList = '(' ( TypeName (',' TypeName )* )? ')'
+
+Old: n/a
+```
+
+- **UserDefinedTypeName**
+
+```
+New: UserDefinedTypeName = Identifier ( '.' Identifier )*
+
+Old: n/a
 ```
 
 #### New features
