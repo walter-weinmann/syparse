@@ -1,0 +1,1006 @@
+-- -----------------------------------------------------------------------------
+--
+-- syparse.cf: Solidity - grammar definition in BNF Converter format.
+--
+-- Copyright (c) 2017 Walter Weinmann.  All Rights Reserved.
+--
+-- This file is provided to you under the Apache License,
+-- Version 2.0 (the "License"); you may not use this file
+-- except in compliance with the License.  You may obtain
+-- a copy of the License at
+--
+--   http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing,
+-- software distributed under the License is distributed on an
+-- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+-- KIND, either express or implied.  See the License for the
+-- specific language governing permissions and limitations
+-- under the License.
+--
+-- -----------------------------------------------------------------------------
+
+-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+-- Grammar rules.
+-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+-- source_unit -> contract_definition_import_pragma_directive_list                                 : {sourceUnit, '$1'}.
+
+SourceUnit01.                                    SourceUnit ::= ContractDefinitionImportPragmaList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- contract_definition_import_pragma_directive_list ->                                                  import_directive
+--                                                                                                 :         ['$1'].
+-- contract_definition_import_pragma_directive_list ->                                                  contract_definition
+--                                                                                                 :         ['$1'].
+-- contract_definition_import_pragma_directive_list ->                                                  pragma_directive
+--                                                                                                 :         ['$1'].
+-- contract_definition_import_pragma_directive_list -> contract_definition_import_pragma_directive_list import_directive
+--                                                                                                 : '$1' ++ ['$2'].
+-- contract_definition_import_pragma_directive_list -> contract_definition_import_pragma_directive_list contract_definition
+--                                                                                                 : '$1' ++ ['$2'].
+-- contract_definition_import_pragma_directive_list -> contract_definition_import_pragma_directive_list pragma_directive
+--                                                                                                 : '$1' ++ ['$2'].
+
+ContractDefinitionImportPragmaList01.            ContractDefinitionImportPragmaList ::=                                    ImportDirective    ;
+ContractDefinitionImportPragmaList02.            ContractDefinitionImportPragmaList ::=                                    ContractDefinition ;
+ContractDefinitionImportPragmaList03.            ContractDefinitionImportPragmaList ::=                                    PragmaDirective    ;
+ContractDefinitionImportPragmaList04.            ContractDefinitionImportPragmaList ::= ContractDefinitionImportPragmaList ImportDirective    ;
+ContractDefinitionImportPragmaList05.            ContractDefinitionImportPragmaList ::= ContractDefinitionImportPragmaList ContractDefinition ;
+ContractDefinitionImportPragmaList06.            ContractDefinitionImportPragmaList ::= ContractDefinitionImportPragmaList PragmaDirective    ;
+-- =============================================================================
+
+-- pragma_directive -> PRAGMA identifier PRAGMA_DIRECTIVE                                          : {pragmaDirective, '$2', unwrap('$3')}.
+
+PragmaDirective01.                               PragmaDirective ::= "PRAGMA" Identifier "PRAGMA_DIRECTIVE" ;
+
+-- import_directive -> IMPORT string_literal                                          ';'          : {importDirective, '$2', [],   []}.
+-- import_directive -> IMPORT string_literal AS identifier                            ';'          : {importDirective, '$2', '$4', []}.
+-- import_directive -> IMPORT '*'                                 FROM string_literal ';'          : {importDirective, "*",  [],   '$4'}.
+-- import_directive -> IMPORT '*'            AS identifier        FROM string_literal ';'          : {importDirective, "*",  '$4', '$6'}.
+-- import_directive -> IMPORT identifier                          FROM string_literal ';'          : {importDirective, '$2', [],   '$4'}.
+-- import_directive -> IMPORT identifier     AS identifier        FROM string_literal ';'          : {importDirective, '$2', '$4', '$6'}.
+-- import_directive -> IMPORT '{' import_identifier_commalist '}' FROM string_literal ';'          : {importDirective, "{",  '$3', '$6'}.
+
+ImportDirective01.                               ImportDirective ::= "IMPORT" StringLiteral                                          ";" ;
+ImportDirective02.                               ImportDirective ::= "IMPORT" StringLiteral "AS" Identifier                          ";" ;
+ImportDirective03.                               ImportDirective ::= "IMPORT" "*"                               "FROM" StringLiteral ";" ;
+ImportDirective04.                               ImportDirective ::= "IMPORT" "*"           "AS" Identifier     "FROM" StringLiteral ";" ;
+ImportDirective05.                               ImportDirective ::= "IMPORT" Identifier                        "FROM" StringLiteral ";" ;
+ImportDirective06.                               ImportDirective ::= "IMPORT" Identifier    "AS" Identifier     "FROM" StringLiteral ";" ;
+ImportDirective07.                               ImportDirective ::= "IMPORT" "(" ImportIdentifierCommalist ")" "FROM" StringLiteral ";" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- import_identifier -> identifier                                                                 : {'$1', []}.
+-- import_identifier -> identifier AS identifier                                                   : {'$1', '$3'}.
+
+ImportIdentifier01.                              ImportIdentifier ::= Identifier                 ;
+ImportIdentifier02.                              ImportIdentifier ::= Identifier "AS" Identifier ;
+
+-- import_identifier_commalist -> import_identifier                                                : ['$1'].
+-- import_identifier_commalist -> import_identifier ',' import_identifier_commalist                : ['$1' | '$3'].
+
+ImportIdentifierCommalist01.                     ImportIdentifierCommalist ::= ImportIdentifier                               ;
+ImportIdentifierCommalist02.                     ImportIdentifierCommalist ::= ImportIdentifier "," ImportIdentifierCommalist ;
+-- =============================================================================
+
+-- contract_definition -> CONTRACT  identifier                                    '{'                    '}'
+--                                                                                                 : {contractDefinition, "contract", '$2', [],   []}.
+-- contract_definition -> CONTRACT  identifier                                    '{' contract_part_list '}'
+--                                                                                                 : {contractDefinition, "contract", '$2', [],   '$4'}.
+-- contract_definition -> CONTRACT  identifier IS inheritance_specifier_commalist '{'                    '}'
+--                                                                                                 : {contractDefinition, "contract", '$2', '$4', []}.
+-- contract_definition -> CONTRACT  identifier IS inheritance_specifier_commalist '{' contract_part_list '}'
+--                                                                                                 : {contractDefinition, "contract", '$2', '$4', '$6'}.
+-- contract_definition -> INTERFACE identifier                                    '{'                    '}'
+--                                                                                                 : {contractDefinition, "interface",  '$2', [],   []}.
+-- contract_definition -> INTERFACE identifier                                    '{' contract_part_list '}'
+--                                                                                                 : {contractDefinition, "interface",  '$2', [],   '$4'}.
+-- contract_definition -> INTERFACE identifier IS inheritance_specifier_commalist '{'                    '}'
+--                                                                                                 : {contractDefinition, "interface",  '$2', '$4', []}.
+-- contract_definition -> INTERFACE identifier IS inheritance_specifier_commalist '{' contract_part_list '}'
+--                                                                                                 : {contractDefinition, "interface",  '$2', '$4', '$6'}.
+-- contract_definition -> LIBRARY   identifier                                    '{'                    '}'
+--                                                                                                 : {contractDefinition, "library",  '$2', [],   []}.
+-- contract_definition -> LIBRARY   identifier                                    '{' contract_part_list '}'
+--                                                                                                 : {contractDefinition, "library",  '$2', [],   '$4'}.
+-- contract_definition -> LIBRARY   identifier IS inheritance_specifier_commalist '{'                    '}'
+--                                                                                                 : {contractDefinition, "library",  '$2', '$4', []}.
+-- contract_definition -> LIBRARY   identifier IS inheritance_specifier_commalist '{' contract_part_list '}'
+--                                                                                                 : {contractDefinition, "library",  '$2', '$4', '$6'}.
+
+ContractDefinition01.                            ContractDefinition ::= "CONTRACT"  Identifier "IS"                               "("                  ")" ;
+ContractDefinition02.                            ContractDefinition ::= "CONTRACT"  Identifier "IS"                               "(" ContractPartList ")" ;
+ContractDefinition03.                            ContractDefinition ::= "CONTRACT"  Identifier "IS" InheritanceSpecifierCommalist "("                  ")" ;
+ContractDefinition04.                            ContractDefinition ::= "CONTRACT"  Identifier "IS" InheritanceSpecifierCommalist "(" ContractPartList ")" ;
+ContractDefinition05.                            ContractDefinition ::= "INTERFACE" Identifier "IS"                               "("                  ")" ;
+ContractDefinition06.                            ContractDefinition ::= "INTERFACE" Identifier "IS"                               "(" ContractPartList ")" ;
+ContractDefinition07.                            ContractDefinition ::= "INTERFACE" Identifier "IS" InheritanceSpecifierCommalist "("                  ")" ;
+ContractDefinition08.                            ContractDefinition ::= "INTERFACE" Identifier "IS" InheritanceSpecifierCommalist "(" ContractPartList ")" ;
+ContractDefinition09.                            ContractDefinition ::= "LIBRARY"   Identifier "IS"                               "("                  ")" ;
+ContractDefinition10.                            ContractDefinition ::= "LIBRARY"   Identifier "IS"                               "(" ContractPartList ")" ;
+ContractDefinition11.                            ContractDefinition ::= "LIBRARY"   Identifier "IS" InheritanceSpecifierCommalist "("                  ")" ;
+ContractDefinition12.                            ContractDefinition ::= "LIBRARY"   Identifier "IS" InheritanceSpecifierCommalist "(" ContractPartList ")" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- contract_part_list -> contract_part                                                             : ['$1'].
+-- contract_part_list -> contract_part contract_part_list                                          : ['$1' | '$2'].
+
+ContractPartList01.                              ContractPartList ::= ContractPart                  ;
+ContractPartList02.                              ContractPartList ::= ContractPart ContractPartList ;
+
+-- inheritance_specifier_commalist -> inheritance_specifier                                        : ['$1'].
+-- inheritance_specifier_commalist -> inheritance_specifier ',' inheritance_specifier_commalist    : ['$1' | '$3'].
+
+InheritanceSpecifierCommalist01.                 InheritanceSpecifierCommalist ::= InheritanceSpecifier                                   ;
+InheritanceSpecifierCommalist02.                 InheritanceSpecifierCommalist ::= InheritanceSpecifier "," InheritanceSpecifierCommalist ;
+-- =============================================================================
+
+-- contract_part -> state_variable_declaration                                                     : {contractPart, '$1'}.
+-- contract_part -> using_for_declaration                                                          : {contractPart, '$1'}.
+-- contract_part -> struct_definition                                                              : {contractPart, '$1'}.
+-- contract_part -> modifier_definition                                                            : {contractPart, '$1'}.
+-- contract_part -> function_definition                                                            : {contractPart, '$1'}.
+-- contract_part -> event_definition                                                               : {contractPart, '$1'}.
+-- contract_part -> enum_definition                                                                : {contractPart, '$1'}.
+
+ContractPart01.                                  ContractPart ::= StateVariableDeclaration ;
+ContractPart02.                                  ContractPart ::= UsingForDeclaration      ; 
+ContractPart03.                                  ContractPart ::= StructDefinition         ;
+ContractPart04.                                  ContractPart ::= ModifierDefinition       ;
+ContractPart05.                                  ContractPart ::= FunctionDefinition       ;
+ContractPart06.                                  ContractPart ::= EventDefinition          ;
+ContractPart07.                                  ContractPart ::= EnumDefinition           ;
+
+-- inheritance_specifier -> user_defined_type_name                                                 : {inheritanceSpecifier, '$1', []}.
+-- inheritance_specifier -> user_defined_type_name '(' expression_commalist ')'                    : {inheritanceSpecifier, '$1', '$3'}.
+
+InheritanceSpecifier01.                          InheritanceSpecifier ::= UserDefinedTypeName                             ;
+InheritanceSpecifier02.                          InheritanceSpecifier ::= UserDefinedTypeName "(" ExpressionCommalist ")" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- expression_commalist -> expression                                                              : ['$1'].
+-- expression_commalist -> expression ',' expression_commalist                                     : ['$1' | '$3'].
+
+ExpressionCommalist01.                           ExpressionCommalist ::= Expression                         ;
+ExpressionCommalist02.                           ExpressionCommalist ::= Expression "," ExpressionCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- state_variable_declaration -> type_name          identifier                ';'                  : {stateVariableDeclaration, '$1', [],         '$2', []}.
+-- state_variable_declaration -> type_name          identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', [],         '$2', '$4'}.
+-- state_variable_declaration -> type_name PUBLIC   identifier                ';'                  : {stateVariableDeclaration, '$1', "public",   '$3', []}.
+-- state_variable_declaration -> type_name INTERNAL identifier                ';'                  : {stateVariableDeclaration, '$1', "internal", '$3', []}.
+-- state_variable_declaration -> type_name PRIVATE  identifier                ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', []}.
+-- state_variable_declaration -> type_name CONSTANT identifier                ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', []}.
+-- state_variable_declaration -> type_name PUBLIC   identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "public",   '$3', '$5'}.
+-- state_variable_declaration -> type_name INTERNAL identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "internal", '$3', '$5'}.
+-- state_variable_declaration -> type_name PRIVATE  identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', '$5'}.
+-- state_variable_declaration -> type_name CONSTANT identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', '$5'}.
+
+StateVariableDeclaration01.                      StateVariableDeclaration ::= TypeName            Identifier                ";" ; 
+StateVariableDeclaration02.                      StateVariableDeclaration ::= TypeName            Identifier "=" Expression ";" ;
+StateVariableDeclaration03.                      StateVariableDeclaration ::= TypeName "PUBLIC"   Identifier                ";" ;
+StateVariableDeclaration04.                      StateVariableDeclaration ::= TypeName "INTERNAL" Identifier                ";" ;
+StateVariableDeclaration05.                      StateVariableDeclaration ::= TypeName "PRIVATE"  Identifier                ";" ;
+StateVariableDeclaration06.                      StateVariableDeclaration ::= TypeName "CONSTANT" Identifier                ";" ;
+StateVariableDeclaration07.                      StateVariableDeclaration ::= TypeName "PUBLIC"   Identifier "=" Expression ";" ;
+StateVariableDeclaration08.                      StateVariableDeclaration ::= TypeName "INTERNAL" Identifier "=" Expression ";" ;
+StateVariableDeclaration09.                      StateVariableDeclaration ::= TypeName "PRIVATE"  Identifier "=" Expression ";" ;
+StateVariableDeclaration10.                      StateVariableDeclaration ::= TypeName "CONSTANT" Identifier "=" Expression ";" ;
+
+-- using_for_declaration -> USING identifier FOR '*'       ';'                                     : {usingForDeclaration, '$2', "*"}.
+-- using_for_declaration -> USING identifier FOR type_name ';'                                     : {usingForDeclaration, '$2', '$4'}.
+
+UsingForDeclaration01.                           UsingForDeclaration ::= "USING" Identifier "FOR" "*"      ";" ;
+UsingForDeclaration02.                           UsingForDeclaration ::= "USING" Identifier "FOR" TypeName ";" ;
+
+-- struct_definition -> STRUCT identifier '{'                                    '}'               : {structDefinition, '$2', []}.
+-- struct_definition -> STRUCT identifier '{' variable_declaration_semicolonlist '}'               : {structDefinition, '$2', '$4'}.
+
+StructDefinition01.                              StructDefinition ::= "STRUCT" Identifier "{"                                  "}" ";" ;
+StructDefinition02.                              StructDefinition ::= "STRUCT" Identifier "{" VariableDeclarationSemicolonlist "}" ";" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- variable_declaration_semicolonlist -> variable_declaration ';'                                  : ['$1'].
+-- variable_declaration_semicolonlist -> variable_declaration ';' variable_declaration_semicolonlist
+--                                                                                                 : ['$1' | '$3'].
+
+VariableDeclarationSemicolonlist01.              VariableDeclarationSemicolonlist ::= VariableDeclaration ";"                                  ; 
+VariableDeclarationSemicolonlist02.              VariableDeclarationSemicolonlist ::= VariableDeclaration ";" VariableDeclarationSemicolonlist ;
+-- =============================================================================
+
+-- modifier_definition -> MODIFIER identifier                block                                 : {modifierDefinition, '$2', [],   '$3'}.
+-- modifier_definition -> MODIFIER identifier parameter_list block                                 : {modifierDefinition, '$2', '$3', '$4'}.
+
+ModifierDefinition01.                            ModifierDefinition ::= "MODIFIER" Identifier               Block ;
+ModifierDefinition02.                            ModifierDefinition ::= "MODIFIER" Identifier ParameterList Block ;
+
+-- modifier_invocation -> identifier                                                               : {modifierInvocation, '$1', [],  []}.
+-- modifier_invocation -> identifier '('                      ')'                                  : {modifierDefinition, '$1', "(", []}.
+-- modifier_invocation -> identifier '(' expression_commalist ')'                                  : {modifierDefinition, '$1', "(", '$3'}.
+
+ModifierInvocation01.                            ModifierInvocation ::= Identifier                             ;
+ModifierInvocation02.                            ModifierInvocation ::= Identifier "("                     ")" ;
+ModifierInvocation03.                            ModifierInvocation ::= Identifier "(" ExpressionCommalist ")" ;
+
+-- function_definition -> FUNCTION            parameter_list                                                            ';'
+--                                                                                                 : {functionDefinition, [],   '$2', [],   [],   []}.
+-- function_definition -> FUNCTION            parameter_list                                                            block
+--                                                                                                 : {functionDefinition, [],   '$2', [],   [],   '$3'}.
+-- function_definition -> FUNCTION            parameter_list                                     RETURNS parameter_list ';'
+--                                                                                                 : {functionDefinition, [],   '$2', [],   '$4', []}.
+-- function_definition -> FUNCTION            parameter_list                                     RETURNS parameter_list block
+--                                                                                                 : {functionDefinition, [],   '$2', [],   '$4', '$5'}.
+-- function_definition -> FUNCTION            parameter_list function_definition_visibility_list                        ';'
+--                                                                                                 : {functionDefinition, [],   '$2', '$3', [],   []}.
+-- function_definition -> FUNCTION            parameter_list function_definition_visibility_list                        block
+--                                                                                                 : {functionDefinition, [],   '$2', '$3', [],   '$4'}.
+-- function_definition -> FUNCTION            parameter_list function_definition_visibility_list RETURNS parameter_list ';'
+--                                                                                                 : {functionDefinition, [],   '$2', '$3', '$5', []}.
+-- function_definition -> FUNCTION            parameter_list function_definition_visibility_list RETURNS parameter_list block
+--                                                                                                 : {functionDefinition, [],   '$2', '$3', '$5', '$6'}.
+-- function_definition -> FUNCTION identifier parameter_list                                                            ';'
+--                                                                                                 : {functionDefinition, '$2', '$3', [],   [],   []}.
+-- function_definition -> FUNCTION identifier parameter_list                                                            block
+--                                                                                                 : {functionDefinition, '$2', '$3', [],   [],   '$4'}.
+-- function_definition -> FUNCTION identifier parameter_list                                     RETURNS parameter_list ';'
+--                                                                                                 : {functionDefinition, '$2', '$3', [],   '$5', []}.
+-- function_definition -> FUNCTION identifier parameter_list                                     RETURNS parameter_list block
+--                                                                                                 : {functionDefinition, '$2', '$3', [],   '$5', '$6'}.
+-- function_definition -> FUNCTION identifier parameter_list function_definition_visibility_list                        ';'
+--                                                                                                 : {functionDefinition, '$2', '$3', '$4', [],   []}.
+-- function_definition -> FUNCTION identifier parameter_list function_definition_visibility_list                        block
+--                                                                                                 : {functionDefinition, '$2', '$3', '$4', [],   '$5'}.
+-- function_definition -> FUNCTION identifier parameter_list function_definition_visibility_list RETURNS parameter_list ';'
+--                                                                                                 : {functionDefinition, '$2', '$3', '$4', '$6', []}.
+-- function_definition -> FUNCTION identifier parameter_list function_definition_visibility_list RETURNS parameter_list block
+--                                                                                                 : {functionDefinition, '$2', '$3', '$4', '$6', '$7'}.
+
+FunctionDefinition01.                            FunctionDefinition ::= "FUNCTION"            ParameterList                                                          ";"   ;
+FunctionDefinition02.                            FunctionDefinition ::= "FUNCTION"            ParameterList                                                          Block ;
+FunctionDefinition03.                            FunctionDefinition ::= "FUNCTION"            ParameterList                                  "RETURNS" ParameterList ";"   ;
+FunctionDefinition04.                            FunctionDefinition ::= "FUNCTION"            ParameterList                                  "RETURNS" ParameterList Block ;
+FunctionDefinition05.                            FunctionDefinition ::= "FUNCTION"            ParameterList FunctionDefinitionVisibilityList                         ";"   ;
+FunctionDefinition06.                            FunctionDefinition ::= "FUNCTION"            ParameterList FunctionDefinitionVisibilityList                         Block ;
+FunctionDefinition07.                            FunctionDefinition ::= "FUNCTION"            ParameterList FunctionDefinitionVisibilityList "RETURNS" ParameterList ";"   ;
+FunctionDefinition08.                            FunctionDefinition ::= "FUNCTION"            ParameterList FunctionDefinitionVisibilityList "RETURNS" ParameterList Block ;
+FunctionDefinition09.                            FunctionDefinition ::= "FUNCTION" Identifier ParameterList                                                          ";"   ;
+FunctionDefinition10.                            FunctionDefinition ::= "FUNCTION" Identifier ParameterList                                                          Block ;
+FunctionDefinition11.                            FunctionDefinition ::= "FUNCTION" Identifier ParameterList                                  "RETURNS" ParameterList ";"   ;
+FunctionDefinition12.                            FunctionDefinition ::= "FUNCTION" Identifier ParameterList                                  "RETURNS" ParameterList Block ;
+FunctionDefinition13.                            FunctionDefinition ::= "FUNCTION" Identifier ParameterList FunctionDefinitionVisibilityList                         ";"   ;
+FunctionDefinition14.                            FunctionDefinition ::= "FUNCTION" Identifier ParameterList FunctionDefinitionVisibilityList                         Block ;
+FunctionDefinition15.                            FunctionDefinition ::= "FUNCTION" Identifier ParameterList FunctionDefinitionVisibilityList "RETURNS" ParameterList ";"   ;
+FunctionDefinition16.                            FunctionDefinition ::= "FUNCTION" Identifier ParameterList FunctionDefinitionVisibilityList "RETURNS" ParameterList Block ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- function_definition_visibility -> modifier_invocation                                           : '$1'.
+-- function_definition_visibility -> state_mutability                                              : '$1'.
+-- function_definition_visibility -> EXTERNAL                                                      : "external".
+-- function_definition_visibility -> PUBLIC                                                        : "public".
+-- function_definition_visibility -> INTERNAL                                                      : "internal".
+-- function_definition_visibility -> PRIVATE                                                       : "private".
+
+FunctionDefinitionVisibility01.                  FunctionDefinitionVisibility ::= ModifierInvocation ;
+FunctionDefinitionVisibility02.                  FunctionDefinitionVisibility ::= StateMutability    ;
+FunctionDefinitionVisibility03.                  FunctionDefinitionVisibility ::= "EXTERNAL"         ; 
+FunctionDefinitionVisibility04.                  FunctionDefinitionVisibility ::= "PUBLIC"           ;
+FunctionDefinitionVisibility05.                  FunctionDefinitionVisibility ::= "INTERNAL"         ;
+FunctionDefinitionVisibility06.                  FunctionDefinitionVisibility ::= "PRIVATE"          ;
+
+-- function_definition_visibility_list -> function_definition_visibility                           : ['$1'].
+-- function_definition_visibility_list -> function_definition_visibility function_definition_visibility_list
+--                                                                                                 : ['$1' | '$2'].
+
+FunctionDefinitionVisibilitListy01.              FunctionDefinitionVisibilityList ::= FunctionDefinitionVisibility                                  ;
+FunctionDefinitionVisibilityList02.              FunctionDefinitionVisibilityList ::= FunctionDefinitionVisibility FunctionDefinitionVisibilityList ;
+-- -----------------------------------------------------------------------------
+
+-- event_definition -> EVENT identifier indexed_parameter_list           ';'                       : {eventDefinition, '$2', '$3', []}.
+-- event_definition -> EVENT identifier indexed_parameter_list ANONYMOUS ';'                       : {eventDefinition, '$2', '$3', "anonymous"}.
+
+EventDefinition01.                               EventDefinition ::= "EVENT" Identifier IndexedParameterList             ";" ;
+EventDefinition02.                               EventDefinition ::= "EVENT" Identifier IndexedParameterList "ANONYMOUS" ";" ;
+
+-- enum_value -> identifier                                                                        : {enumValue, '$1'}.
+
+EnumValue01.                                     EnumValue ::= Identifier ;
+
+-- enum_definition -> ENUM identifier '{'                      '}'                                 : {enumDefinition, '$2', []}.
+-- enum_definition -> ENUM identifier '{' enum_value_commalist '}'                                 : {enumDefinition, '$2', '$4'}.
+
+EnumDefinition01.                                EnumDefinition ::= "ENUM" Identifier "{"                    "}" ;
+EnumDefinition02.                                EnumDefinition ::= "ENUM" Identifier "{" EnumValueCommalist "}" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- enum_value_commalist -> enum_value                                                              : ['$1'].
+-- enum_value_commalist -> enum_value ',' enum_value_commalist                                     : ['$1' | '$3'].
+
+EnumValueCommalist01.                            EnumValueCommalist ::= EnumValue                        ;
+EnumValueCommalist02.                            EnumValueCommalist ::= EnumValue "," EnumValueCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- indexed_parameter_list -> '('                             ')'                                   : {indexedParameterList, []}.
+-- indexed_parameter_list -> '(' indexed_parameter_commalist ')'                                   : {indexedParameterList, '$2'}.
+
+IndexedParameterList01.                          IndexedParameterList ::= "("                           ")" ;
+IndexedParameterList02.                          IndexedParameterList ::= "(" IndexedParameterCommalist ")" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- indexed_parameter -> type_name                                                                  : {'$1', [],        []}.
+-- indexed_parameter -> type_name         identifier                                               : {'$1', [],        '$2'}.
+-- indexed_parameter -> type_name INDEXED                                                          : {'$1', "indexed", []}.
+-- indexed_parameter -> type_name INDEXED identifier                                               : {'$1', "indexed", '$3'}.
+
+IndexedParameter01.                              IndexedParameter ::= TypeName                      ;
+IndexedParameter02.                              IndexedParameter ::= TypeName           Identifier ;
+IndexedParameter03.                              IndexedParameter ::= TypeName "INDEXED"            ;
+IndexedParameter04.                              IndexedParameter ::= TypeName "INDEXED" Identifier ;
+
+-- indexed_parameter_commalist -> indexed_parameter                                                : ['$1'].
+-- indexed_parameter_commalist -> indexed_parameter ',' indexed_parameter_commalist                : ['$1' | '$3'].
+
+IndexedParameterCommalist01.                     IndexedParameterCommalist ::= IndexedParameter                               ;
+IndexedParameterCommalist02.                     IndexedParameterCommalist ::= IndexedParameter "," IndexedParameterCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- parameter_list -> '('                                ')'                                        : {parameterList, []}.
+-- parameter_list -> '(' type_name_identifier_commalist ')'                                        : {parameterList, '$2'}.
+
+ParameterList01.                                 ParameterList ::= "("                             ")" ;
+ParameterList02.                                 ParameterList ::= "(" TypeNameIdentifierCommalist ")" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- type_name_identifier -> type_name                                                               : {'$1', []}.
+-- type_name_identifier -> type_name identifier                                                    : {'$1', '$2'}.
+
+-- reduce/reduce TypeNameIdentifier01.                            TypeNameIdentifier ::= TypeName            ;
+TypeNameIdentifier02.                            TypeNameIdentifier ::= TypeName Identifier ;
+
+-- type_name_identifier_commalist -> type_name_identifier                                          : ['$1'].
+-- type_name_identifier_commalist -> type_name_identifier ',' type_name_identifier_commalist       : ['$1' | '$3'].
+
+TypeNameIdentifierCommalist01.                   TypeNameIdentifierCommalist ::= TypeNameIdentifier                                 ;
+TypeNameIdentifierCommalist02.                   TypeNameIdentifierCommalist ::= TypeNameIdentifier "," TypeNameIdentifierCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- type_name_list -> '('                     ')'                                                   : {typeNameList, []}.
+-- type_name_list -> '(' type_name_commalist ')'                                                   : {typeNameList, '$2'}.
+
+-- reduce/reduce TypeNameList01.                                  TypeNameList ::= "("                   ")" ;
+TypeNameList02.                                  TypeNameList ::= "(" TypeNameCommalist ")" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- type_name_commalist -> type_name                                                                : ['$1'].
+-- type_name_commalist -> type_name ',' type_name_commalist                                        : ['$1' | '$3'].
+
+TypeNameCommalist01.                             TypeNameCommalist ::= TypeName                       ;
+TypeNameCommalist02.                             TypeNameCommalist ::= TypeName "," TypeNameCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- variable_declaration -> type_name                  identifier                                   : {variableDeclaration, '$1', [],   '$2'}.
+-- variable_declaration -> type_name storage_location identifier                                   : {variableDeclaration, '$1', '$2', '$3'}.
+
+VariableDeclaration01.                           VariableDeclaration ::= TypeName                 Identifier ;
+VariableDeclaration02.                           VariableDeclaration ::= TypeName StorageLocation Identifier ;
+
+-- type_name -> elementary_type_name                                                               : {typeName, '$1'}.
+-- type_name -> user_defined_type_name                                                             : {typeName, '$1'}.
+-- type_name -> mapping                                                                            : {typeName, '$1'}.
+-- type_name -> array_type_name                                                                    : {typeName, '$1'}.
+-- type_name -> function_type_name                                                                 : {typeName, '$1'}.
+
+TypeName01.                                      TypeName ::= ElementaryTypeName  ;
+TypeName02.                                      TypeName ::= UserDefinedTypeName ;
+TypeName03.                                      TypeName ::= Mapping             ;
+TypeName04.                                      TypeName ::= ArrayTypeName       ;
+TypeName05.                                      TypeName ::= FunctionTypeName    ;
+
+-- user_defined_type_name -> identifier_dotlist                                                    : {userDefinedTypeName, '$1'}.
+
+UserDefinedTypeName01.                           UserDefinedTypeName ::= IdentifierDotlist ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- identifier_dotlist -> identifier                                                                : ['$1'].
+-- identifier_dotlist -> identifier '.' identifier_dotlist                                         : ['$1' | '$3'].
+
+IdentifierDotlist01.                             IdentifierDotlist ::= Identifier                       ;
+IdentifierDotlist02.                             IdentifierDotlist ::= Identifier "." IdentifierDotlist ;
+-- -----------------------------------------------------------------------------
+
+-- mapping -> MAPPING '(' elementary_type_name '=>' type_name ')'                                  : {mapping, '$3', '$5'}.
+
+Mapping01.                                       Mapping ::= "MAPPING" "(" ElementaryTypeName "=>" TypeName ")" ;
+
+-- array_type_name -> type_name '['            ']'                                                 : {arrayTypeName, '$1', []}.
+-- array_type_name -> type_name '[' expression ']'                                                 : {arrayTypeName, '$1', '$3'}.
+
+ArrayTypeName01.                                 ArrayTypeName ::= TypeName "["            "]" ;
+ArrayTypeName02.                                 ArrayTypeName ::= TypeName "[" Expression "]" ;
+
+-- function_type_name -> FUNCTION type_name_list                                                   : {functionTypeName, '$2', [],   []}.
+-- function_type_name -> FUNCTION type_name_list                               RETURNS type_name_list
+--                                                                                                 : {functionTypeName, '$2', [],   '$4'}.
+-- function_type_name -> FUNCTION type_name_list function_type_visibility_list                     : {functionTypeName, '$2', '$3', []}.
+-- function_type_name -> FUNCTION type_name_list function_type_visibility_list RETURNS type_name_list
+--                                                                                                 : {functionTypeName, '$2', '$3', '$5'}.
+
+FunctionTypeName01.                              FunctionTypeName ::= "FUNCTION" TypeNameList                                                  ;
+FunctionTypeName02.                              FunctionTypeName ::= "FUNCTION" TypeNameList                            "RETURN" TypeNameList ;
+FunctionTypeName03.                              FunctionTypeName ::= "FUNCTION" TypeNameList FunctionTypeVisibilityList                       ;
+FunctionTypeName04.                              FunctionTypeName ::= "FUNCTION" TypeNameList FunctionTypeVisibilityList "RETURN" TypeNameList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- function_type_visibility_list -> INTERNAL                                                       : ["internal"].
+-- function_type_visibility_list -> EXTERNAL                                                       : ["external"].
+-- function_type_visibility_list -> state_mutability                                               : ['$1'].
+-- function_type_visibility_list -> INTERNAL          function_type_visibility_list                : ["internal" | '$2'].
+-- function_type_visibility_list -> EXTERNAL          function_type_visibility_list                : ["external" | '$2'].
+-- function_type_visibility_list -> state_mutability  function_type_visibility_list                : ['$1'       | '$2'].
+
+FunctionTypeVisibilityList01.                    FunctionTypeVisibilityList ::= "INTERNAL"                                 ;
+FunctionTypeVisibilityList02.                    FunctionTypeVisibilityList ::= "EXTERNAL"                                 ;
+FunctionTypeVisibilityList03.                    FunctionTypeVisibilityList ::= StateMutability                            ;
+FunctionTypeVisibilityList04.                    FunctionTypeVisibilityList ::= "INTERNAL"      FunctionTypeVisibilityList ;
+FunctionTypeVisibilityList05.                    FunctionTypeVisibilityList ::= "EXTERNAL"      FunctionTypeVisibilityList ;
+FunctionTypeVisibilityList06.                    FunctionTypeVisibilityList ::= StateMutability FunctionTypeVisibilityList ;
+-- -----------------------------------------------------------------------------
+
+-- storage_location -> MEMORY                                                                      : {storageLocation, "memory"}.
+-- storage_location -> STORAGE                                                                     : {storageLocation, "storage"}.
+
+StorageLocation01.                               StorageLocation ::= "MEMORY"  ;
+StorageLocation02.                               StorageLocation ::= "STORAGE" ;
+
+-- state_mutability -> PURE                                                                        : {stateMutability, "pure"}.
+-- state_mutability -> CONSTANT                                                                    : {stateMutability, "constant"}.
+-- state_mutability -> VIEW                                                                        : {stateMutability, "view"}.
+-- state_mutability -> PAYABLE                                                                     : {stateMutability, "payable"}.
+
+StateMutability01.                               StateMutability ::= "PURE"     ;
+StateMutability02.                               StateMutability ::= "CONSTANT" ;
+StateMutability03.                               StateMutability ::= "VIEW"     ;
+StateMutability04.                               StateMutability ::= "PAYABLE"  ;
+
+-- block -> '{'                '}'                                                                 : {block, []}.
+-- block -> '{' statement_list '}'                                                                 : {block, '$2'}.
+
+Block01.                                         Block ::= "{" StatementList "}" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- statement_list -> statement                                                                     : ['$1'].
+-- statement_list -> statement statement_list                                                      : ['$1' | '$2'].
+
+StatementList01.                                 StatementList ::= Statement               ;
+StatementList02.                                 StatementList ::= Statement StatementList ;
+-- =============================================================================
+
+-- statement -> if_statement                                                                       : {statement, '$1'}.
+-- statement -> while_statement                                                                    : {statement, '$1'}.
+-- statement -> for_statement                                                                      : {statement, '$1'}.
+-- statement -> block                                                                              : {statement, '$1'}.
+-- statement -> inline_assembly_statement                                                          : {statement, '$1'}.
+-- statement -> do_while_statement        ';'                                                      : {statement, '$1'}.
+-- statement -> place_holder_statement    ';'                                                      : {statement, '$1'}.
+-- statement -> continue                  ';'                                                      : {statement, '$1'}.
+-- statement -> break                     ';'                                                      : {statement, '$1'}.
+-- statement -> return                    ';'                                                      : {statement, '$1'}.
+-- statement -> throw                     ';'                                                      : {statement, '$1'}.
+-- statement -> simple_statement          ';'                                                      : {statement, '$1'}.
+
+Statement01.                                     Statement ::= IfStatement                 ;
+Statement02.                                     Statement ::= WhileStatement              ;
+Statement03.                                     Statement ::= ForStatement                ;
+Statement04.                                     Statement ::= Block                       ;
+Statement05.                                     Statement ::= InlineAssemblyStatement     ;
+Statement06.                                     Statement ::= DoWhileStatement        ";" ;
+Statement07.                                     Statement ::= PlaceHolderStatement    ";" ;
+Statement08.                                     Statement ::= Continue                ";" ;
+Statement09.                                     Statement ::= Break                   ";" ;
+Statement10.                                     Statement ::= Return                  ";" ;
+Statement11.                                     Statement ::= Throw                   ";" ;
+Statement12.                                     Statement ::= SimpleStatement         ";" ;
+
+-- expression_statement -> expression                                                              : {expressionStatement, '$1'}.
+
+ExpressionStatement01.                           ExpressionStatement ::= Expression ;
+
+-- if_statement -> IF '(' expression ')' statement                                                 : {ifStatement, '$3', '$5', []}.
+-- if_statement -> IF '(' expression ')' statement ELSE statement                                  : {ifStatement, '$3', '$5', '$7'}.
+
+IfStatement01.                                   IfStatement ::= "IF" "(" Expression ")" Statement                  ;
+IfStatement02.                                   IfStatement ::= "IF" "(" Expression ")" Statement "ELSE" Statement ;
+
+-- while_statement -> WHILE '(' expression ')' statement                                           : {whileStatement, '$3', '$5'}.
+
+WhileStatement01.                                WhileStatement ::= "WHILE" "(" Expression ")" Statement ;
+
+-- place_holder_statement -> '_'                                                                   : {placeHolderStatement, " _ "}.
+
+PlaceHolderStatement01.                          PlaceHolderStatement ::= "_" ;
+
+-- simple_statement -> variable_definition                                                         : {simpleStatement, '$1'}.
+-- simple_statement -> expression_statement                                                        : {simpleStatement, '$1'}.
+
+SimpleStatement01.                               SimpleStatement ::= VariableDefinition  ;
+SimpleStatement02.                               SimpleStatement ::= ExpressionStatement ;
+
+-- for_statement -> FOR '('                  ';'            ';'            ')' statement           : {forStatement, [],   [],   [],   '$6'}.
+-- for_statement -> FOR '('                  ';'            ';' expression ')' statement           : {forStatement, [],   [],   '$5', '$7'}.
+-- for_statement -> FOR '('                  ';' expression ';'            ')' statement           : {forStatement, [],   '$4', [],   '$7'}.
+-- for_statement -> FOR '('                  ';' expression ';' expression ')' statement           : {forStatement, [],   '$4', '$6', '$8'}.
+-- for_statement -> FOR '(' simple_statement ';'            ';'            ')' statement           : {forStatement, '$3', [],   [],   '$7'}.
+-- for_statement -> FOR '(' simple_statement ';'            ';' expression ')' statement           : {forStatement, '$3', [],   '$6', '$8'}.
+-- for_statement -> FOR '(' simple_statement ';' expression ';'            ')' statement           : {forStatement, '$3', '$5', [],   '$8'}.
+-- for_statement -> FOR '(' simple_statement ';' expression ';' expression ')' statement           : {forStatement, '$3', '$5', '$7', '$9'}.
+
+ForStatement01.                                  ForStatement ::= "FOR" "("                 ";"            ";"            ")" Statement ;
+ForStatement02.                                  ForStatement ::= "FOR" "("                 ";"            ";" Expression ")" Statement ;
+ForStatement03.                                  ForStatement ::= "FOR" "("                 ";" Expression ";"            ")" Statement ;
+ForStatement04.                                  ForStatement ::= "FOR" "("                 ";" Expression ";" Expression ")" Statement ;
+ForStatement05.                                  ForStatement ::= "FOR" "(" SimpleStatement ";"            ";"            ")" Statement ;
+ForStatement06.                                  ForStatement ::= "FOR" "(" SimpleStatement ";"            ";" Expression ")" Statement ;
+ForStatement07.                                  ForStatement ::= "FOR" "(" SimpleStatement ";" Expression ";"            ")" Statement ;
+ForStatement08.                                  ForStatement ::= "FOR" "(" SimpleStatement ";" Expression ";" Expression ")" Statement ;
+
+-- inline_assembly_statement -> ASSEMBLY                inline_assembly_block                      : {inlineAssemblyStatement, [],   '$2'}.
+-- inline_assembly_statement -> ASSEMBLY string_literal inline_assembly_block                      : {inlineAssemblyStatement, '$2', '$3'}.
+
+InlineAssemblyStatement01.                       InlineAssemblyStatement ::= "ASSEMBLY"               InlineAssemblyBlock ;
+InlineAssemblyStatement02.                       InlineAssemblyStatement ::= "ASSEMBLY" StringLiteral InlineAssemblyBlock ;
+
+-- do_while_statement -> DO statement WHILE '(' expression ')'                                     : {doWhileStatement, '$2', '$5'}.
+
+DoWhileStatement01.                              DoWhileStatement ::= "DO" Statement "WHILE" "(" Expression ")" ;
+
+-- continue -> CONTINUE                                                                            : {continue, "continue"}.
+
+Continue01.                                      Continue ::= "CONTINUE" ;
+
+-- break -> BREAK                                                                                  : {break, "break"}.
+
+Break01.                                         Break ::= "BREAK" ;
+
+-- return -> RETURN                                                                                : {return, []}.
+-- return -> RETURN expression                                                                     : {return, '$2'}.
+
+Return01.                                        Return ::= "RETURN"            ;
+Return02.                                        Return ::= "RETURN" Expression ;
+
+-- throw -> THROW                                                                                  : {throw, "throw"}.
+
+Throw01.                                         Throw ::= "THROW" ;
+
+-- variable_definition -> VAR identifier_list                                                      : {variableDefinition, '$2', []}.
+-- variable_definition -> VAR identifier_list      '=' expression                                  : {variableDefinition, '$2', '$4'}.
+-- variable_definition ->     variable_declaration                                                 : {variableDefinition, '$1', []}.
+-- variable_definition ->     variable_declaration '=' expression                                  : {variableDefinition, '$1', '$3'}.
+
+VariableDefinition01.                            VariableDefinition ::= "VAR" IdentifierList                     ;
+VariableDefinition02.                            VariableDefinition ::= "VAR" IdentifierList      "=" Expression ;
+VariableDefinition03.                            VariableDefinition ::=       VariableDeclaration                ;
+VariableDefinition04.                            VariableDefinition ::=       VariableDeclaration "=" Expression ;
+
+-- identifier_list -> '('                                  ')'                                     : {identifierList, [],   []}.
+-- identifier_list -> '(' identifier_comma_list            ')'                                     : {identifierList, '$2', []}.
+-- identifier_list -> '(' identifier_comma_list identifier ')'                                     : {identifierList, '$2', '$3'}.
+
+IdentifierList01.                                IdentifierList ::= "("                                ")" ;
+IdentifierList02.                                IdentifierList ::= "(" IdentifierCommaList            ")" ;
+IdentifierList03.                                IdentifierList ::= "(" IdentifierCommaList Identifier ")" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- identifier_comma ->            ','                                                              : [].
+-- identifier_comma -> identifier ','                                                              : '$1'.
+
+IdentifierComma01.                               IdentifierComma ::=            "," ;
+IdentifierComma02.                               IdentifierComma ::= Identifier "," ;
+
+-- identifier_comma_list -> identifier_comma                                                       : ['$1'].
+-- identifier_comma_list -> identifier_comma identifier_comma_list                                 : ['$1' | '$2'].
+
+IdentifierCommaList01.                           IdentifierCommaList ::= IdentifierComma                     ;
+IdentifierCommaList02.                           IdentifierCommaList ::= IdentifierComma IdentifierCommaList ;
+-- =============================================================================
+
+-- expression -> expression unary_right                                                            : {expression, [],   '$1', '$2'}.
+
+Expression01.                                    Expression ::= Expression UnaryRight ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- unary_right -> '++'                                                                             : "++".
+-- unary_right -> '--'                                                                             : "--".
+
+UnaryRight01.                                    UnaryRight ::= "++" ;
+UnaryRight02.                                    UnaryRight ::= "--" ;
+-- -----------------------------------------------------------------------------
+
+-- expression -> new_expression                                                                    : {expression, '$1'}.
+-- expression -> index_access                                                                      : {expression, '$1'}.
+-- expression -> member_access                                                                     : {expression, '$1'}.
+-- expression -> function_call                                                                     : {expression, '$1'}.
+-- expression -> '(' expression ')'                                                                : {expression, "(",  '$2'}.
+
+Expression02.                                    Expression ::= NewExpression      ;
+Expression03.                                    Expression ::= IndexAccess        ;
+Expression04.                                    Expression ::= MemberAccess       ;
+Expression05.                                    Expression ::= FunctionCall       ;
+Expression06.                                    Expression ::= "(" Expression ")" ;
+
+-- expression -> unary_left expression                                                             : {expression, '$1', '$2', []}.
+
+Expression07.                                    Expression ::= UnaryLeft Expression ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- unary_left -> '!'                                                                               : "!".
+-- unary_left -> '~'                                                                               : "~".
+-- unary_left -> DELETE                                                                            : "delete".
+-- unary_left -> '++'                                                                              : "++".
+-- unary_left -> '--'                                                                              : "--".
+-- unary_left -> '+'                                                                               : "+".
+-- unary_left -> '-'                                                                               : "-".
+
+UnaryLeft01.                                     UnaryLeft ::= "!"      ;
+UnaryLeft02.                                     UnaryLeft ::= "~"      ;
+UnaryLeft03.                                     UnaryLeft ::= "DELETE" ;
+UnaryLeft04.                                     UnaryLeft ::= "++"     ;
+UnaryLeft05.                                     UnaryLeft ::= "--"     ;
+UnaryLeft06.                                     UnaryLeft ::= "+"      ;
+UnaryLeft07.                                     UnaryLeft ::= "-"      ;
+-- -----------------------------------------------------------------------------
+
+-- expression -> expression '**'  expression                                                       : {expression, '$1', "**",  '$3'}.
+
+Expression08.                                    Expression ::= Expression "**" Expression ;
+
+-- expression -> expression '*'   expression                                                       : {expression, '$1', "*",   '$3'}.
+-- expression -> expression '/'   expression                                                       : {expression, '$1', "/",   '$3'}.
+-- expression -> expression '%'   expression                                                       : {expression, '$1', "%",   '$3'}.
+
+Expression09.                                    Expression ::= Expression "*" Expression ;
+Expression10.                                    Expression ::= Expression "/" Expression ;
+Expression11.                                    Expression ::= Expression "%" Expression ;
+
+-- expression -> expression '+'   expression                                                       : {expression, '$1', "+",   '$3'}.
+-- expression -> expression '-'   expression                                                       : {expression, '$1', "-",   '$3'}.
+
+Expression12.                                    Expression ::= Expression "+" Expression ;
+Expression13.                                    Expression ::= Expression "-" Expression ;
+
+-- expression -> expression '<<'   expression                                                      : {expression, '$1', "<<",  '$3'}.
+-- expression -> expression '>>'   expression                                                      : {expression, '$1', ">>",  '$3'}.
+
+Expression14.                                    Expression ::= Expression "<<" Expression ;
+Expression15.                                    Expression ::= Expression ">>" Expression ;
+
+-- expression -> expression '&'   expression                                                       : {expression, '$1', "&",   '$3'}.
+
+Expression16.                                    Expression ::= Expression "&" Expression ;
+
+-- expression -> expression '^'   expression                                                       : {expression, '$1', "^",   '$3'}.
+
+Expression17.                                    Expression ::= Expression "^" Expression ;
+
+-- expression -> expression '|'   expression                                                       : {expression, '$1', "|",   '$3'}.
+
+Expression18.                                    Expression ::= Expression "|" Expression ;
+
+-- expression -> expression '<'   expression                                                       : {expression, '$1', "<",   '$3'}.
+-- expression -> expression '>'   expression                                                       : {expression, '$1', ">",   '$3'}.
+-- expression -> expression '<='  expression                                                       : {expression, '$1', "<=",  '$3'}.
+-- expression -> expression '>='  expression                                                       : {expression, '$1', ">=",  '$3'}.
+
+Expression19.                                    Expression ::= Expression "<"   Expression ;
+Expression20.                                    Expression ::= Expression ">"   Expression ;
+Expression21.                                    Expression ::= Expression "<="  Expression ;
+Expression22.                                    Expression ::= Expression ">="  Expression ;
+
+-- expression -> expression '=='  expression                                                       : {expression, '$1', "==",  '$3'}.
+-- expression -> expression '!='  expression                                                       : {expression, '$1', "!=",  '$3'}.
+
+Expression23.                                    Expression ::= Expression "==" Expression ;
+Expression24.                                    Expression ::= Expression "!=" Expression ;
+
+-- expression -> expression '&&'  expression                                                       : {expression, '$1', "&&",  '$3'}.
+
+Expression25.                                    Expression ::= Expression "&&" Expression ;
+
+-- expression -> expression '||'  expression                                                       : {expression, '$1', "||",  '$3'}.
+
+Expression26.                                    Expression ::= Expression "||" Expression ;
+
+-- expression -> expression '?'   expression ':' expression                                        : {expression, '$1', "?", '$3', '$5'}.
+
+Expression27.                                    Expression ::= Expression "?" Expression ":" Expression ;
+
+-- expression -> expression '='   expression                                                       : {expression, '$1', "=",   '$3'}.
+-- expression -> expression '|='  expression                                                       : {expression, '$1', "|=",  '$3'}.
+-- expression -> expression '^='  expression                                                       : {expression, '$1', "^=",  '$3'}.
+-- expression -> expression '&='  expression                                                       : {expression, '$1', "&=",  '$3'}.
+-- expression -> expression '<<=' expression                                                       : {expression, '$1', "<<=", '$3'}.
+-- expression -> expression '>>=' expression                                                       : {expression, '$1', ">>=", '$3'}.
+-- expression -> expression '+='  expression                                                       : {expression, '$1', "+=",  '$3'}.
+-- expression -> expression '-='  expression                                                       : {expression, '$1', "-=",  '$3'}.
+-- expression -> expression '*='  expression                                                       : {expression, '$1', "*=",  '$3'}.
+-- expression -> expression '/='  expression                                                       : {expression, '$1', "/=",  '$3'}.
+-- expression -> expression '%='  expression                                                       : {expression, '$1', "%=",  '$3'}.
+
+Expression28.                                    Expression ::= Expression "="    Expression ;
+Expression29.                                    Expression ::= Expression "|="   Expression ;
+Expression30.                                    Expression ::= Expression "^="   Expression ;
+Expression31.                                    Expression ::= Expression "&="   Expression ;
+Expression32.                                    Expression ::= Expression "<<="  Expression ;
+Expression33.                                    Expression ::= Expression ">>="  Expression ;
+Expression34.                                    Expression ::= Expression "+="   Expression ;
+Expression35.                                    Expression ::= Expression "-="   Expression ;
+Expression36.                                    Expression ::= Expression "*="   Expression ;
+Expression37.                                    Expression ::= Expression "/="   Expression ;
+Expression38.                                    Expression ::= Expression "%="   Expression ;
+
+-- expression -> primary_expression                                                                : {expression, '$1'}.
+
+Expression39.                                    Expression ::= PrimaryExpression ;
+
+-- primary_expression -> boolean_literal                                                           : {primaryExpression, '$1'}.
+-- primary_expression -> number_literal                                                            : {primaryExpression, '$1'}.
+-- primary_expression -> hex_literal                                                               : {primaryExpression, '$1'}.
+-- primary_expression -> string_literal                                                            : {primaryExpression, '$1'}.
+-- primary_expression -> tuple_expression                                                          : {primaryExpression, '$1'}.
+-- primary_expression -> identifier                                                                : {primaryExpression, '$1'}.
+-- primary_expression -> elementary_type_name_expression                                           : {primaryExpression, '$1'}.
+
+PrimaryExpression01.                             PrimaryExpression ::= BooleanLiteral               ;
+PrimaryExpression02.                             PrimaryExpression ::= NumberLiteral                ;
+PrimaryExpression03.                             PrimaryExpression ::= HexLiteral                   ;
+PrimaryExpression04.                             PrimaryExpression ::= StringLiteral                ;
+PrimaryExpression05.                             PrimaryExpression ::= TupleExpression              ;
+-- reduce/reduce PrimaryExpression06.                             PrimaryExpression ::= Identifier                   ;
+-- reduce/reduce PrimaryExpression07.                             PrimaryExpression ::= ElementaryTypeNameExpression ;
+
+-- expression_list -> expression_commalist                                                         : {expressionList, '$1'}.
+
+ExpressionList01.                                ExpressionList ::= ExpressionCommalist ;
+
+-- name_value_list -> identifier_expression_list                                                   : {nameValueList, '$1'}.
+
+NameValueList01.                                 NameValueList ::= IdentifierExpressionList ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- identifier_expression_list -> identifier_expression                                             : ['$1'].
+-- identifier_expression_list -> identifier_expression identifier_expression_list                  : ['$1' | '$2'].
+
+IdentifierExpressionList01.                      IdentifierExpressionList ::= IdentifierExpression                          ;
+IdentifierExpressionList02.                      IdentifierExpressionList ::= IdentifierExpression IdentifierExpressionList ;
+
+-- identifier_expression -> identifier ':' expression                                              : {'$1', '$2'}.
+
+IdentifierExpression01.                          IdentifierExpression ::= Identifier ";" Expression ;
+-- -----------------------------------------------------------------------------
+
+-- function_call -> expression '(' function_call_arguments ')'                                     : {functionCall, '$1', '$3'}.
+
+FunctionCall01.                                  FunctionCall ::= Expression "(" FunctionCallArguments ")" ;
+
+-- function_call_arguments -> '{'                 '}'                                              : {functionCallArguments, []}.
+-- function_call_arguments -> '{' name_value_list '}'                                              : {functionCallArguments, '$2'}.
+-- function_call_arguments -> expression_list                                                      : {functionCallArguments, '$1'}.
+
+FunctionCallArguments01.                         FunctionCallArguments ::= "{"               "}" ;
+FunctionCallArguments02.                         FunctionCallArguments ::= "{" NameValueList "}" ;
+FunctionCallArguments03.                         FunctionCallArguments ::= ExpressionList        ;
+
+-- new_expression -> NEW type_name                                                                 : {newExpression, '$2'}.
+
+NewExpression01.                                 NewExpression ::= "NEW" Expression ;
+
+-- member_access -> expression '.' identifier                                                      : {memberAccess, '$1', '$3'}.
+
+MemberAccess01.                                  MemberAccess ::= Expression "." Identifier ;
+
+-- index_access -> expression '['            ']'                                                   : {indexAccess, '$1', []}.
+-- index_access -> expression '[' expression ']'                                                   : {indexAccess, '$1', '$3'}.
+
+IndexAccess01.                                   IndexAccess ::= Expression "["            "]" ;
+IndexAccess02.                                   IndexAccess ::= Expression "[" Expression "]" ;
+
+-- boolean_literal -> TRUE                                                                         : {booleanLiteral, "true"}.
+-- boolean_literal -> FALSE                                                                        : {booleanLiteral, "false"}.
+
+BooleanLiteral01.                                BooleanLiteral ::= "TRUE"  ;
+BooleanLiteral02.                                BooleanLiteral ::= "FALSE" ;
+
+-- number_literal -> HEX_NUMBER                                                                    : {numberLiteral, unwrap('$1'), []}.
+-- number_literal -> HEX_NUMBER     number_unit                                                    : {numberLiteral, unwrap('$1'), '$2'}.
+-- number_literal -> DECIMAL_NUMBER                                                                : {numberLiteral, unwrap('$1'), []}.
+-- number_literal -> DECIMAL_NUMBER number_unit                                                    : {numberLiteral, unwrap('$1'), '$2'}.
+
+NumberLiteral01.                                 NumberLiteral ::= "HEX_NUMBER"                ;
+NumberLiteral02.                                 NumberLiteral ::= "HEX_NUMBER"     NumberUnit ;
+NumberLiteral03.                                 NumberLiteral ::= "DECIMAL_NUMBER"            ;
+Numb04erLiteral.                                 NumberLiteral ::= "DECIMAL_NUMBER" NumberUnit ;
+
+-- number_unit -> WEI                                                                              : {numberUnit, "wei"}.
+-- number_unit -> SZABO                                                                            : {numberUnit, "szabo"}.
+-- number_unit -> FINNEY                                                                           : {numberUnit, "finney"}.
+-- number_unit -> ETHER                                                                            : {numberUnit, "ether"}.
+-- number_unit -> SECONDS                                                                          : {numberUnit, "seconds"}.
+-- number_unit -> MINUTES                                                                          : {numberUnit, "minutes"}.
+-- number_unit -> HOURS                                                                            : {numberUnit, "hours"}.
+-- number_unit -> DAYS                                                                             : {numberUnit, "days"}.
+-- number_unit -> WEEKS                                                                            : {numberUnit, "weeks"}.
+-- number_unit -> YEARS                                                                            : {numberUnit, "years"}.
+
+NumberUnit01.                                    NumberUnit ::= "WEI"     ;
+NumberUnit02.                                    NumberUnit ::= "SZABO"   ;
+NumberUnit03.                                    NumberUnit ::= "FINNEY"  ;
+NumberUnit04.                                    NumberUnit ::= "ETHER"   ;
+NumberUnit05.                                    NumberUnit ::= "SECONDS" ;
+NumberUnit06.                                    NumberUnit ::= "NINUTES" ;
+NumberUnit07.                                    NumberUnit ::= "HOURS"   ;
+NumberUnit08.                                    NumberUnit ::= "DAYS"    ;
+NumberUnit09.                                    NumberUnit ::= "WEEKS"   ;
+NumberUnit10.                                    NumberUnit ::= "YEARS"   ;
+
+-- hex_literal -> HEX_LITERAL                                                                      : {hexLiteral, unwrap('$1')}.
+
+HexLiteral01.                                    HexLiteral ::= "HEX_LITERAL" ;
+
+-- string_literal -> STRING_LITERAL                                                                : {stringLiteral, unwrap('$1')}.
+
+StringLiteral01.                                 StringLiteral ::= "STRING_LITERAL" ;
+
+-- identifier -> IDENTIFIER                                                                        : {identifier, unwrap('$1')}.
+
+Identifier01.                                    Identifier ::= "IDENTIFIER" ;
+
+-- tuple_expression -> '('                 ')'                                                     : {tupleExpression, "(", []}.
+-- tuple_expression -> '(' expression_list ')'                                                     : {tupleExpression, "(", '$2'}.
+-- tuple_expression -> '['                 ']'                                                     : {tupleExpression, "[", []}.
+-- tuple_expression -> '[' expression_list ']'                                                     : {tupleExpression, "[", '$2'}.
+
+TupleExpression01.                               TupleExpression ::= "("                ")" ;
+TupleExpression02.                               TupleExpression ::= "(" ExpressionList ")" ;
+TupleExpression03.                               TupleExpression ::= "["                "]" ;
+TupleExpression04.                               TupleExpression ::= "[" ExpressionList "]" ;
+
+-- elementary_type_name_expression -> elementary_type_name                                         : {elementaryTypeNameExpression, '$1'}.
+
+-- reduce/reduce ElementaryTypeNameExpression01.                  ElementaryTypeNameExpression ::= ElementaryTypeName ;
+
+-- elementary_type_name -> ADDRESS                                                                 : {elementaryTypeName, "address"}.
+-- elementary_type_name -> BOOL                                                                    : {elementaryTypeName, "bool"}.
+-- elementary_type_name -> STRING                                                                  : {elementaryTypeName, "string"}.
+-- elementary_type_name -> VAR                                                                     : {elementaryTypeName, "var"}.
+-- elementary_type_name -> INT                                                                     : {elementaryTypeName, unwrap('$1')}.
+-- elementary_type_name -> UINT                                                                    : {elementaryTypeName, unwrap('$1')}.
+-- elementary_type_name -> BYTE                                                                    : {elementaryTypeName, unwrap('$1')}.
+-- elementary_type_name -> fixed                                                                   : {elementaryTypeName, '$1'}.
+-- elementary_type_name -> ufixed                                                                  : {elementaryTypeName, '$1'}.
+
+ElementaryTypeName01.                            ElementaryTypeName ::= "ADDRESS" ;
+ElementaryTypeName02.                            ElementaryTypeName ::= "BOOL"    ;
+ElementaryTypeName03.                            ElementaryTypeName ::= "STRING"  ;
+ElementaryTypeName04.                            ElementaryTypeName ::= "VAR"     ;
+ElementaryTypeName05.                            ElementaryTypeName ::= "INT"     ;
+ElementaryTypeName06.                            ElementaryTypeName ::= "UINT"    ;
+ElementaryTypeName07.                            ElementaryTypeName ::= "BYTE"    ;
+ElementaryTypeName08.                            ElementaryTypeName ::= Fixed     ;
+ElementaryTypeName09.                            ElementaryTypeName ::= Ufixed    ;
+
+-- fixed -> 'fixed'                                                                                : {fixed, []}.
+-- fixed -> 'fixed' DECIMAL_NUMBER 'x' DECIMAL_NUMBER                                              : {fixed, '$2', '$4'}.
+
+Fixed01.                                         Fixed ::= "FIXED"                                       ;
+Fixed02.                                         Fixed ::= "FIXED" "DECIMAL_NUMBER" "x" "DECIMAL_NUMBER" ;
+
+-- ufixed -> 'ufixed'                                                                              : {ufixed, []}.
+-- ufixed -> 'ufixed' DECIMAL_NUMBER 'x' DECIMAL_NUMBER                                            : {ufixed, '$2', '$4'}.
+
+Ufixed01.                                        Ufixed ::= "UFIXED"                                       ;
+Ufixed02.                                        Ufixed ::= "UFIXED" "DECIMAL_NUMBER" "x" "DECIMAL_NUMBER" ;
+
+-- inline_assembly_block -> '{'                    '}'                                             : {inlineAssemblyBlock, []}.
+-- inline_assembly_block -> '{' assembly_item_list '}'                                             : {inlineAssemblyBlock, '$2'}.
+
+InlineAssemblyBlock01.                           InlineAssemblyBlock ::= "{"                  "}" ;
+InlineAssemblyBlock02.                           InlineAssemblyBlock ::= "{" AssemblyItemList "}" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- assembly_item_list -> assembly_item                                                             : ['$1'].
+-- assembly_item_list -> assembly_item assembly_item_list                                          : ['$1' | '$2'].
+
+AssemblyItemList01.                              AssemblyItemList ::= AssemblyItem                  ;
+AssemblyItemList02.                              AssemblyItemList ::= AssemblyItem AssemblyItemList ;
+-- -----------------------------------------------------------------------------
+
+-- assembly_item -> identifier                                                                     : {assemblyItem, '$1'}.
+-- assembly_item -> functional_assembly_expression                                                 : {assemblyItem, '$1'}.
+-- assembly_item -> inline_assembly_block                                                          : {assemblyItem, '$1'}.
+-- assembly_item -> assembly_local_binding                                                         : {assemblyItem, '$1'}.
+-- assembly_item -> assembly_assignment                                                            : {assemblyItem, '$1'}.
+-- assembly_item -> assembly_label                                                                 : {assemblyItem, '$1'}.
+-- assembly_item -> number_literal                                                                 : {assemblyItem, '$1'}.
+-- assembly_item -> string_literal                                                                 : {assemblyItem, '$1'}.
+-- assembly_item -> hex_literal                                                                    : {assemblyItem, '$1'}.
+
+AssemblyItem01.                                  AssemblyItem ::= Identifier                   ;
+AssemblyItem02.                                  AssemblyItem ::= FunctionalAssemblyExpression ;
+AssemblyItem03.                                  AssemblyItem ::= InlineAssemblyBlock          ;
+AssemblyItem04.                                  AssemblyItem ::= AssemblyLocalBinding         ;
+AssemblyItem05.                                  AssemblyItem ::= AssemblyAssignment           ;
+AssemblyItem06.                                  AssemblyItem ::= AssemblyLabel                ;
+AssemblyItem07.                                  AssemblyItem ::= NumberLiteral                ;
+AssemblyItem08.                                  AssemblyItem ::= StringLiteral                ;
+AssemblyItem09.                                  AssemblyItem ::= HexLiteral                   ;
+
+-- assembly_local_binding -> LET identifier ':=' functional_assembly_expression                    : {assemblyLocalBinding, '$2', '$4'}.
+
+AssemblyLocalBinding01.                          AssemblyLocalBinding ::= "LET" Identifier ":=" FunctionalAssemblyExpression ;
+
+-- assembly_assignment ->            ':=' identifier                                               : {assemblyAssignment, [],   '$2'}.
+-- assembly_assignment -> identifier ':=' functional_assembly_expression                           : {assemblyAssignment, '$1', '$3'}.
+
+AssemblyAssignment01.                            AssemblyAssignment ::=            ":=" Identifier                   ;
+AssemblyAssignment02.                            AssemblyAssignment ::= Identifier ":=" FunctionalAssemblyExpression ;
+
+-- assembly_label -> identifier ':='                                                               : {assemblyLabel, '$1'}.
+
+AssemblyLabel01.                                 AssemblyLabel ::= Identifier ":=" ;
+
+-- functional_assembly_expression -> identifier '('                         ')'                    : {functionalAssemblyExpression, '$1', []}.
+-- functional_assembly_expression -> identifier '(' assembly_item_commalist ')'                    : {functionalAssemblyExpression, '$1', '$3'}.
+
+FunctionalAssemblyExpression01.                  FunctionalAssemblyExpression ::= Identifier "("                       ")" ;
+FunctionalAssemblyExpression02.                  FunctionalAssemblyExpression ::= Identifier "(" AssemblyItemCommalist ")" ;
+
+-- =============================================================================
+-- Helper definitions.
+-- -----------------------------------------------------------------------------
+-- assembly_item_commalist -> assembly_item                                                        : ['$1'].
+-- assembly_item_commalist -> assembly_item ',' assembly_item_commalist                            : ['$1' | '$2'].
+
+AssemblyItemCommalist01.                         AssemblyItemCommalist ::= AssemblyItem                           ;
+AssemblyItemCommalist02.                         AssemblyItemCommalist ::= AssemblyItem "," AssemblyItemCommalist ;
+-- -----------------------------------------------------------------------------
+
+-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+-- LBNF specifica
+-- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+entrypoints SourceUnit ;

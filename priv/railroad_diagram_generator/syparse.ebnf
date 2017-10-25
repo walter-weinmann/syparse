@@ -1,0 +1,195 @@
+SourceUnit ::= (PragmaDirective | ImportDirective | ContractDefinition)*
+
+PragmaDirective ::= 'PRAGMA' Identifier ([^;]+) ';'
+
+ImportDirective ::= 'IMPORT' StringLiteral ('AS' Identifier)? ';'
+                  | 'IMPORT' ('*' | Identifier) ('AS' Identifier)? 'FROM' StringLiteral ';'
+                  | 'IMPORT' '{' Identifier ('AS' Identifier)? ( ',' Identifier ('AS' Identifier)? )* '}' 'FROM' StringLiteral ';'
+
+ContractDefinition ::= ( 'CONTRACT' | 'LIBRARY' | 'INTERFACE' ) Identifier
+                       ( 'IS' InheritanceSpecifier (',' InheritanceSpecifier )* )?
+                       '{' ContractPart* '}'
+
+ContractPart ::= StateVariableDeclaration | UsingForDeclaration
+               | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
+
+InheritanceSpecifier ::= UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
+
+StateVariableDeclaration ::= TypeName ( 'PUBLIC' | 'INTERNAL' | 'PRIVATE' | 'CONSTANT' )? Identifier ('=' Expression)? ';'
+
+UsingForDeclaration ::= 'USING' Identifier 'FOR' ('*' | TypeName) ';'
+
+StructDefinition ::= 'STRUCT' Identifier '{'
+                     ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
+
+ModifierDefinition ::= 'MODIFIER' Identifier ParameterList? Block
+
+ModifierInvocation ::= Identifier ( '(' ExpressionList? ')' )?
+
+FunctionDefinition ::= 'FUNCTION' Identifier? ParameterList
+                       ( ModifierInvocation | StateMutability | 'EXTERNAL' | 'PUBLIC' | 'INTERNAL' | 'PRIVATE' )*
+                       ( 'RETURNS' ParameterList )? ( ';' | Block )
+
+EventDefinition ::= 'EVENT' Identifier IndexedParameterList 'ANONYMOUS'? ';'
+
+EnumValue ::= Identifier
+
+EnumDefinition ::= 'ENUM' Identifier '{' EnumValue? (',' EnumValue)* '}'
+
+IndexedParameterList ::= '(' ( TypeName 'INDEXED'? Identifier? (',' TypeName 'INDEXED'? Identifier?)* )? ')'
+
+/* reduce/reduce ParameterList ::=        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')' */
+ParameterList ::=        '(' ( TypeName            Identifier (',' TypeName            Identifier)* )? ')'
+
+/* reduce/reduce TypeNameList ::=         '(' ( TypeName (',' TypeName )* )? ')' */
+TypeNameList ::=         '(' ( TypeName (',' TypeName )* ) ')'
+
+VariableDeclaration ::= TypeName StorageLocation? Identifier
+
+TypeName ::= ElementaryTypeName
+           | UserDefinedTypeName
+           | Mapping
+           | ArrayTypeName
+           | FunctionTypeName
+
+UserDefinedTypeName ::= Identifier ( '.' Identifier )*
+
+Mapping ::= 'MAPPING' '(' ElementaryTypeName '=>' TypeName ')'
+
+ArrayTypeName ::= TypeName '[' Expression? ']'
+
+FunctionTypeName ::= 'FUNCTION' TypeNameList ( 'INTERNAL' | 'EXTERNAL' | StateMutability )*
+                     ( 'RETURNS' TypeNameList )?
+
+StorageLocation ::= 'MEMORY' | 'STORAGE'
+
+StateMutability ::= 'PURE' | 'CONSTANT' | 'VIEW' | 'PAYABLE'
+
+Block ::= '{' Statement* '}'
+
+Statement ::= IfStatement | WhileStatement | ForStatement | Block | InlineAssemblyStatement |
+              ( DoWhileStatement | PlaceholderStatement | Continue | Break | Return |
+                Throw | SimpleStatement ) ';'
+
+ExpressionStatement ::= Expression
+
+IfStatement ::= 'IF' '(' Expression ')' Statement ( 'ELSE' Statement )?
+
+WhileStatement ::= 'WHILE' '(' Expression ')' Statement
+
+PlaceholderStatement ::= '_'
+
+SimpleStatement ::= VariableDefinition | ExpressionStatement
+
+ForStatement ::= 'FOR' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
+
+InlineAssemblyStatement ::= 'ASSEMBLY' StringLiteral? InlineAssemblyBlock
+
+DoWhileStatement ::= 'DO' Statement 'WHILE' '(' Expression ')'
+
+Continue ::= 'CONTINUE'
+
+Break ::= 'BREAK'
+
+Return ::= 'RETURN' Expression?
+
+Throw ::= 'THROW'
+
+VariableDefinition ::= ('VAR' IdentifierList | VariableDeclaration) ( '=' Expression )?
+
+IdentifierList ::= '(' ( Identifier? ',' )* Identifier? ')'
+
+Expression
+::= Expression ('++' | '--')
+  | NewExpression
+  | IndexAccess
+  | MemberAccess
+  | FunctionCall
+  | '(' Expression ')'
+  | ('!' | '~' | 'delete' | '++' | '--' | '+' | '-') Expression
+  | Expression '**' Expression
+  | Expression ('*' | '/' | '%') Expression
+  | Expression ('+' | '-') Expression
+  | Expression ('<<' | '>>') Expression
+  | Expression '&' Expression
+  | Expression '^' Expression
+  | Expression '|' Expression
+  | Expression ('<' | '>' | '<=' | '>=') Expression
+  | Expression ('==' | '!=') Expression
+  | Expression '&&' Expression
+  | Expression '||' Expression
+  | Expression '?' Expression ':' Expression
+  | Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') Expression
+  | PrimaryExpression
+
+PrimaryExpression ::= BooleanLiteral
+                    | NumberLiteral
+                    | HexLiteral
+                    | StringLiteral
+                    | TupleExpression
+/* reduce/reduce                     | Identifier                   */
+/* reduce/reduce                     | ElementaryTypeNameExpression */
+
+ExpressionList ::= Expression ( ',' Expression )*
+
+NameValueList ::= Identifier ':' Expression ( ',' Identifier ':' Expression )*
+
+FunctionCall ::= Expression '(' FunctionCallArguments ')'
+
+FunctionCallArguments ::= '{' NameValueList? '}'
+                        | ExpressionList?
+
+NewExpression ::= 'NEW' TypeName
+
+MemberAccess ::= Expression '.' Identifier
+
+IndexAccess ::= Expression '[' Expression? ']'
+
+BooleanLiteral ::= 'TRUE' | 'FALSE'
+
+NumberLiteral ::= ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
+
+NumberUnit ::= 'WEI' | 'SZABO' | 'FINNEY' | 'ETHER'
+             | 'SECONDS' | 'MINUTES' | 'HOURS' | 'DAYS' | 'WEEKS' | 'YEARS'
+
+HexLiteral ::= 'HEX' ('"' ([0-9a-fA-F][0-9a-fA-F])* '"' | "'" ([0-9a-fA-F][0-9a-fA-F])* "'")
+
+StringLiteral ::= '"' ([^"\r\n\\] | '\\' .)* '"'
+
+Identifier ::= [a-zA-Z_$] [a-zA-Z_$0-9]*
+
+HexNumber ::= '0x' [0-9a-fA-F]+
+
+DecimalNumber ::= [0-9]+
+
+TupleExpression ::= '(' ( Expression ( ',' Expression )*  )? ')'
+                  | '[' ( Expression ( ',' Expression )*  )? ']'
+
+/* reduce/reduce ElementaryTypeNameExpression ::= ElementaryTypeName */
+
+ElementaryTypeName ::= 'ADDRESS' | 'BOOL' | 'STRING' | 'VAR'
+                     | Int | Uint | Byte | Fixed | Ufixed
+
+Int ::= 'INT' | 'INT8' | 'INT16' | 'INT24' | 'INT32' | 'INT40' | 'INT48' | 'INT56' | 'INT64' | 'INT72' | 'INT80' | 'INT88' | 'INT96' | 'INT104' | 'INT112' | 'INT120' | 'INT128' | 'INT136' | 'INT144' | 'INT152' | 'INT160' | 'INT168' | 'INT176' | 'INT184' | 'INT192' | 'INT200' | 'INT208' | 'INT216' | 'INT224' | 'INT232' | 'INT240' | 'INT248' | 'INT256'
+
+Uint ::= 'UINT' | 'UINT8' | 'UINT16' | 'UINT24' | 'UINT32' | 'UINT40' | 'UINT48' | 'UINT56' | 'UINT64' | 'UINT72' | 'UINT80' | 'UINT88' | 'UINT96' | 'UINT104' | 'UINT112' | 'UINT120' | 'UINT128' | 'UINT136' | 'UINT144' | 'UINT152' | 'UINT160' | 'UINT168' | 'UINT176' | 'UINT184' | 'UINT192' | 'UINT200' | 'UINT208' | 'UINT216' | 'UINT224' | 'UINT232' | 'UINT240' | 'UINT248' | 'UINT256'
+
+Byte ::= 'BYTE' | 'BYTES' | 'BYTES1' | 'BYTES2' | 'BYTES3' | 'BYTES4' | 'BYTES5' | 'BYTES6' | 'BYTES7' | 'BYTES8' | 'BYTES9' | 'BYTES10' | 'BYTES11' | 'BYTES12' | 'BYTES13' | 'BYTES14' | 'BYTES15' | 'BYTES16' | 'BYTES17' | 'BYTES18' | 'BYTES19' | 'BYTES20' | 'BYTES21' | 'BYTES22' | 'BYTES23' | 'BYTES24' | 'BYTES25' | 'BYTES26' | 'BYTES27' | 'BYTES28' | 'BYTES29' | 'BYTES30' | 'BYTES31' | 'BYTES32'
+
+Fixed ::= 'FIXED' | ( 'FIXED' DecimalNumber 'x' DecimalNumber )
+
+Ufixed ::= 'UFIXED' | ( 'UFIXED' DecimalNumber 'x' DecimalNumber )
+
+InlineAssemblyBlock ::= '{' AssemblyItem* '}'
+
+AssemblyItem ::= Identifier | FunctionalAssemblyExpression | InlineAssemblyBlock | AssemblyLocalBinding | AssemblyAssignment | AssemblyLabel | NumberLiteral | StringLiteral | HexLiteral
+
+AssemblyLocalBinding ::= 'LET' Identifier ':=' FunctionalAssemblyExpression
+
+AssemblyAssignment ::= ( Identifier ':=' FunctionalAssemblyExpression ) | ( '=:' Identifier )
+
+AssemblyLabel ::= Identifier ':'
+
+FunctionalAssemblyExpression ::= Identifier '(' AssemblyItem? ( ',' AssemblyItem )* ')'
+
+/* ================================================================================================================== */

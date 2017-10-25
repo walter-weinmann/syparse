@@ -1,55 +1,126 @@
+%% -----------------------------------------------------------------------------
+%%
+%% syparse.xrl: Solidity - lexer definition.
+%%
+%% Copyright (c) 2017 Walter Weinmann.  All Rights Reserved.
+%%
+%% This file is provided to you under the Apache License,
+%% Version 2.0 (the "License"); you may not use this file
+%% except in compliance with the License.  You may obtain
+%% a copy of the License at
+%%
+%%   http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing,
+%% software distributed under the License is distributed on an
+%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+%% KIND, either express or implied.  See the License for the
+%% specific language governing permissions and limitations
+%% under the License.
+%%
+%% -----------------------------------------------------------------------------
+
 %% -*- erlang -*-
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Definitions.
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Rules.
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % comments
 ((//).*[\n\r]?)                                           : skip_token.
 ((/\*)(.|\n|\r)*(\*/))                                    : skip_token.
 
-%% string literals
-(\"([^\"\r\n\\]|\\.)*\")                                  : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% pragma directive
 
+%% PragmaDirective = 'pragma' Identifier ([^;]+) ';'
+
+(\^[0-9]+\.[0-9]+\.[0-9]+;)                               : {token, {'PRAGMA_DIRECTIVE', TokenLine, TokenChars}}.
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% bytes
+
+%% Byte = 'byte' | 'bytes' | 'bytes1' | 'bytes2' | 'bytes3' | 'bytes4' | 'bytes5' | 'bytes6' | 'bytes7' | 'bytes8' | 'bytes9' | 'bytes10' | 'bytes11' | 'bytes12' | 'bytes13' | 'bytes14' | 'bytes15' | 'bytes16' | 'bytes17' | 'bytes18' | 'bytes19' | 'bytes20' | 'bytes21' | 'bytes22' | 'bytes23' | 'bytes24' | 'bytes25' | 'bytes26' | 'bytes27' | 'bytes28' | 'bytes29' | 'bytes30' | 'bytes31' | 'bytes32'
+
 (([bB][yY][tT][eE])|([bB][yY][tT][eE][sS][1-9]?)|([bB][yY][tT][eE][sS][12][0-9])|([bB][yY][tT][eE][sS]3[0-2]))
                                                           : match_bytes(TokenChars, TokenLen).
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% fixed
-(([fF][iI][xX][eE][dD])((0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
-                                                          : match_fixed(TokenChars, TokenLen).
 
+%% Fixed = 'fixed' | ( 'fixed' DecimalNumber 'x' DecimalNumber )
+
+([fF][iI][xX][eE][dD](([8]|[1][6]|[2][4]|[3][2]|[4][0]|[4][8]|[5][6]|[6][4]|[7][2]|[8][0]|[8][8]|[9][6]|[1][0][4]|[1][1][2]|[1][2][0]|[1][2][8]|[1][3][6]|[1][4][4]|[1][5][2]|[1][6][0]|[1][6][8]|[1][7][6]|[1][8][4]|[1][9][2]|[2][0][0]|[2][0][8]|[2][1][6]|[2][2][4]|[2][3][2]|[2][4][0]|[2][4][8]|[2][5][6])[xX]([1-7][0-9]|[8][0]|[0-9]))?)
+                                                          : {token, {'FIXED', TokenLine, TokenChars}}.
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% hex literals
-(hex(\"([0-9a-fA-F])*\"))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
-(hex(\'([0-9a-fA-F])*\'))                                 : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
 
+%% HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
+
+([hH][eE][xX](\"([0-9a-fA-F])*\"))                        : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
+([hH][eE][xX](\'([0-9a-fA-F])*\'))                        : {token, {'HEX_LITERAL', TokenLine, TokenChars}}.
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% int
+
+%% Int = 'int' | 'int8' | 'int16' | 'int24' | 'int32' | 'int40' | 'int48' | 'int56' | 'int64' | 'int72' | 'int80' | 'int88' | 'int96' | 'int104' | 'int112' | 'int120' | 'int128' | 'int136' | 'int144' | 'int152' | 'int160' | 'int168' | 'int176' | 'int184' | 'int192' | 'int200' | 'int208' | 'int216' | 'int224' | 'int232' | 'int240' | 'int248' | 'int256'
+
 (([iI][nN][tT])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : {token, {'INT', TokenLine, TokenChars}}.
 
-%% pragma directive
-([^;]+;)                                                  : {token, {'PRAGMA_DIRECTIVE', TokenLine, TokenChars}}.
-
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ufixed
-(([uU][fF][iI][xX][eE][dD])((0|8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248)(x|X)(8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
-                                                          : match_ufixed(TokenChars, TokenLen).
 
+%% Ufixed = 'ufixed' | ( 'ufixed' DecimalNumber 'x' DecimalNumber )
+
+([uU][fF][iI][xX][eE][dD](([8]|[1][6]|[2][4]|[3][2]|[4][0]|[4][8]|[5][6]|[6][4]|[7][2]|[8][0]|[8][8]|[9][6]|[1][0][4]|[1][1][2]|[1][2][0]|[1][2][8]|[1][3][6]|[1][4][4]|[1][5][2]|[1][6][0]|[1][6][8]|[1][7][6]|[1][8][4]|[1][9][2]|[2][0][0]|[2][0][8]|[2][1][6]|[2][2][4]|[2][3][2]|[2][4][0]|[2][4][8]|[2][5][6])[xX]([1-7][0-9]|[8][0]|[0-9]))?)
+                                                          : {token, {'UFIXED', TokenLine, TokenChars}}.
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% uint
+
+%% Uint = 'uint' | 'uint8' | 'uint16' | 'uint24' | 'uint32' | 'uint40' | 'uint48' | 'uint56' | 'uint64' | 'uint72' | 'uint80' | 'uint88' | 'uint96' | 'uint104' | 'uint112' | 'uint120' | 'uint128' | 'uint136' | 'uint144' | 'uint152' | 'uint160' | 'uint168' | 'uint176' | 'uint184' | 'uint192' | 'uint200' | 'uint208' | 'uint216' | 'uint224' | 'uint232' | 'uint240' | 'uint248' | 'uint256'
+
 (([uU][iI][nN][tT])((8|16|24|32|40|48|56|64|72|80|88|96|104|112|120|128|136|144|152|160|168|176|184|192|200|208|216|224|232|240|248|256))?)
                                                           : {token, {'UINT', TokenLine, TokenChars}}.
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% string literals
+
+%% StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
+
+(\"([^\"\r\n\\]|\\.)*\")                                  : {token, {'STRING_LITERAL', TokenLine, TokenChars}}.
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% hex numbers
+
+%% HexNumber = '0x' [0-9a-fA-F]+
+
 (0x[0-9a-fA-F]+)                                          : {token, {'HEX_NUMBER', TokenLine, TokenChars}}.
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% decimal numbers
-([0-9]+)                                                   : {token, {'DECIMAL_NUMBER', TokenLine, TokenChars}}.
 
+%% DecimalNumber = [0-9]+
+
+([0-9]+)                                                  : {token, {'DECIMAL_NUMBER', TokenLine, TokenChars}}.
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% identifiers
-(_[a-zA-Z_0-9]+)                                          : {token, {'IDENTIFIER', TokenLine, TokenChars}}.
+
+%% Identifier = [a-zA-Z_$] [a-zA-Z_$0-9]*
+
+([_$][a-zA-Z_$0-9]+)                                      : {token, {'IDENTIFIER', TokenLine, TokenChars}}.
+([a-zA-Z][a-zA-Z_0-9]*[$][a-zA-Z_$0-9]*)                  : {token, {'IDENTIFIER', TokenLine, TokenChars}}.
 ([a-zA-Z][a-zA-Z_0-9]*)                                   : match_any(TokenChars, TokenLen, TokenLine, ?TOKEN_PATTERNS).
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% punctuation
 (,|{|}|\(|\)|;|_|=>|\[|\]|\.)                             : {token, {list_to_atom(TokenChars), TokenLine}}.
-(=|\|=|\^=|&=|<<=|>>=|\+=|-=|\*=|/=|%=)                   : {token, {list_to_atom(TokenChars), TokenLine}}.
+(=|\|=|\^=|&=|<<=|>>=|\+=|-=|\*=|/=|%=|:=)                : {token, {list_to_atom(TokenChars), TokenLine}}.
 (!|~|\+\+|--)                                             : {token, {list_to_atom(TokenChars), TokenLine}}.
 (\*\*|\*|/|%)                                             : {token, {list_to_atom(TokenChars), TokenLine}}.
 (\||\^|&|<<|>>)                                           : {token, {list_to_atom(TokenChars), TokenLine}}.
@@ -58,12 +129,39 @@ Rules.
 (==|!=)                                                   : {token, {list_to_atom(TokenChars), TokenLine}}.
 (&&|\|\||\?|:)                                            : {token, {list_to_atom(TokenChars), TokenLine}}.
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% white space
 ([\n\r\s\t]+)                                             : skip_token.
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Erlang code.
 
+%% -----------------------------------------------------------------------------
+%%
+%% sylexer.erl: Solidity - lexer.
+%%
+%% Copyright (c) 2017 Walter Weinmann.  All Rights Reserved.
+%%
+%% This file is provided to you under the Apache License,
+%% Version 2.0 (the "License"); you may not use this file
+%% except in compliance with the License.  You may obtain
+%% a copy of the License at
+%%
+%%   http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing,
+%% software distributed under the License is distributed on an
+%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+%% KIND, either express or implied.  See the License for the
+%% specific language governing permissions and limitations
+%% under the License.
+%%
+%% -----------------------------------------------------------------------------
+
 -export([reserved_keywords/0]).
+
+-define(NODEBUG, true).
+-include_lib("eunit/include/eunit.hrl").
 
 -define(TOKEN_PATTERNS, [
     {"^(?i)(ADDRESS)$",          'ADDRESS'},
@@ -92,6 +190,7 @@ Erlang code.
     {"^(?i)(IF)$",               'IF'},
     {"^(?i)(IMPORT)$",           'IMPORT'},
     {"^(?i)(INDEXED)$",          'INDEXED'},
+    {"^(?i)(INTERFACE)$",        'INTERFACE'},
     {"^(?i)(INTERNAL)$",         'INTERNAL'},
     {"^(?i)(IS)$",               'IS'},
     {"^(?i)(LET)$",              'LET'},
@@ -105,6 +204,7 @@ Erlang code.
     {"^(?i)(PRAGMA)$",           'PRAGMA'},
     {"^(?i)(PRIVATE)$",          'PRIVATE'},
     {"^(?i)(PUBLIC)$",           'PUBLIC'},
+    {"^(?i)(PURE)$",             'PURE'},
     {"^(?i)(RETURN)$",           'RETURN'},
     {"^(?i)(RETURNS)$",          'RETURNS'},
     {"^(?i)(SECONDS)$",          'SECONDS'},
@@ -116,15 +216,14 @@ Erlang code.
     {"^(?i)(TRUE)$",             'TRUE'},
     {"^(?i)(USING)$",            'USING'},
     {"^(?i)(VAR)$",              'VAR'},
+    {"^(?i)(VIEW)$",             'VIEW'},
     {"^(?i)(WEEKS)$",            'WEEKS'},
     {"^(?i)(WEI)$",              'WEI'},
     {"^(?i)(WHILE)$",            'WHILE'},
     {"^(?i)(YEARS)$",            'YEARS'}
 ]).
 
--define(NODEBUG, true).
--include_lib("eunit/include/eunit.hrl").
-
+%-define(DEBUG, true).
 -ifdef(DEBUG).
 -define(Dbg(F,A), io:format(user, "[~p] "++F++"~n", [?LINE|A])).
 -else.
@@ -135,9 +234,9 @@ reserved_keywords() -> [T || {_, T} <- ?TOKEN_PATTERNS].
 
 match_any(TokenChars, TokenLen, _TokenLine, []) ->
     {token, {'IDENTIFIER', TokenLen, TokenChars}};
-match_any(TokenChars, TokenLen, TokenLine, [{P, T} | TPs]) ->
+match_any(TokenChars, TokenLen, TokenLine, [{P,T}|TPs]) ->
     case re:run(TokenChars, P, [{capture, first, list}]) of
-        {match, [_]} ->
+        {match,[_]} ->
             {token, {T, TokenLine}};
         nomatch ->
             match_any(TokenChars, TokenLen, TokenLine, TPs)
@@ -159,96 +258,4 @@ match_bytes(TokenChars, TokenLen) ->
                     {token, {'IDENTIFIER', TokenLen, TokenChars}}
             end;
         _ -> {token, {'BYTE', TokenLen, TokenChars}}
-    end.
-
-match_fixed(TokenChars, TokenLen) ->
-    TokenCharsLower = string:to_lower(TokenChars),
-    Pos7 = case TokenLen > 7 of
-               true ->
-                   string:substr(TokenCharsLower, 7, 1);
-               _ ->
-                   []
-           end,
-    Pos8 = case TokenLen > 8 of
-               true ->
-                   string:substr(TokenCharsLower, 8, 1);
-               _ ->
-                   []
-           end,
-    Pos9 = case TokenLen > 9 of
-               true ->
-                   string:substr(TokenCharsLower, 9, 1);
-               _ ->
-                   []
-           end,
-    {{Size1, _}, {Size2, _}} = case {Pos7, Pos8, Pos9} of
-                                   {"x", _, _} ->
-                                       {
-                                           string:to_integer(string:substr(TokenChars, 6, 1)),
-                                           string:to_integer(string:substr(TokenChars, 8))
-                                       };
-                                   {_, "x", _} ->
-                                       {
-                                           string:to_integer(string:substr(TokenChars, 6, 2)),
-                                           string:to_integer(string:substr(TokenChars, 9))
-                                       };
-                                   {_, _, "x"} ->
-                                       {
-                                           string:to_integer(string:substr(TokenChars, 6, 3)),
-                                           string:to_integer(string:substr(TokenChars, 10))
-                                       };
-                                   _ ->
-                                       {{0, []}, {0, []}}
-                               end,
-    case 256 - Size1 - Size2 >= 0 of
-        true ->
-            {token, {'FIXED', TokenLen, TokenCharsLower}};
-        _ ->
-            {token, {'IDENTIFIER', TokenLen, TokenChars}}
-    end.
-
-match_ufixed(TokenChars, TokenLen) ->
-    TokenCharsLower = string:to_lower(TokenChars),
-    Pos8 = case TokenLen > 8 of
-               true ->
-                   string:substr(TokenCharsLower, 8, 1);
-               _ ->
-                   []
-           end,
-    Pos9 = case TokenLen > 9 of
-               true ->
-                   string:substr(TokenCharsLower, 9, 1);
-               _ ->
-                   []
-           end,
-    Pos10 = case TokenLen > 10 of
-                true ->
-                    string:substr(TokenCharsLower, 10, 1);
-                _ ->
-                    []
-            end,
-    {{Size1, _}, {Size2, _}} = case {Pos8, Pos9, Pos10} of
-                                   {"x", _, _} ->
-                                       {
-                                           string:to_integer(string:substr(TokenChars, 7, 1)),
-                                           string:to_integer(string:substr(TokenChars, 9))
-                                       };
-                                   {_, "x", _} ->
-                                       {
-                                           string:to_integer(string:substr(TokenChars, 7, 2)),
-                                           string:to_integer(string:substr(TokenChars, 10))
-                                       };
-                                   {_, _, "x"} ->
-                                       {
-                                           string:to_integer(string:substr(TokenChars, 7, 3)),
-                                           string:to_integer(string:substr(TokenChars, 11))
-                                       };
-                                   _ ->
-                                       {{0, []}, {0, []}}
-                               end,
-    case 256 - Size1 - Size2 >= 0 of
-        true ->
-            {token, {'UFIXED', TokenLen, TokenCharsLower}};
-        _ ->
-            {token, {'IDENTIFIER', TokenLen, TokenChars}}
     end.
