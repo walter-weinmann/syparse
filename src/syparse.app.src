@@ -29,9 +29,7 @@
             ]
         },
         {description, "LALR grammar based Solidity parser"},
-        {modules, [
-            syparse
-        ]},
+        {modules, [syparse]},
         {vsn, "1.1.0"}
     ]
 }.

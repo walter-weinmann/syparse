@@ -43,7 +43,7 @@ IF "%1" == "" (
        ECHO -----------------------------------------------------------------------
        ECHO !TIME! %%G. Step: gen_tests.bat
        CALL gen_tests.bat
-       REM DEL test\reliability_*_SUITE.erl
+       DEL test\reliability_*_SUITE.erl
        MD tmp\backup\%%G
        COPY test\*_SUITE.erl tmp\backup\%%G
        ECHO !TIME! %%G. Step: rebar3 ct
