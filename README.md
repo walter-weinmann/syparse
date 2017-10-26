@@ -9,77 +9,82 @@
 ### Example code:
 
 ```
+pragma solidity ^0.4.0;
+
 contract C {
-    function f(uint a) private returns (uint b) { return a + 1; }
-    function setData(uint a) internal { data = a; }
-    uint public data;
+  struct s { uint a; uint b; }
+  uint x;
+  mapping(uint => mapping(uint => s)) data;
 }
 ```
 
 ### Parsing the example code:
 
 ```erlang
-1> {ok, {ParseTree, Tokens}} = syparse:parsetree_with_tokens("contract C {functi
-on f(uint a) private returns (uint b) { return a + 1; } function setData(uint a)
- internal { data = a; } uint public data;}").
+1> {ok, {ParseTree, Tokens}} = syparse:source_to_pt("pragma solidity ^0.4.0;
+                                                     
+                                                     contract C {
+                                                       struct s { uint a; uint b; }
+                                                       uint x;
+                                                       mapping(uint => mapping(uint => s)) data;
+                                                     }").
 
 {ok,{{sourceUnit,
-         [{contractDefinition,"contract",
+         [{pragmaDirective,{identifier,"solidity"},"^0.4.0;"},
+          {contractDefinition,"contract",
               {identifier,"C"},
               [],
               [{contractPart,
-                   {functionDefinition,
-                       {identifier,"f"},
-                       {parameterList,
-                           [{{typeName,{elementaryTypeName,"uint"},[]},
-                             {identifier,"a"}}]},
-                       ["private"],
-                       {parameterList,
-                           [{{typeName,{elementaryTypeName,"uint"},[]},
-                             {identifier,"b"}}]},
-                       {block,[{statement,{return,{expression,{...},...}}}]}}},
-               {contractPart,
-                   {functionDefinition,
-                       {identifier,"setData"},
-                       {parameterList,
-                           [{{typeName,{elementaryTypeName,"uint"},[]},
-                             {identifier,"a"}}]},
-                       ["internal"],
-                       [],
-                       {block,
-                           [{statement,
-                                {simpleStatement,
-                                    {expressionStatement,...}}}]}}},
+                   {structDefinition,
+                       {identifier,"s"},
+                       [{variableDeclaration,
+                            {typeName,{elementaryTypeName,"uint"}},
+                            [],
+                            {identifier,"a"}},
+                        {variableDeclaration,
+                            {typeName,{elementaryTypeName,"uint"}},
+                            [],
+                            {identifier,"b"}}]}},
                {contractPart,
                    {stateVariableDeclaration,
-                       {typeName,{elementaryTypeName,"uint"},[]},
-                       "public",
+                       {typeName,{elementaryTypeName,"uint"}},
+                       [],
+                       {identifier,"x"},
+                       []}},
+               {contractPart,
+                   {stateVariableDeclaration,
+                       {typeName,
+                           {mapping,
+                               {elementaryTypeName,"uint"},
+                               {typeName,
+                                   {mapping,{elementaryTypeName,...},{...}}}}},
+                       [],
                        {identifier,"data"},
                        []}}]}]},
-     [{'CONTRACT',1},
+     [{'PRAGMA',1},
+      {'IDENTIFIER',8,"solidity"},
+      {'PRAGMA_DIRECTIVE',1,"^0.4.0;"},
+      {'CONTRACT',3},
       {'IDENTIFIER',1,"C"},
-      {'{',1},
-      {'FUNCTION',1},
-      {'IDENTIFIER',1,"f"},
-      {'(',1},
-      {'UINT',1,"uint"},
+      {'{',3},
+      {'STRUCT',4},
+      {'IDENTIFIER',1,"s"},
+      {'{',4},
+      {'UINT',4,"uint"},
       {'IDENTIFIER',1,"a"},
-      {')',1},
-      {'PRIVATE',1},
-      {'RETURNS',1},
-      {'(',1},
-      {'UINT',1,"uint"},
+      {';',4},
+      {'UINT',4,"uint"},
       {'IDENTIFIER',1,"b"},
-      {')',1},
-      {'{',1},
-      {'RETURN',1},
-      {'IDENTIFIER',1,"a"},
-      {'+',1},
-      {'NUMBER_LITERAL',1,"1"},
-      {';',1},
-      {'}',1},
-      {'FUNCTION',1},
-      {'IDENTIFIER',...},
+      {';',4},
+      {'}',4},
+      {'UINT',5,"uint"},
+      {'IDENTIFIER',1,"x"},
+      {';',5},
+      {'MAPPING',6},
+      {'(',6},
+      {'UINT',6,[...]},
+      {'=>',6},
+      {'MAPPING',...},
       {...}|...]}}
 ````
 
@@ -89,43 +94,37 @@ on f(uint a) private returns (uint b) { return a + 1; } function setData(uint a)
 2> ParseTree.
 
 {sourceUnit,
-    [{contractDefinition,"contract",
+    [{pragmaDirective,{identifier,"solidity"},"^0.4.0;"},
+     {contractDefinition,"contract",
          {identifier,"C"},
          [],
          [{contractPart,
-              {functionDefinition,
-                  {identifier,"f"},
-                  {parameterList,
-                      [{{typeName,{elementaryTypeName,"uint"},[]},
-                        {identifier,"a"}}]},
-                  ["private"],
-                  {parameterList,
-                      [{{typeName,{elementaryTypeName,"uint"},[]},
-                        {identifier,"b"}}]},
-                  {block,
-                      [{statement,
-                           {return,
-                               {expression,
-                                   {expression,{primaryExpression,...}},
-                                   "+",
-                                   {expression,...}}}}]}}},
-          {contractPart,
-              {functionDefinition,
-                  {identifier,"setData"},
-                  {parameterList,
-                      [{{typeName,{elementaryTypeName,"uint"},[]},
-                        {identifier,"a"}}]},
-                  ["internal"],
-                  [],
-                  {block,
-                      [{statement,
-                           {simpleStatement,
-                               {expressionStatement,
-                                   {expression,{...},...}}}}]}}},
+              {structDefinition,
+                  {identifier,"s"},
+                  [{variableDeclaration,
+                       {typeName,{elementaryTypeName,"uint"}},
+                       [],
+                       {identifier,"a"}},
+                   {variableDeclaration,
+                       {typeName,{elementaryTypeName,"uint"}},
+                       [],
+                       {identifier,"b"}}]}},
           {contractPart,
               {stateVariableDeclaration,
-                  {typeName,{elementaryTypeName,"uint"},[]},
-                  "public",
+                  {typeName,{elementaryTypeName,"uint"}},
+                  [],
+                  {identifier,"x"},
+                  []}},
+          {contractPart,
+              {stateVariableDeclaration,
+                  {typeName,
+                      {mapping,
+                          {elementaryTypeName,"uint"},
+                          {typeName,
+                              {mapping,
+                                  {elementaryTypeName,"uint"},
+                                  {typeName,{userDefinedTypeName,...}}}}}},
+                  [],
                   {identifier,"data"},
                   []}}]}]}
 ```
@@ -135,44 +134,43 @@ on f(uint a) private returns (uint b) { return a + 1; } function setData(uint a)
 ```erlang
 3> Tokens.
 
-[{'CONTRACT',1},
+[{'PRAGMA',1},
+ {'IDENTIFIER',8,"solidity"},
+ {'PRAGMA_DIRECTIVE',1,"^0.4.0;"},
+ {'CONTRACT',3},
  {'IDENTIFIER',1,"C"},
- {'{',1},
- {'FUNCTION',1},
- {'IDENTIFIER',1,"f"},
- {'(',1},
- {'UINT',1,"uint"},
+ {'{',3},
+ {'STRUCT',4},
+ {'IDENTIFIER',1,"s"},
+ {'{',4},
+ {'UINT',4,"uint"},
  {'IDENTIFIER',1,"a"},
- {')',1},
- {'PRIVATE',1},
- {'RETURNS',1},
- {'(',1},
- {'UINT',1,"uint"},
+ {';',4},
+ {'UINT',4,"uint"},
  {'IDENTIFIER',1,"b"},
- {')',1},
- {'{',1},
- {'RETURN',1},
- {'IDENTIFIER',1,"a"},
- {'+',1},
- {'NUMBER_LITERAL',1,"1"},
- {';',1},
- {'}',1},
- {'FUNCTION',1},
- {'IDENTIFIER',7,"setData"},
- {'(',1},
- {'UINT',1,[...]},
- {'IDENTIFIER',1,...},
- {')',...},
+ {';',4},
+ {'}',4},
+ {'UINT',5,"uint"},
+ {'IDENTIFIER',1,"x"},
+ {';',5},
+ {'MAPPING',6},
+ {'(',6},
+ {'UINT',6,"uint"},
+ {'=>',6},
+ {'MAPPING',6},
+ {'(',6},
+ {'UINT',6,[...]},
+ {'=>',6},
+ {'IDENTIFIER',...},
  {...}|...]
 ```
 
 ### Compile the code from a parse tree:
 
 ```erlang
-4> syparse:parsetree_to_string(ParseTree).
+4> syparse:pt_to_source_td(ParseTree).
 
-<<"contract C{function f(uint a)private returns(uint b){return a + 1;} function
-setData(uint a)internal {data = a;} uin"...>>
+<<"pragma solidity ^0.4.0; contract C{struct s{uint a;uint b;} uint x; mapping(uint=>mapping(uint=>s)) data;}">>
 ```
 
 ### Complete parse tree:
@@ -181,51 +179,39 @@ The output of the parse tree in the Erlang shell is shortened (cause not known).
 
 ```erlang
 {sourceUnit,
- [{contractDefinition,"contract",
+ [{pragmaDirective,{identifier,"solidity"},"^0.4.0;"},
+  {contractDefinition,"contract",
    {identifier,"C"},
    [],
    [{contractPart,
-     {functionDefinition,
-      {identifier,"f"},
-      {parameterList,
-       [{{typeName,{elementaryTypeName,"uint"},[]},
-         {identifier,"a"}}]},
-      ["private"],
-      {parameterList,
-       [{{typeName,{elementaryTypeName,"uint"},[]},
-         {identifier,"b"}}]},
-      {block,
-       [{statement,
-         {return,
-          {expression,
-           {expression,{primaryExpression,{identifier,"a"}}},
-           "+",
-           {expression,
-            {primaryExpression,{numberLiteral,"1",[]}}}}}}]}}},
-    {contractPart,
-     {functionDefinition,
-      {identifier,"setData"},
-      {parameterList,
-       [{{typeName,{elementaryTypeName,"uint"},[]},
-         {identifier,"a"}}]},
-      ["internal"],
-      [],
-      {block,
-       [{statement,
-         {simpleStatement,
-          {expressionStatement,
-           {expression,
-            {expression,{primaryExpression,{identifier,"data"}}},
-            "=",
-            {expression,
-             {primaryExpression,{identifier,"a"}}}}}}}]}}},
+     {structDefinition,
+      {identifier,"s"},
+      [{variableDeclaration,
+        {typeName,{elementaryTypeName,"uint"}},
+        [],
+        {identifier,"a"}},
+       {variableDeclaration,
+        {typeName,{elementaryTypeName,"uint"}},
+        [],
+        {identifier,"b"}}]}},
     {contractPart,
      {stateVariableDeclaration,
-      {typeName,{elementaryTypeName,"uint"},[]},
-      "public",
+      {typeName,{elementaryTypeName,"uint"}},
+      [],
+      {identifier,"x"},
+      []}},
+    {contractPart,
+     {stateVariableDeclaration,
+      {typeName,
+       {mapping,
+        {elementaryTypeName,"uint"},
+        {typeName,
+         {mapping,
+          {elementaryTypeName,"uint"},
+          {typeName,{userDefinedTypeName,[{identifier,"s"}]}}}}}},
+      [],
       {identifier,"data"},
       []}}]}]}
-
 ```
 
 ## 2. Documentation
@@ -234,21 +220,21 @@ The documentation for **syparse** is available here: [Wiki](https://github.com/w
 
 ## 3. Known issues
 
-### Expression
+### ElementaryTypeNameExpression
 
+Due to a reduce / reduce conflict between
 ```
-Expression = Expression ',' Expression
+ElementaryTypeNameExpression = ElementaryTypeName
 ```
-
-This rule results in a reduce/reduce conflict with `InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?`, for example.
-
-### Keyword 'from'
-
+and
 ```
-ImportDirective = ... | 'import' ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral ';' | ...
+TypeName = ElementaryTypeName
+         | UserDefinedTypeName
+         | Mapping
+         | ArrayTypeName
+         | FunctionTypeName
 ```
-
-The keyword `from` cannot be used as an identifier.
+the grammar rule of ```ElementaryTypeNameExpression``` is not supported. Hence the ```ElementaryTypeNameExpression``` is also not supported in the grammar rule of ```PrimaryExpression```.
 
 ### NumberLiteral
 
@@ -258,13 +244,55 @@ NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
 
 The ' ' can not be enforced with the parser tools leex and yecc.
 
-### TypeName
+### ParameterList
 
+Due to a reduce / reduce conflict between
 ```
-TypeName = Identifier
+ParameterList =        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
 ```
+and
+```
+TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
+```
+only the restricted grammar rule
+```
+ParameterList =        '(' ( TypeName            Identifier  (',' TypeName            Identifier )* )? ')'
+```
+is supported.
 
-This rule results in a reduce/reduce conflict with `PrimaryExpression = Identifier`, for example.
+### PrimaryExpression
+
+Due to a reduce / reduce conflict between
+```
+PrimaryExpression = BooleanLiteral
+                  | NumberLiteral
+                  | HexLiteral
+                  | StringLiteral
+                  | TupleExpression
+                  | Identifier
+                  | ElementaryTypeNameExpression
+```
+and
+```
+UserDefinedTypeName = Identifier ( '.' Identifier )*
+```
+the ```Identifier``` is not supported in the grammar rule of ```PrimaryExpression```.
+
+### TypeNameList
+
+Due to a reduce / reduce conflict between
+```
+ParameterList =        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
+```
+and
+```
+TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
+```
+only the restricted grammar rule
+```
+TypeNameList =         '(' ( TypeName (',' TypeName )* )  ')'
+```
+is supported.
 
 ## 4. Acknowledgement
 
