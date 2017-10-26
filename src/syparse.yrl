@@ -292,11 +292,6 @@ Left        1402 unary_left.
 Right       1501 '(' ')'.
 Right       1501 unary_right.
 
-Right       1501 new_expression.
-Right       1501 array_type_name.
-Right       1501 member_access.
-Right       1501 function_call.
-
 Left        1600 ELSE.
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -310,8 +305,6 @@ source_unit -> contract_definition_import_pragma_directive_list                 
 %% =============================================================================
 %% Helper definitions - test purposes.
 %% -----------------------------------------------------------------------------
-% wwe source_unit -> parameter_list                                                                   : '$1'.
-% wwe source_unit -> variable_definition                                                              : '$1'.
 % wwe source_unit -> function_type_name                                                               : '$1'.
 %% =============================================================================
 
