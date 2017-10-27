@@ -48,6 +48,7 @@ IF "%1" == "" (
        COPY test\*_SUITE.erl tmp\backup\%%G
        ECHO !TIME! %%G. Step: rebar3 ct
        CALL rebar3 ct
+       CALL rebar3 cover
     )
 
     ECHO -----------------------------------------------------------------------
