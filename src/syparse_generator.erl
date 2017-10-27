@@ -24,175 +24,6 @@
 
 -export([generate/0]).
 
--define(ALL_CLAUSE_CT_PERFORMANCE, [
-    sourceUnit
-]).
-
--define(ALL_CLAUSE_CT_RELIABILITY, [
-    contractDefinition,
-    importDirective,
-    pragmaDirective
-]).
-
--define(ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART, [
-    enumDefinition,
-    eventDefinition,
-    functionDefinition,
-    modifierDefinition,
-    stateVariableDeclaration,
-    structDefinition,
-    usingForDeclaration
-]).
-
--define(ALL_CLAUSE_CT_RELIABILITY_STATEMENT, [
-    block,
-    break,
-    continue,
-    doWhileStatement,
-    forStatement,
-    ifStatement,
-    inlineAssemblyStatement,
-    placeholderStatement,
-    return,
-    simpleStatement,
-    throw,
-    whileStatement
-]).
-
--define(ALL_CLAUSE_EUNIT, [
-%%%% Level 01 ..........................
-%%    booleanLiteral,
-%%    break,
-%%    byte,
-%%    continue,
-%%    decimalNumber,
-%%    hexLiteral,
-%%    hexNumber,
-%%    identifier,
-%%    int,
-%%    numberUnit,
-%%    placeholderStatement,
-%%    pragma_directive,
-%%    stateMutability,
-%%    storageLocation,
-%%    stringLiteral,
-%%    throw,
-%%    uInt
-%%%% Level 02 ..........................
-%%    assemblyLabel,
-%%    enumDefinition,
-%%    fixed,
-%%    identifierList,
-%%    importDirective,
-%%    numberLiteral,
-%%    uFixed,
-%%    userDefinedTypeName
-%%%% Level 03 ..........................
-%%    elementaryTypeName,
-%%    pragmaDirective
-%%%% Level 04 ..........................
-%%    expression
-%%%% Level 05 ..........................
-%%    arrayTypeName,
-%%    expressionList,
-%%    indexAccess,
-%%    indexedParameterList,
-%%    inheritanceSpecifier,
-%%    mapping,
-%%    memberAccess,
-%%    nameValueList,
-%%    newExpression,
-%%    parameterList,
-%%    return,
-%%    stateVariableDeclaration,
-%%    tupleExpression,
-%%    typeNameList,
-%%    usingForDeclaration,
-%%    variableDeclaration
-%%%% Level 06 ..........................
-%%    eventDefinition,
-%%    functionCallArguments,
-%%    functionTypeName,
-%%    modifierInvocation,
-%%    structDefinition,
-%%    variableDefinition
-%%%% Level 07 ..........................
-%%    functionCall
-%%%% Level 21 ..........................
-%%    doWhileStatement,
-%%    forStatement,
-%%    ifStatement,
-%%    whileStatement
-%%%% Level 22 ..........................
-%%    block
-%%%% Level 41 ..........................
-%%    functionalAssemblyExpression
-%%%% Level 42 ..........................
-%%    assemblyAssignment,
-%%    assemblyLocalBinding
-%%%% Level 43 ..........................
-%%    inlineAssemblyBlock
-%%%% Level 44 ..........................
-%%    inlineAssemblyStatement
-%%%% Level 62 ..........................
-%%    modifierDefinition,
-%%    functionDefinition
-%%%% Level 63 ..........................
-%%    contractDefinition
-%%%% Level 64 ..........................
-%%    sourceUnit
-]).
-
--define(ALL_CLAUSE_EUNIT_CONTRACT_PART, [
-    enumDefinition,
-    eventDefinition,
-    functionDefinition,
-    modifierDefinition,
-    stateVariableDeclaration,
-    structDefinition,
-    usingForDeclaration
-]).
-
--define(ALL_CLAUSE_EUNIT_STATEMENT, [
-    block,
-    break,
-    continue,
-    doWhileStatement,
-    forStatement,
-    ifStatement,
-    inlineAssemblyStatement,
-    placeholderStatement,
-    return,
-    simpleStatement,
-    throw,
-    whileStatement
-]).
-
--define(CODE_TEMPLATES, code_templates).
--define(CREATE_CODE_END,
-    [_CodeFirst | _] = Code,
-    {_, _MemorySize} = erlang:process_info(self(), memory),
-    ?debugFmt("~ntime (ms)          ===  ~12.. B rule: ~s ~n", [erlang:monotonic_time(1000) - _Start, atom_to_list(Rule)]),
-    ?debugFmt("~nmemory (bytes)     ===  ~12.. B rule: ~s ~n", [_MemorySize, atom_to_list(Rule)]),
-    ?debugFmt("~ncode size (bytes) <===  ~12.. B rule: ~s ~n", [length(_CodeFirst), atom_to_list(Rule)]),
-    ok
-).
--define(CREATE_CODE_START,
-    [garbage_collect(Pid) || Pid <- processes()],
-    _Start = erlang:monotonic_time(1000)
-).
-
--define(F_RANDOM, fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end).
-
--define(MAX_BASIC, 250).
--define(MAX_CONTRACT_PART, ?MAX_BASIC * 4).
--define(MAX_STATEMENT, ?MAX_BASIC * 8).
-
--define(PATH_CT, "test").
--define(PATH_EUNIT, "test").
-
--define(TIMETRAP_MINUTES, 10).
-
 -define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 -include("syparse_generator.hrl").
@@ -228,12 +59,18 @@ generate() ->
     ok = file_create_ct_all("reliability", "statement", "compacted", ?ALL_CLAUSE_CT_RELIABILITY_STATEMENT),
 
     % reliability common tests with contract completion and detailed test cases
-    ok = file_create_ct_all("performance", "complete", "detailed_", [special]),
+    ok = file_create_ct_all("performance", "complete", "compacted", [referenceExamples]),
+
+    % reliability common tests with contract completion and detailed test cases
+    ok = file_create_ct_all("performance", "complete", "compacted", [special]),
 
 %%    % reliability common tests with modifier_definition completion and detailed test cases
 %%    ok = file_create_ct_all("reliability", "statement", "detailed_", ?ALL_CLAUSE_CT_RELIABILITY_STATEMENT),
 
     %% EUnit tests .............................................................
+
+    % reliability eunit tests with compacted test cases
+    ok = file_create_eunit_all("performance", "complete_", [referenceExamples]),
 
     % reliability eunit tests with compacted test cases
     ok = file_create_eunit_all("performance", "complete_", [special]),
@@ -271,6 +108,7 @@ create_code() ->
     create_code(numberUnit),
     create_code(placeholderStatement),
     create_code(pragma_directive),
+    create_code(referenceExamples),
     create_code(special),
     create_code(stateMutability),
     create_code(storageLocation),
@@ -2539,6 +2377,18 @@ create_code(pragmaDirective = Rule) ->
     ],
     store_code(Rule, Code, ?MAX_STATEMENT, false),
     ?CREATE_CODE_END;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Reference examples from xxx.
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+create_code(referenceExamples = Rule) ->
+    ?CREATE_CODE_START,
+
+    Code = [CodeExample || {_File, _Chapter, _SubChapter, CodeExample} <- ?TESTS_FROM_SOLIDITY_DOCS],
+    dets:insert(?CODE_TEMPLATES, {Rule, Code}),
+%   ?CREATE_CODE_END;
+    ok;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Return = 'return' Expression?

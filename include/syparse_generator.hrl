@@ -1,3 +1,25 @@
+%% -----------------------------------------------------------------------------
+%%
+%% syparse_generator.hrl: Solidity - test data generator.
+%%
+%% Copyright (c) 2017 Walter Weinmann.  All Rights Reserved.
+%%
+%% This file is provided to you under the Apache License,
+%% Version 2.0 (the "License"); you may not use this file
+%% except in compliance with the License.  You may obtain
+%% a copy of the License at
+%%
+%%   http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing,
+%% software distributed under the License is distributed on an
+%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+%% KIND, either express or implied.  See the License for the
+%% specific language governing permissions and limitations
+%% under the License.
+%%
+%% -----------------------------------------------------------------------------
+
 -define(BYTE,
     [
         "byte",
@@ -36,6 +58,169 @@
         "bytes32"
     ]
 ).
+
+-define(ALL_CLAUSE_CT_PERFORMANCE, [
+    sourceUnit
+]).
+
+-define(ALL_CLAUSE_CT_RELIABILITY, [
+    contractDefinition,
+    importDirective,
+    pragmaDirective
+]).
+
+-define(ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART, [
+    enumDefinition,
+    eventDefinition,
+    functionDefinition,
+    modifierDefinition,
+    stateVariableDeclaration,
+    structDefinition,
+    usingForDeclaration
+]).
+
+-define(ALL_CLAUSE_CT_RELIABILITY_STATEMENT, [
+    block,
+    break,
+    continue,
+    doWhileStatement,
+    forStatement,
+    ifStatement,
+    inlineAssemblyStatement,
+    placeholderStatement,
+    return,
+    simpleStatement,
+    throw,
+    whileStatement
+]).
+
+-define(ALL_CLAUSE_EUNIT, [
+%%%% Level 01 ..........................
+%%    booleanLiteral,
+%%    break,
+%%    byte,
+%%    continue,
+%%    decimalNumber,
+%%    hexLiteral,
+%%    hexNumber,
+%%    identifier,
+%%    int,
+%%    numberUnit,
+%%    placeholderStatement,
+%%    pragma_directive,
+%%    stateMutability,
+%%    storageLocation,
+%%    stringLiteral,
+%%    throw,
+%%    uInt
+%%%% Level 02 ..........................
+%%    assemblyLabel,
+%%    enumDefinition,
+%%    fixed,
+%%    identifierList,
+%%    importDirective,
+%%    numberLiteral,
+%%    uFixed,
+%%    userDefinedTypeName
+%%%% Level 03 ..........................
+%%    elementaryTypeName,
+%%    pragmaDirective
+%%%% Level 04 ..........................
+%%    expression
+%%%% Level 05 ..........................
+%%    arrayTypeName,
+%%    expressionList,
+%%    indexAccess,
+%%    indexedParameterList,
+%%    inheritanceSpecifier,
+%%    mapping,
+%%    memberAccess,
+%%    nameValueList,
+%%    newExpression,
+%%    parameterList,
+%%    return,
+%%    stateVariableDeclaration,
+%%    tupleExpression,
+%%    typeNameList,
+%%    usingForDeclaration,
+%%    variableDeclaration
+%%%% Level 06 ..........................
+%%    eventDefinition,
+%%    functionCallArguments,
+%%    functionTypeName,
+%%    modifierInvocation,
+%%    structDefinition,
+%%    variableDefinition
+%%%% Level 07 ..........................
+%%    functionCall
+%%%% Level 21 ..........................
+%%    doWhileStatement,
+%%    forStatement,
+%%    ifStatement,
+%%    whileStatement
+%%%% Level 22 ..........................
+%%    block
+%%%% Level 41 ..........................
+%%    functionalAssemblyExpression
+%%%% Level 42 ..........................
+%%    assemblyAssignment,
+%%    assemblyLocalBinding
+%%%% Level 43 ..........................
+%%    inlineAssemblyBlock
+%%%% Level 44 ..........................
+%%    inlineAssemblyStatement
+%%%% Level 62 ..........................
+%%    modifierDefinition,
+%%    functionDefinition
+%%%% Level 63 ..........................
+%%    contractDefinition
+%%%% Level 64 ..........................
+%%    sourceUnit
+]).
+
+-define(ALL_CLAUSE_EUNIT_CONTRACT_PART, [
+    enumDefinition,
+    eventDefinition,
+    functionDefinition,
+    modifierDefinition,
+    stateVariableDeclaration,
+    structDefinition,
+    usingForDeclaration
+]).
+
+-define(ALL_CLAUSE_EUNIT_STATEMENT, [
+    block,
+    break,
+    continue,
+    doWhileStatement,
+    forStatement,
+    ifStatement,
+    inlineAssemblyStatement,
+    placeholderStatement,
+    return,
+    simpleStatement,
+    throw,
+    whileStatement
+]).
+
+-define(CODE_TEMPLATES, code_templates).
+
+-define(CREATE_CODE_END,
+    [_CodeFirst | _] = Code,
+    {_, _MemorySize} = erlang:process_info(self(), memory),
+    ?debugFmt("~ntime (ms)          ===  ~12.. B rule: ~s ~n", [erlang:monotonic_time(1000) - _Start, atom_to_list(Rule)]),
+    ?debugFmt("~nmemory (bytes)     ===  ~12.. B rule: ~s ~n", [_MemorySize, atom_to_list(Rule)]),
+    ?debugFmt("~ncode size (bytes) <===  ~12.. B rule: ~s ~n", [length(_CodeFirst), atom_to_list(Rule)]),
+    ok
+).
+
+-define(CREATE_CODE_START,
+    [garbage_collect(Pid) || Pid <- processes()],
+    _Start = erlang:monotonic_time(1000)
+).
+
+-define(F_RANDOM, fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end).
+
 -define(INT,
     [
         "int",
@@ -73,248 +258,44 @@
         "int256"
     ]
 ).
+
+-define(MAX_BASIC, 250).
+-define(MAX_CONTRACT_PART, ?MAX_BASIC * 4).
+-define(MAX_STATEMENT, ?MAX_BASIC * 8).
+
+-define(PATH_CT, "test").
+-define(PATH_EUNIT, "test").
+
 -define(TESTS_FROM_SOLIDITY_DOCS, [
-    {"Common Patterns",
-        "Restricting Access",
+%%  {"file name" , "section name", "title", "code"}
+    % --------------------------------------------------------------------------
+    {"Contracts", "Visibility and Getters", "Getter Functions",
         "
-            pragma solidity ^0.4.0;
+pragma solidity ^0.4.0;
 
-            contract AccessRestriction {
-                // These will be assigned at the construction
-                // phase, where `msg.sender` is the account
-                // creating this contract.
-                address public owner = msg.sender;
-                uint public creationTime = now;
-
-                // Modifiers can be used to change
-                // the body of a function.
-                // If this modifier is used, it will
-                // prepend a check that only passes
-                // if the function is called from
-                // a certain address.
-                modifier onlyBy(address _account)
-                {
-                    if (msg.sender != _account)
-                        throw;
-                    // Do not forget the \\\"_;\\\"! It will
-                    // be replaced by the actual function
-                    // body when the modifier is used.
-                    _;
-                }
-
-                /// Make `_newOwner` the new owner of this
-                /// contract.
-                function changeOwner(address _newOwner)
-                    onlyBy(owner)
-                {
-                    owner = _newOwner;
-                }
-
-                modifier onlyAfter(uint _time) {
-                    if (now < _time) throw;
-                    _;
-                }
-
-                /// Erase ownership information.
-                /// May only be called 6 weeks after
-                /// the contract has been created.
-                function disown()
-                    onlyBy(owner)
-                    onlyAfter(creationTime + 6 weeks)
-                {
-                    delete owner;
-                }
-
-                // This modifier requires a certain
-                // fee being associated with a function call.
-                // If the caller sent too much, he or she is
-                // refunded, but only after the function body.
-                // This was dangerous before Solidity version 0.4.0,
-                // where it was possible to skip the part after `_;`.
-                modifier costs(uint _amount) {
-                    if (msg.value < _amount)
-                        throw;
-                    _;
-                    if (msg.value > _amount)
-                        msg.sender.send(msg.value - _amount);
-                }
-
-                function forceOwnerChange(address _newOwner)
-                    costs(200 ether)
-                {
-                    owner = _newOwner;
-                    // just some example condition
-                    if (uint(owner) & 0 == 1)
-                        // This did not refund for Solidity
-                        // before version 0.4.0.
-                        return;
-                    // refund overpaid fees
-                }
-            }
+contract Complex {
+   struct Data {
+       uint a;
+       bytes3 b;
+       mapping (uint => uint) map;
+   }
+   mapping (uint => mapping(bool => Data[])) public data;
+}
+"},
+    % --------------------------------------------------------------------------
+    {"Contracts", "Interfaces", "",
         "
-    },
-    {"Common Patterns",
-        "State Machine",
-        "
-            pragma solidity ^0.4.0;
+pragma solidity ^0.4.11;
 
-            contract StateMachine {
-                enum Stages {
-                    AcceptingBlindedBids,
-                    RevealBids,
-                    AnotherStage,
-                    AreWeDoneYet,
-                    Finished
-                }
-
-                // This is the current stage.
-                Stages public stage = Stages.AcceptingBlindedBids;
-
-                uint public creationTime = now;
-
-                modifier atStage(Stages _stage) {
-                    if (stage != _stage) throw;
-                    _;
-                }
-
-                function nextStage() internal {
-                    stage = Stages(uint(stage) + 1);
-                }
-
-                // Perform timed transitions. Be sure to mention
-                // this modifier first, otherwise the guards
-                // will not take the new stage into account.
-                modifier timedTransitions() {
-                    if (stage == Stages.AcceptingBlindedBids &&
-                                now >= creationTime + 10 days)
-                        nextStage();
-                    if (stage == Stages.RevealBids &&
-                            now >= creationTime + 12 days)
-                        nextStage();
-                    // The other stages transition by transaction
-                    _;
-                }
-
-                // Order of the modifiers matters here!
-                function bid()
-                    payable
-                    timedTransitions
-                    atStage(Stages.AcceptingBlindedBids)
-                {
-                    // We will not implement that here
-                }
-
-                function reveal()
-                    timedTransitions
-                    atStage(Stages.RevealBids)
-                {
-                }
-
-                // This modifier goes to the next stage
-                // after the function is done.
-                modifier transitionNext()
-                {
-                    _;
-                    nextStage();
-                }
-
-                function g()
-                    timedTransitions
-                    atStage(Stages.AnotherStage)
-                    transitionNext
-                {
-                }
-
-                function h()
-                    timedTransitions
-                    atStage(Stages.AreWeDoneYet)
-                    transitionNext
-                {
-                }
-
-                function i()
-                    timedTransitions
-                    atStage(Stages.Finished)
-                {
-                }
-            }
-        "
-    },
-    {"Common Patterns",
-        "Withdrawal from Contracts 1",
-        "
-            pragma solidity ^0.4.0;
-
-            contract WithdrawalContract {
-                address public richest;
-                uint public mostSent;
-
-                mapping (address => uint) pendingWithdrawals;
-
-                function WithdrawalContract() payable {
-                    richest = msg.sender;
-                    mostSent = msg.value;
-                }
-
-                function becomeRichest() payable returns (bool) {
-                    if (msg.value > mostSent) {
-                        pendingWithdrawals[richest] += msg.value;
-                        richest = msg.sender;
-                        mostSent = msg.value;
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
-
-                function withdraw() returns (bool) {
-                    uint amount = pendingWithdrawals[msg.sender];
-                    // Remember to zero the pending refund before
-                    // sending to prevent re-entrancy attacks
-                    pendingWithdrawals[msg.sender] = 0;
-                    if (msg.sender.send(amount)) {
-                        return true;
-                    } else {
-                        pendingWithdrawals[msg.sender] = amount;
-                        return false;
-                    }
-                }
-            }
-        "
-    },
-    {"Common Patterns",
-        "Withdrawal from Contracts 2",
-        "
-            pragma solidity ^0.4.0;
-
-            contract SendContract {
-                address public richest;
-                uint public mostSent;
-
-                function SendContract() payable {
-                    richest = msg.sender;
-                    mostSent = msg.value;
-                }
-
-                function becomeRichest() returns (bool) {
-                    if (msg.value > mostSent) {
-                        // Check if call succeeds to prevent an attacker
-                        // from trapping the previous person's funds in
-                        // this contract through a callstack attack
-                        if (!richest.send(msg.value)) {
-                            throw;
-                        }
-                        richest = msg.sender;
-                        mostSent = msg.value;
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
-            }
-        "
-    }
+interface Token {
+   function transfer(address recipient, uint amount);
+}
+"}
 ]).
+
+
+-define(TIMETRAP_MINUTES, 10).
+
 -define(UINT,
     [
         "uint",
