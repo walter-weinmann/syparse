@@ -43,46 +43,25 @@ generate() ->
 
     %% Common tests ............................................................
 
-    % performance common tests with compacted test cases
     ok = file_create_ct_all("performance", "complete_", "compacted", ?ALL_CLAUSE_CT_PERFORMANCE),
 
-    % reliability common tests with compacted test cases
     ok = file_create_ct_all("reliability", "complete_", "compacted", ?ALL_CLAUSE_CT_RELIABILITY),
-
-    % reliability common tests with contract completion and compacted test cases
+    ok = file_create_ct_all("reliability", "complete_", "compacted", [referenceExamples]),
+    ok = file_create_ct_all("reliability", "complete_", "compacted", [special]),
     ok = file_create_ct_all("reliability", "contract_", "compacted", ?ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART),
-
-%%    % reliability common tests with contract completion and detailed test cases
-%%    ok = file_create_ct_all("reliability", "contract_", "detailed_", ?ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART),
-
-    % reliability common tests with modifier_definition completion and compacted test cases
+%%    ok = file_create_ct_all("reliability", "contract_", "detailed", ?ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART),
     ok = file_create_ct_all("reliability", "statement", "compacted", ?ALL_CLAUSE_CT_RELIABILITY_STATEMENT),
-
-    % reliability common tests with contract completion and detailed test cases
-    ok = file_create_ct_all("performance", "complete", "compacted", [referenceExamples]),
-
-    % reliability common tests with contract completion and detailed test cases
-    ok = file_create_ct_all("performance", "complete", "compacted", [special]),
-
-%%    % reliability common tests with modifier_definition completion and detailed test cases
-%%    ok = file_create_ct_all("reliability", "statement", "detailed_", ?ALL_CLAUSE_CT_RELIABILITY_STATEMENT),
+%%    ok = file_create_ct_all("reliability", "statement", "detailed", ?ALL_CLAUSE_CT_RELIABILITY_STATEMENT),
 
     %% EUnit tests .............................................................
 
-    % reliability eunit tests with compacted test cases
     ok = file_create_eunit_all("performance", "complete_", [referenceExamples]),
-
-    % reliability eunit tests with compacted test cases
     ok = file_create_eunit_all("performance", "complete_", [special]),
 
-    % reliability eunit tests with compacted test cases
     ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_EUNIT),
-
-%%    % reliability common tests with contract completion and compacted test cases
-%%    ok = file_create_eunit_all("reliability", "contract_", ?ALL_CLAUSE_EUNIT_CONTRACT_PART),
-%%
-%%    % reliability common tests with modifier_definition completion and compacted test cases
-%%    ok = file_create_eunit_all("reliability", "statement", ?ALL_CLAUSE_EUNIT_STATEMENT),
+    ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_EUNIT_RELIABILITY),
+    ok = file_create_eunit_all("reliability", "contract_", ?ALL_CLAUSE_EUNIT_CONTRACT_PART),
+    ok = file_create_eunit_all("reliability", "statement", ?ALL_CLAUSE_EUNIT_STATEMENT),
 
     dets:close(?CODE_TEMPLATES).
 
@@ -2583,19 +2562,19 @@ create_code(special = Rule) ->
     ?CREATE_CODE_START,
 
     Code = [
-        "Contract myContract Is identifier (47++, 11--) {}",
-        "Contract myContract Is identifier (47++,Delete 4711) {}",
-        "Contract myContract Is identifier {}",
-        "Contract myContract {Event identifier1 (Address identifier2, Bool Indexed identifier3);}",
-        "Contract myContract {Event identifier1 (Address, Bool);}",
-        "Contract myContract {Function () {Return [];}}",
-        "Contract myContract {Modifier myModifier () {Var ();}}",
-        "Contract myContract {Modifier myModifier {Return ();}}",
-        "Contract myContract {Modifier myModifier {Return [];}}",
-        "Contract myContract {Modifier myModifier {Var ();}}",
-        "Contract myContract {Using identifier For Address [];}",
-        "Contract myContract {}",
-        "Contract myContract1 {Using identifier For Address [];} Contract myContract2 {Using identifier For Address [];}",
+        "Contract my_contract Is identifier (47++, 11--) {}",
+        "Contract my_contract Is identifier (47++,Delete 4711) {}",
+        "Contract my_contract Is identifier {}",
+        "Contract my_contract {Event identifier1 (Address identifier2, Bool Indexed identifier3);}",
+        "Contract my_contract {Event identifier1 (Address, Bool);}",
+        "Contract my_contract {Function () {Return [];}}",
+        "Contract my_contract {Modifier my_modifier () {Var ();}}",
+        "Contract my_contract {Modifier my_modifier {Return ();}}",
+        "Contract my_contract {Modifier my_modifier {Return [];}}",
+        "Contract my_contract {Modifier my_modifier {Var ();}}",
+        "Contract my_contract {Using identifier For Address [];}",
+        "Contract my_contract {}",
+        "Contract my_contract1 {Using identifier For Address [];} Contract my_contract2 {Using identifier For Address [];}",
         "Import \\\"string1\\\"; Import \\\"string2\\\";",
         "Import {identifier1 As identifier2, identifier2 As identifier4} From \\\"string\\\";",
         "Import {identifier1, identifier2 As identifier3} From \\\"string\\\";",
@@ -3301,12 +3280,12 @@ file_write_ct(Current, Type, CompleteDescription, CompactedDetailed, File, [H | 
                 "(\"",
                 case CompleteDescription of
                     "contract_" -> lists:append([
-                        "Contract myContract {",
+                        "Contract my_contract {",
                         H,
                         "}"
                     ]);
                     "statement" -> lists:append([
-                        "Contract myContract { Modifier myModifier {",
+                        "Contract my_contract { Modifier my_modifier {",
                         H,
                         "}}"
                     ]);
@@ -3325,12 +3304,12 @@ file_write_ct(Current, Type, CompleteDescription, CompactedDetailed, File, [H | 
                 "(\"",
                 case CompleteDescription of
                     "contract_" -> lists:append([
-                        "Contract myContract {",
+                        "Contract my_contract {",
                         H,
                         "}"
                     ]);
                     "statement" -> lists:append([
-                        "Contract myContract { Modifier myModifier {",
+                        "Contract my_contract { Modifier my_modifier {",
                         H,
                         "}}"
                     ]);
@@ -3371,7 +3350,7 @@ file_create_eunit(Type, CompleteDescription, Rule) ->
 
     RuleStrimg = atom_to_list(Rule),
 
-    FileName = lists:append([Type, "_", CompleteDescription, " ", RuleStrimg, ".tst"]),
+    FileName = lists:append([Type, "_", CompleteDescription, "_", RuleStrimg, ".tst"]),
     {ok, File, _} = file:path_open([?PATH_EUNIT], FileName, [write]),
 
     erlang:display(io:format("final eunit  tests ===> ~12.. B file_name: ~s ", [length(Code), FileName])),
@@ -3396,12 +3375,12 @@ file_write_eunit(CompleteDescription, File, [H | T]) ->
         "\"",
         case CompleteDescription of
             "contract_" -> lists:append([
-                "Contract myContract {",
+                "Contract my_contract {",
                 H,
                 "}"
             ]);
             "statement" -> lists:append([
-                "Contract myContract { Modifier myModifier {",
+                "Contract my_contract { Modifier my_modifier {",
                 H,
                 "}}"
             ]);

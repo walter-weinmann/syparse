@@ -59,6 +59,7 @@
     ]
 ).
 
+%% no coverage analysis for syparse_util
 -define(ALL_CLAUSE_CT_PERFORMANCE, [
     sourceUnit
 ]).
@@ -66,7 +67,8 @@
 -define(ALL_CLAUSE_CT_RELIABILITY, [
     contractDefinition,
     importDirective,
-    pragmaDirective
+    pragmaDirective,
+    sourceUnit
 ]).
 
 -define(ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART, [
@@ -186,6 +188,13 @@
     stateVariableDeclaration,
     structDefinition,
     usingForDeclaration
+]).
+
+-define(ALL_CLAUSE_EUNIT_RELIABILITY, [
+    contractDefinition,
+    importDirective,
+    pragmaDirective,
+    sourceUnit
 ]).
 
 -define(ALL_CLAUSE_EUNIT_STATEMENT, [
