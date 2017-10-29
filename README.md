@@ -236,6 +236,10 @@ TypeName = ElementaryTypeName
 ```
 the grammar rule of ```ElementaryTypeNameExpression``` has precedence over ```TypeName```.
 
+### Identifier versus Keywords
+
+Keywords such as 'abstract', 'address', 'after', etc. must not be used as identifiers.
+
 ### NumberLiteral
 
 ```
