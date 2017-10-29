@@ -60,21 +60,18 @@ EnumDefinition ::= 'ENUM' Identifier '{' EnumValue? (',' EnumValue)* '}'
 
 IndexedParameterList ::= '(' ( TypeName 'INDEXED'? Identifier? (',' TypeName 'INDEXED'? Identifier?)* )? ')'
 
-/* reduce/reduce ParameterList ::=        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')' */
-ParameterList ::=        '(' ( TypeName            Identifier (',' TypeName            Identifier)* )? ')'
+ParameterList ::=        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
 
-/* reduce/reduce TypeNameList ::=         '(' ( TypeName (',' TypeName )* )? ')' */
-TypeNameList ::=         '(' ( TypeName (',' TypeName )* ) ')'
+TypeNameList ::=         '(' ( TypeName (',' TypeName )* )? ')'
 
 VariableDeclaration ::= TypeName StorageLocation? Identifier
 
 TypeName ::= ElementaryTypeName
-           | UserDefinedTypeName
            | Mapping
            | ArrayTypeName
            | FunctionTypeName
 
-UserDefinedTypeName ::= Identifier ( '.' Identifier )*
+UserDefinedTypeName ::= Identifier ( '.' Identifier )* */
 
 Mapping ::= 'MAPPING' '(' ElementaryTypeName '=>' TypeName ')'
 
@@ -149,8 +146,8 @@ PrimaryExpression ::= BooleanLiteral
                     | HexLiteral
                     | StringLiteral
                     | TupleExpression
-/* reduce/reduce                     | Identifier                   */
-/* reduce/reduce                     | ElementaryTypeNameExpression */
+                    | Identifier
+                    | ElementaryTypeNameExpression */
 
 ExpressionList ::= Expression ( ',' Expression )*
 
@@ -187,7 +184,7 @@ DecimalNumber ::= [0-9]+
 TupleExpression ::= '(' ( Expression ( ',' Expression )*  )? ')'
                   | '[' ( Expression ( ',' Expression )*  )? ']'
 
-/* reduce/reduce ElementaryTypeNameExpression ::= ElementaryTypeName */
+ElementaryTypeNameExpression ::= ElementaryTypeName
 
 ElementaryTypeName ::= 'ADDRESS' | 'BOOL' | 'STRING' | 'VAR'
                      | Int | Uint | Byte | Fixed | Ufixed

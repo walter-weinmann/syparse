@@ -46,7 +46,7 @@ Nonterminals
  contract_part_list
  do_while_statement
  elementary_type_name
- %% reduce/reduce elementary_type_name_expression
+elementary_type_name_expression
  enum_definition
  enum_value
  enum_value_commalist
@@ -289,10 +289,14 @@ Left        1303 '**'.                                  %% exponentation.
 
 Left        1402 unary_left.
 
-Right       1501 '(' ')'.
+% wwe Right       1501 '(' ')'.
 Right       1501 unary_right.
 
-Left        1600 ELSE.
+Left        2000 elementary_type_name_expression.       %% reduce/reduce conflict with type_name
+Left        2000 ELSE.
+Left        2000 parameter_list.                        %% reduce/reduce conflict with type_name_list
+Left        2000 primary_expression    .                %% reduce/reduce conflict with user_defined_type_name
+Left        2000 type_name_identifier.                  %% reduce/reduce conflict with type_name_commalist (from parameter_list vs. type_name_list)
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
@@ -554,7 +558,7 @@ parameter_list -> '(' type_name_identifier_commalist ')'                        
 %% =============================================================================
 %% Helper definitions.
 %% -----------------------------------------------------------------------------
-%% reduce/reduce type_name_identifier -> type_name                                                               : {'$1', []}.
+type_name_identifier -> type_name                                                               : {'$1', []}.
 type_name_identifier -> type_name identifier                                                    : {'$1', '$2'}.
 
 type_name_identifier_commalist -> type_name_identifier                                          : ['$1'].
@@ -563,7 +567,7 @@ type_name_identifier_commalist -> type_name_identifier ',' type_name_identifier_
 
 %% TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
 
-%% reduce/reduce type_name_list -> '('                     ')'                                                   : {typeNameList, []}.
+type_name_list -> '('                     ')'                                                   : {typeNameList, []}.
 type_name_list -> '(' type_name_commalist ')'                                                   : {typeNameList, '$2'}.
 
 %% =============================================================================
@@ -861,8 +865,8 @@ primary_expression -> number_literal                                            
 primary_expression -> hex_literal                                                               : {primaryExpression, '$1'}.
 primary_expression -> string_literal                                                            : {primaryExpression, '$1'}.
 primary_expression -> tuple_expression                                                          : {primaryExpression, '$1'}.
-%% reduce/reduce primary_expression -> identifier                                                                : {primaryExpression, '$1'}.
-%% reduce/reduce primary_expression -> elementary_type_name_expression                                           : {primaryExpression, '$1'}.
+primary_expression -> identifier                                                                : {primaryExpression, '$1'}.
+primary_expression -> elementary_type_name_expression                                           : {primaryExpression, '$1'}.
 
 %% ExpressionList = Expression ( ',' Expression )*
 
@@ -883,6 +887,7 @@ identifier_expression -> identifier ':' expression                              
 
 %% FunctionCall = Expression '(' FunctionCallArguments ')'
 
+function_call -> expression '('                         ')'                                     : {functionCall, '$1', []}.
 function_call -> expression '(' function_call_arguments ')'                                     : {functionCall, '$1', '$3'}.
 
 %% FunctionCallArguments = '{' NameValueList? '}'
@@ -956,7 +961,7 @@ tuple_expression -> '[' expression_list ']'                                     
 
 %% ElementaryTypeNameExpression = ElementaryTypeName
 
-%% reduce/reduce elementary_type_name_expression -> elementary_type_name                                         : {elementaryTypeNameExpression, '$1'}.
+elementary_type_name_expression -> elementary_type_name                                         : {elementaryTypeNameExpression, '$1'}.
 
 %% ElementaryTypeName = 'address' | 'bool' | 'string' | 'var'
 %%                    | Int | Uint | Byte | Fixed | Ufixed

@@ -48,10 +48,10 @@ generate() ->
     ok = file_create_ct_all("reliability", "complete_", "compacted", ?ALL_CLAUSE_CT_RELIABILITY),
     ok = file_create_ct_all("reliability", "complete_", "compacted", [referenceExamples]),
     ok = file_create_ct_all("reliability", "complete_", "compacted", [special]),
-    ok = file_create_ct_all("reliability", "contract_", "compacted", ?ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART),
-%%    ok = file_create_ct_all("reliability", "contract_", "detailed", ?ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART),
-    ok = file_create_ct_all("reliability", "statement", "compacted", ?ALL_CLAUSE_CT_RELIABILITY_STATEMENT),
-%%    ok = file_create_ct_all("reliability", "statement", "detailed", ?ALL_CLAUSE_CT_RELIABILITY_STATEMENT),
+%%    ok = file_create_ct_all("reliability", "contract_", "compacted", ?ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART),
+    ok = file_create_ct_all("reliability", "contract_", "detailed", ?ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART),
+%%    ok = file_create_ct_all("reliability", "statement", "compacted", ?ALL_CLAUSE_CT_RELIABILITY_STATEMENT),
+    ok = file_create_ct_all("reliability", "statement", "detailed", ?ALL_CLAUSE_CT_RELIABILITY_STATEMENT),
 
     %% EUnit tests .............................................................
 
@@ -2364,7 +2364,24 @@ create_code(pragmaDirective = Rule) ->
 create_code(referenceExamples = Rule) ->
     ?CREATE_CODE_START,
 
-    Code = [CodeExample || {_File, _Chapter, _SubChapter, CodeExample} <- ?TESTS_FROM_SOLIDITY_DOCS],
+    LineSep = io_lib:nl(),
+
+    Code = [
+        lists:append([
+            LineSep,
+            "        // =====================================================================", LineSep,
+            "        // from file:       ", File, LineSep,
+            "        //      chapter:    ", Chapter, LineSep,
+            case SubChapter of
+                [] -> [];
+                _ ->
+                    lists:append(["        //      subchapter: ", SubChapter, LineSep])
+            end,
+            "        // ---------------------------------------------------------------------", LineSep,
+            LineSep,
+            string:replace(CodeExample, "\"", "\\\"", all)
+        ]) || {File, Chapter, SubChapter, CodeExample} <- ?TESTS_FROM_SOLIDITY_DOCS
+    ],
     dets:insert(?CODE_TEMPLATES, {Rule, Code}),
 %   ?CREATE_CODE_END;
     ok;
