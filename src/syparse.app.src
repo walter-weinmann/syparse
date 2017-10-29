@@ -30,6 +30,6 @@
         },
         {description, "LALR grammar based Solidity parser"},
         {modules, [syparse]},
-        {vsn, "1.1.0"}
+        {vsn, "1.2.0"}
     ]
 }.
