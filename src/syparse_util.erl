@@ -716,21 +716,19 @@ pt_to_source(FType, Fun, Ctx, Lvl, {eventDefinition, Value1, Value2, Value3} = S
 % expression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% reduce/reduce conflict
-
-%%pt_to_source(FType, Fun, Ctx, _Lvl, {expression, {elementaryTypeName, _} = Value} = ST) ->
-%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
-%%    NewCtx = case FType of
-%%                 top_down -> Fun(ST, Ctx);
-%%                 bottom_up -> Ctx
-%%             end,
-%%    NewCtx1 = case FType of
-%%                  top_down -> NewCtx;
-%%                  bottom_up -> Fun(ST, NewCtx)
-%%              end,
-%%    RT = {Value, NewCtx1},
-%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-%%    RT;
+pt_to_source(FType, Fun, Ctx, _Lvl, {expression, {elementaryTypeName, _} = Value} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {Value, NewCtx1},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {expression, {Type, _} = Value} = ST)
     when Type == newExpression; Type == primaryExpression ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
@@ -1133,6 +1131,20 @@ pt_to_source(FType, Fun, Ctx, Lvl, {functionalAssemblyExpression, Value1, Value2
 % functionCall
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+pt_to_source(FType, Fun, Ctx, Lvl, {functionCall, Value1, []} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value1New, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value1),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {lists:append([Value1New, "()"]), NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {functionCall, Value1, Value2} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
@@ -2345,6 +2357,20 @@ pt_to_source(FType, Fun, Ctx, Lvl, {numberLiteral, Value1, Value2} = ST) ->
 % parameter
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+pt_to_source(FType, Fun, Ctx, Lvl, {parameter, {Value1, []}} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    {Value1New, NewCtx1} = pt_to_source(FType, Fun, NewCtx, Lvl + 1, Value1),
+    NewCtx2 = case FType of
+                  top_down -> NewCtx1;
+                  bottom_up -> Fun(ST, NewCtx1)
+              end,
+    RT = {lists:append([Value1New]), NewCtx2},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {parameter, {Value1, Value2}} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
@@ -2707,21 +2733,19 @@ pt_to_source(FType, Fun, Ctx, Lvl, {tupleExpression, Value1, Value2} = ST) ->
 % typeNameList
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% reduce/reduce conflict
-
-%%pt_to_source(FType, Fun, Ctx, _Lvl, {typeNameList, []} = ST) ->
-%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
-%%    NewCtx = case FType of
-%%                 top_down -> Fun(ST, Ctx);
-%%                 bottom_up -> Ctx
-%%             end,
-%%    NewCtx1 = case FType of
-%%                  top_down -> NewCtx;
-%%                  bottom_up -> Fun(ST, NewCtx)
-%%              end,
-%%    RT = {"()", NewCtx1},
-%%    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
-%%    RT;
+pt_to_source(FType, Fun, Ctx, _Lvl, {typeNameList, []} = ST) ->
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
+    NewCtx = case FType of
+                 top_down -> Fun(ST, Ctx);
+                 bottom_up -> Ctx
+             end,
+    NewCtx1 = case FType of
+                  top_down -> NewCtx;
+                  bottom_up -> Fun(ST, NewCtx)
+              end,
+    RT = {"()", NewCtx1},
+    ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
+    RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {typeNameList, Value} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of

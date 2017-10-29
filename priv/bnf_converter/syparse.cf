@@ -372,7 +372,7 @@ ParameterList02.                                 ParameterList ::= "(" TypeNameI
 -- type_name_identifier -> type_name                                                               : {'$1', []}.
 -- type_name_identifier -> type_name identifier                                                    : {'$1', '$2'}.
 
--- reduce/reduce TypeNameIdentifier01.                            TypeNameIdentifier ::= TypeName            ;
+TypeNameIdentifier01.                            TypeNameIdentifier ::= TypeName            ;
 TypeNameIdentifier02.                            TypeNameIdentifier ::= TypeName Identifier ;
 
 -- type_name_identifier_commalist -> type_name_identifier                                          : ['$1'].
@@ -385,7 +385,7 @@ TypeNameIdentifierCommalist02.                   TypeNameIdentifierCommalist ::=
 -- type_name_list -> '('                     ')'                                                   : {typeNameList, []}.
 -- type_name_list -> '(' type_name_commalist ')'                                                   : {typeNameList, '$2'}.
 
--- reduce/reduce TypeNameList01.                                  TypeNameList ::= "("                   ")" ;
+TypeNameList01.                                  TypeNameList ::= "("                   ")" ;
 TypeNameList02.                                  TypeNameList ::= "(" TypeNameCommalist ")" ;
 
 -- =============================================================================
@@ -786,8 +786,8 @@ PrimaryExpression02.                             PrimaryExpression ::= NumberLit
 PrimaryExpression03.                             PrimaryExpression ::= HexLiteral                   ;
 PrimaryExpression04.                             PrimaryExpression ::= StringLiteral                ;
 PrimaryExpression05.                             PrimaryExpression ::= TupleExpression              ;
--- reduce/reduce PrimaryExpression06.                             PrimaryExpression ::= Identifier                   ;
--- reduce/reduce PrimaryExpression07.                             PrimaryExpression ::= ElementaryTypeNameExpression ;
+PrimaryExpression06.                             PrimaryExpression ::= Identifier                   ;
+PrimaryExpression07.                             PrimaryExpression ::= ElementaryTypeNameExpression ;
 
 -- expression_list -> expression_commalist                                                         : {expressionList, '$1'}.
 
@@ -899,7 +899,7 @@ TupleExpression04.                               TupleExpression ::= "[" Express
 
 -- elementary_type_name_expression -> elementary_type_name                                         : {elementaryTypeNameExpression, '$1'}.
 
--- reduce/reduce ElementaryTypeNameExpression01.                  ElementaryTypeNameExpression ::= ElementaryTypeName ;
+ElementaryTypeNameExpression01.                  ElementaryTypeNameExpression ::= ElementaryTypeName ;
 
 -- elementary_type_name -> ADDRESS                                                                 : {elementaryTypeName, "address"}.
 -- elementary_type_name -> BOOL                                                                    : {elementaryTypeName, "bool"}.

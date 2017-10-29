@@ -234,7 +234,7 @@ TypeName = ElementaryTypeName
          | ArrayTypeName
          | FunctionTypeName
 ```
-the grammar rule of ```ElementaryTypeNameExpression``` is not supported. Hence the ```ElementaryTypeNameExpression``` is also not supported in the grammar rule of ```PrimaryExpression```.
+the grammar rule of ```ElementaryTypeNameExpression``` has precedence over ```TypeName```.
 
 ### NumberLiteral
 
@@ -254,11 +254,7 @@ and
 ```
 TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
 ```
-only the restricted grammar rule
-```
-ParameterList =        '(' ( TypeName            Identifier  (',' TypeName            Identifier )* )? ')'
-```
-is supported.
+the grammar rule of ```ParameterList``` has precedence over ```TypeNameList```.
 
 ### PrimaryExpression
 
@@ -276,7 +272,7 @@ and
 ```
 UserDefinedTypeName = Identifier ( '.' Identifier )*
 ```
-the ```Identifier``` is not supported in the grammar rule of ```PrimaryExpression```.
+the grammar rule of ```PrimaryExpression``` has precedence over ```UserDefinedTypeName```.
 
 ### TypeNameList
 
@@ -288,11 +284,7 @@ and
 ```
 TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
 ```
-only the restricted grammar rule
-```
-TypeNameList =         '(' ( TypeName (',' TypeName )* )  ')'
-```
-is supported.
+the grammar rule of ```ParameterList``` has precedence over ```TypeNameList```.
 
 ## 4. Acknowledgement
 
