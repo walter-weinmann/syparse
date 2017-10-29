@@ -279,7 +279,44 @@
 %% wwe
 %%  {"file name" , "section name", "title", "code"}
     % --------------------------------------------------------------------------
-    {"Assembly", "Inline Assembly", "Example",
+    % abi-spec.rst
+    % --------------------------------------------------------------------------
+    {"abi-spec", "Examples", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract Foo {
+            function bar(bytes3[2] xy) {}
+            function baz(uint32 x, bool y) returns (bool r) { r = x > 32 || y; }
+            function sam(bytes name, bool z, uint[] data) {}
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"abi-spec", "JSON", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract Test {
+            function Test(){ b = 0x12345678901234567890123456789012; }
+            event Event1(uint indexed a, bytes32 b);
+            event Event2(uint indexed a, bytes32 b);
+            function foo(uint a) { Event1(a, b); }
+            bytes32 b;
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"abi-spec", "Handling tuple types", "",
+        "
+        contract Test {
+            struct S { uint a; uint[] b; T[] c; }
+            struct T { uint x; uint y; }
+            function f(S s, T t, uint a) { }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    % assembly.rst
+    % --------------------------------------------------------------------------
+    {"assembly", "Inline Assembly", "Example",
         "
         pragma solidity ^0.4.0;
 
@@ -349,8 +386,28 @@
 %%        }
 %%    }
 %%    "},
+    {"assembly", "Inline Assembly", "Literals",
+        "
+        contract my_contract {
+            function my_function () {
+                assembly { 2 3 add \"abc\" and }
+            }
+        }
+    "},
+    {"assembly", "Inline Assembly", "Functional Style",
+        "
+        contract my_contract {
+            function my_function () {
+                assembly {
+                     3 0x80 mload add 0x80 mstore
+
+                     mstore(0x80, add(mload(0x80), 3))
+                }
+            }
+        }
+    "},
 %%    % --------------------------------------------------------------------------
-%%    {"Assembly", "Inline Assembly", "Access to External Variables and Functions",
+%%    {"assembly", "Inline Assembly", "Access to External Variables and Functions",
 %%        "
 %%        pragma solidity ^0.4.11;
 %%
@@ -409,7 +466,7 @@
 %%        }
 %%    "},
 %%    % --------------------------------------------------------------------------
-%%    {"Assembly", "Inline Assembly", "Declaring Assembly-Local Variables",
+%%    {"assembly", "Inline Assembly", "Declaring Assembly-Local Variables",
 %%        "
 %%        pragma solidity ^0.4.0;
 %%
@@ -427,6 +484,87 @@
 %%            }
 %%        }
 %%    "},
+%%    {"assembly", "Inline Assembly", "Assignments",
+%%        "
+%%        contract my_contract {
+%%            function my_function () {
+%%                assembly {
+%%                    let v := 0 // functional-style assignment as part of variable declaration
+%%                    let g := add(v, 2)
+%%                    sload(10)
+%%                    =: v // instruction style assignment, puts the result of sload(10) into v
+%%                }
+%%            }
+%%        }
+%%    "},
+%%    {"assembly", "Inline Assembly", "Switch",
+%%        "
+%%        contract my_contract {
+%%            function my_function () {
+%%                assembly {
+%%                    let x := 0
+%%                    switch calldataload(4)
+%%                    case 0 {
+%%                        x := calldataload(0x24)
+%%                    }
+%%                    default {
+%%                        x := calldataload(0x44)
+%%                    }
+%%                    sstore(0, div(x, 2))
+%%                }
+%%            }
+%%        }
+%%    "},
+%%    {"assembly", "Inline Assembly", "Loops",
+%%        "
+%%        contract my_contract {
+%%            function my_function () {
+%%                assembly {
+%%                    let x := 0
+%%                    for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } {
+%%                        x := add(x, mload(i))
+%%                    }
+%%                }
+%%
+%%                assembly {
+%%                    let x := 0
+%%                    let i := 0
+%%                    for { } lt(i, 0x100) { } {     // while(i < 0x100)
+%%                        x := add(x, mload(i))
+%%                        i := add(i, 0x20)
+%%                    }
+%%                }
+%%            }
+%%        }
+%%    "},
+%%    {"assembly", "Inline Assembly", "Functions",
+%%        "
+%%        contract my_contract {
+%%            function my_function () {
+%%                assembly {
+%%                    let v := 0 // functional-style assignment as part of variable declaration
+%%                    let g := add(v, 2)
+%%                    sload(10)
+%%                    =: v // instruction style assignment, puts the result of sload(10) into v
+%%                }
+%%            }
+%%        }
+%%    "},
+    {"assembly", "Standalone Assembly", "",
+        "
+        contract my_contract {
+            function my_function () {
+                assembly {
+                    let v := 0 // functional-style assignment as part of variable declaration
+                    let g := add(v, 2)
+                    sload(10)
+                    =: v // instruction style assignment, puts the result of sload(10) into v
+                }
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    % contracts.rst
     % --------------------------------------------------------------------------
     {"Contracts", "Visibility and Getters", "",
         "

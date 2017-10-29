@@ -163,8 +163,6 @@ Erlang code.
 -define(NODEBUG, true).
 -include_lib("eunit/include/eunit.hrl").
 
-relocatable, static, switch, try, type, typeof
-
 -define(TOKEN_PATTERNS, [
     {"^(?i)(ABSTRACT)$",         'ABSTRACT'},
     {"^(?i)(ADDRESS)$",          'ADDRESS'},
