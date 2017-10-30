@@ -1708,16 +1708,13 @@ pt_to_source(FType, Fun, Ctx, Lvl, {identifierList, Values} = ST)
     {ValuesNew, NewCtx1} = lists:foldl(fun(F, {Acc, CtxAcc}) ->
         ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n F: ~p~n", [F]),
         case F of
+            44 ->
+                {Acc ++ ",", CtxAcc};
+            "," ->
+                {Acc ++ ",", CtxAcc};
             {identifier, _} ->
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
-                {lists:append([
-                    Acc,
-                    case length(Acc) of
-                        0 -> [];
-                        _ -> ","
-                    end,
-                    SubAcc
-                ]), CtxAcc1}
+                {Acc ++ SubAcc, CtxAcc1}
         end
                                        end,
         {[], NewCtx},

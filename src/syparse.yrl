@@ -295,7 +295,7 @@ Right       1501 unary_right.
 Left        2000 elementary_type_name_expression.       %% reduce/reduce conflict with type_name
 Left        2000 ELSE.
 Left        2000 parameter_list.                        %% reduce/reduce conflict with type_name_list
-Left        2000 primary_expression    .                %% reduce/reduce conflict with user_defined_type_name
+Left        2000 primary_expression.                    %% reduce/reduce conflict with user_defined_type_name
 Left        2000 type_name_identifier.                  %% reduce/reduce conflict with type_name_commalist (from parameter_list vs. type_name_list)
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -750,8 +750,10 @@ identifier_list -> '(' identifier_commalist ')'                                 
 %% =============================================================================
 %% Helper definitions.
 %% -----------------------------------------------------------------------------
-identifier_commalist -> identifier                                                              : ['$1'].
-identifier_commalist -> identifier ',' identifier_commalist                                     : ['$1' | '$3'].
+identifier_commalist ->                          identifier                                     : ['$1'].
+identifier_commalist ->                      ',' identifier                                     : lists:flatten([[","]  | ['$2']]).
+identifier_commalist -> identifier_commalist ','                                                : lists:flatten([['$1'] | [","]]).
+identifier_commalist -> identifier_commalist ',' identifier                                     : lists:flatten(lists:append(['$1', [","], ['$3']])).
 %% =============================================================================
 
 %% Expression
