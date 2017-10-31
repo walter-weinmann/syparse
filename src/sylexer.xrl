@@ -226,6 +226,7 @@ Erlang code.
     {"^(?i)(STRUCT)$",           'STRUCT'},
     {"^(?i)(STRUCT)$",           'STRUCT'},
     {"^(?i)(SWITCH)$",           'SWITCH'},
+    {"^(?i)(SZABO)$",            'SZABO'},
     {"^(?i)(THROW)$",            'THROW'},
     {"^(?i)(TRUE)$",             'TRUE'},
     {"^(?i)(TRY)$",              'TRY'},

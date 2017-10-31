@@ -646,7 +646,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {doWhileStatement, Value1, Value2} = ST) ->
                   top_down -> NewCtx3;
                   bottom_up -> Fun(ST, NewCtx3)
               end,
-    RT = {lists:append(["do ", string:strip(Value1New, left), " while(", Value2New, ");"]), NewCtx4},
+    RT = {lists:append(["do ", string:strip(Value1New, left), " while(", Value2New, ")"]), NewCtx4},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 

@@ -46,7 +46,7 @@ Nonterminals
  contract_part_list
  do_while_statement
  elementary_type_name
-elementary_type_name_expression
+ elementary_type_name_expression
  enum_definition
  enum_value
  enum_value_commalist
@@ -258,7 +258,7 @@ Endsymbol
 %% Operator precedences.
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Nonassoc    0016 ','.                                   %% comma operator.
+Left        0016 ','.                                   %% comma operator.
 
 Right       0115 '=' '|=' '^=' '&=' '<<=' '>>='  '+=' '-=' '*=' '/=' '%=' ':='.
                                                         %% assignment operators.
@@ -292,11 +292,12 @@ Left        1402 unary_left.
 % wwe Right       1501 '(' ')'.
 Right       1501 unary_right.
 
-Left        2000 elementary_type_name_expression.       %% reduce/reduce conflict with type_name
-Left        2000 ELSE.
+Left        2000 elementary_type_name_expression.       %% reduce/reduce conflict with elementary_type_name
 Left        2000 parameter_list.                        %% reduce/reduce conflict with type_name_list
-Left        2000 primary_expression.                    %% reduce/reduce conflict with user_defined_type_name
+Left        2000 primary_expression.                    %% reduce/reduce conflict with identifier_dotlist
 Left        2000 type_name_identifier.                  %% reduce/reduce conflict with type_name_commalist (from parameter_list vs. type_name_list)
+
+Left        3000 ELSE.
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
@@ -309,7 +310,7 @@ source_unit -> contract_definition_import_pragma_directive_list                 
 %% =============================================================================
 %% Helper definitions - test purposes.
 %% -----------------------------------------------------------------------------
-% wwe source_unit -> function_type_name                                                               : '$1'.
+% source_unit -> expression                                                                       : '$1'.
 %% =============================================================================
 
 %% =============================================================================
@@ -421,14 +422,14 @@ expression_commalist -> expression ',' expression_commalist                     
 
 state_variable_declaration -> type_name          identifier                ';'                  : {stateVariableDeclaration, '$1', [],         '$2', []}.
 state_variable_declaration -> type_name          identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', [],         '$2', '$4'}.
-state_variable_declaration -> type_name PUBLIC   identifier                ';'                  : {stateVariableDeclaration, '$1', "public",   '$3', []}.
+state_variable_declaration -> type_name CONSTANT identifier                ';'                  : {stateVariableDeclaration, '$1', "constant", '$3', []}.
+state_variable_declaration -> type_name CONSTANT identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "constant", '$3', '$5'}.
 state_variable_declaration -> type_name INTERNAL identifier                ';'                  : {stateVariableDeclaration, '$1', "internal", '$3', []}.
-state_variable_declaration -> type_name PRIVATE  identifier                ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', []}.
-state_variable_declaration -> type_name CONSTANT identifier                ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', []}.
-state_variable_declaration -> type_name PUBLIC   identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "public",   '$3', '$5'}.
 state_variable_declaration -> type_name INTERNAL identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "internal", '$3', '$5'}.
+state_variable_declaration -> type_name PRIVATE  identifier                ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', []}.
 state_variable_declaration -> type_name PRIVATE  identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', '$5'}.
-state_variable_declaration -> type_name CONSTANT identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', '$5'}.
+state_variable_declaration -> type_name PUBLIC   identifier                ';'                  : {stateVariableDeclaration, '$1', "public",   '$3', []}.
+state_variable_declaration -> type_name PUBLIC   identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "public",   '$3', '$5'}.
 
 %% UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
 
