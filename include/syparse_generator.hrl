@@ -59,19 +59,7 @@
     ]
 ).
 
-%% no coverage analysis for syparse_util
--define(ALL_CLAUSE_CT_PERFORMANCE, [
-    sourceUnit
-]).
-
--define(ALL_CLAUSE_CT_RELIABILITY, [
-    contractDefinition,
-    importDirective,
-    pragmaDirective,
-    sourceUnit
-]).
-
--define(ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART, [
+-define(ALL_CLAUSE_CONTRACT_PART, [
     enumDefinition,
     eventDefinition,
     functionDefinition,
@@ -81,22 +69,7 @@
     usingForDeclaration
 ]).
 
--define(ALL_CLAUSE_CT_RELIABILITY_STATEMENT, [
-    block,
-    break,
-    continue,
-    doWhileStatement,
-    forStatement,
-    ifStatement,
-    inlineAssemblyStatement,
-    placeholderStatement,
-    return,
-    simpleStatement,
-    throw,
-    whileStatement
-]).
-
--define(ALL_CLAUSE_EUNIT, [
+-define(ALL_CLAUSE_DETAILED, [
 %%%% Level 01 ..........................
 %%    booleanLiteral,
 %%    break,
@@ -132,7 +105,6 @@
 %%%% Level 05 ..........................
 %%    arrayTypeName,
 %%    expressionList,
-%%    expressionStatement,
 %%    indexAccess,
 %%    indexedParameterList,
 %%    inheritanceSpecifier,
@@ -142,26 +114,25 @@
 %%    newExpression,
 %%    parameterList,
 %%    return,
-    stateVariableDeclaration,
+%%    stateVariableDeclaration,
 %%    tupleExpression,
 %%    typeNameList,
 %%    usingForDeclaration,
-    variableDeclaration,
+%%    variableDeclaration
 %%%% Level 06 ..........................
 %%    eventDefinition,
 %%    functionCallArguments,
 %%    functionTypeName,
 %%    modifierInvocation,
 %%    structDefinition,
-    variableDefinition,
+%%    variableDefinition
 %%%% Level 07 ..........................
 %%    functionCall
 %%%% Level 21 ..........................
-    doWhileStatement,
-    forStatement,
-    ifStatement,
-    simpleStatement,
-    whileStatement
+%%    doWhileStatement,
+%%    forStatement,
+%%    ifStatement,
+%%    whileStatement
 %%%% Level 22 ..........................
 %%    block
 %%%% Level 41 ..........................
@@ -182,36 +153,35 @@
 %%    sourceUnit
 ]).
 
--define(ALL_CLAUSE_EUNIT_CONTRACT_PART, [
-    enumDefinition,
-    eventDefinition,
-    functionDefinition,
-    modifierDefinition,
-    stateVariableDeclaration,
-    structDefinition,
-    usingForDeclaration
+%% no coverage analysis for syparse_util
+-define(ALL_CLAUSE_PERFORMANCE, [
+    sourceUnit
 ]).
 
--define(ALL_CLAUSE_EUNIT_RELIABILITY, [
+-define(ALL_CLAUSE_RELIABILITY, [
     contractDefinition,
     importDirective,
     pragmaDirective,
     sourceUnit
 ]).
 
--define(ALL_CLAUSE_EUNIT_STATEMENT, [
+-define(ALL_CLAUSE_STATEMENT, [
     block,
-    break,
-    continue,
-    doWhileStatement,
     forStatement,
     ifStatement,
     inlineAssemblyStatement,
+    whileStatement
+]).
+
+-define(ALL_CLAUSE_STATEMENT_SEMICOLON, [
+    break,
+    continue,
+    doWhileStatement,
+    expression,
     placeholderStatement,
     return,
-    simpleStatement,
     throw,
-    whileStatement
+    variableDefinition
 ]).
 
 -define(CODE_TEMPLATES, code_templates).
