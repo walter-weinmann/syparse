@@ -288,10 +288,9 @@ Left        1402 unary_left.
 % wwe Right       1501 '(' ')'.
 Right       1501 unary_right.
 
-% wwe Left        2000 elementary_type_name_expression.       %% reduce/reduce conflict with elementary_type_name
 Left        2000 parameter_list.                        %% reduce/reduce conflict with type_name_list
 Left        2000 primary_expression.                    %% reduce/reduce conflict with identifier_dotlist
-Left        2000 type_name_identifier.                  %% reduce/reduce conflict with type_name_commalist (from parameter_list vs. type_name_list)
+% Left        2000 type_name_identifier.                  %% reduce/reduce conflict with type_name_commalist (from parameter_list vs. type_name_list)
 
 Left        3000 ELSE.
 
