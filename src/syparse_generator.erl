@@ -43,25 +43,28 @@ generate() ->
 
     %% Common tests ............................................................
 
-    ok = file_create_ct_all("performance", "complete_", "compacted", ?ALL_CLAUSE_CT_PERFORMANCE),
+    ok = file_create_ct_all("performance", "complete_", "compacted", ?ALL_CLAUSE_PERFORMANCE),
 
-    ok = file_create_ct_all("reliability", "complete_", "compacted", ?ALL_CLAUSE_CT_RELIABILITY),
-    ok = file_create_ct_all("reliability", "complete_", "compacted", [referenceExamples]),
-    ok = file_create_ct_all("reliability", "complete_", "compacted", [special]),
-%%    ok = file_create_ct_all("reliability", "contract_", "compacted", ?ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART),
-    ok = file_create_ct_all("reliability", "contract_", "detailed", ?ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART),
-%%    ok = file_create_ct_all("reliability", "statement", "compacted", ?ALL_CLAUSE_CT_RELIABILITY_STATEMENT),
-    ok = file_create_ct_all("reliability", "statement", "detailed", ?ALL_CLAUSE_CT_RELIABILITY_STATEMENT),
+    ok = file_create_ct_all("reliability", "complete_", "compacted", ?ALL_CLAUSE_RELIABILITY),
+    ok = file_create_ct_all("reliability", "complete_", "detailed", [referenceExamples]),
+    ok = file_create_ct_all("reliability", "complete_", "detailed", [special]),
+    ok = file_create_ct_all("reliability", "contract_", "compacted", ?ALL_CLAUSE_CONTRACT_PART),
+%%    ok = file_create_ct_all("reliability", "contract_", "detailed", ?ALL_CLAUSE_CONTRACT_PART),
+    ok = file_create_ct_all("reliability", "statement", "compacted", ?ALL_CLAUSE_STATEMENT),
+%%    ok = file_create_ct_all("reliability", "statement", "detailed", ?ALL_CLAUSE_STATEMENT),
+    ok = file_create_ct_all("reliability", "stmntsemi", "compacted", ?ALL_CLAUSE_STATEMENT_SEMICOLON),
+%%    ok = file_create_ct_all("reliability", "stmntsemi", "detailed", ?ALL_CLAUSE_STATEMENT_SEMICOLON),
 
     %% EUnit tests .............................................................
 
     ok = file_create_eunit_all("performance", "complete_", [referenceExamples]),
     ok = file_create_eunit_all("performance", "complete_", [special]),
 
-    ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_EUNIT),
-    ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_EUNIT_RELIABILITY),
-    ok = file_create_eunit_all("reliability", "contract_", ?ALL_CLAUSE_EUNIT_CONTRACT_PART),
-    ok = file_create_eunit_all("reliability", "statement", ?ALL_CLAUSE_EUNIT_STATEMENT),
+    ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_DETAILED),
+    ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_RELIABILITY),
+    ok = file_create_eunit_all("reliability", "contract_", ?ALL_CLAUSE_CONTRACT_PART),
+    ok = file_create_eunit_all("reliability", "statement", ?ALL_CLAUSE_STATEMENT),
+    ok = file_create_eunit_all("reliability", "stmntsemi", ?ALL_CLAUSE_STATEMENT_SEMICOLON),
 
     dets:close(?CODE_TEMPLATES).
 
@@ -85,7 +88,7 @@ create_code() ->
     create_code(identifier),
     create_code(int),
     create_code(numberUnit),
-    create_code(placeholderStatement),
+    create_code(placeHolderStatement),
     create_code(pragma_directive),
     create_code(referenceExamples),
     create_code(special),
@@ -331,7 +334,7 @@ create_code(arrayTypeName = Rule) ->
     Code = [
         lists:append([
             lists:nth(rand:uniform(TypeName_Length), TypeName),
-            "[",
+            " [",
             lists:nth(rand:uniform(Expression_Length), Expression),
             "]"
         ])
@@ -488,7 +491,7 @@ create_code(booleanLiteral = Rule) ->
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(expressionStatement, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
-    store_code(simpleStatement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -502,10 +505,10 @@ create_code(break = Rule) ->
     ?CREATE_CODE_START,
 
     Code = [
-        "Break;"
+        "Break"
     ],
     store_code(Rule, Code, ?MAX_STATEMENT, false),
-    store_code(statement, Code, ?MAX_STATEMENT, false),
+    store_code(statement, [C ++ ";" || C <- Code], ?MAX_STATEMENT, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -513,11 +516,11 @@ create_code(break = Rule) ->
 %% -----------------------------------------------------------------------------
 %% ElementaryTypeName = ... Byte ..
 %% -----------------------------------------------------------------------------
-%% ElementaryTypeNameExpression = ElementaryTypeName               reduce/reduce
+%% ElementaryTypeNameExpression = ElementaryTypeName
 %% -----------------------------------------------------------------------------
-%% Expression =  ... PrimaryExpression ...                         reduce/reduce
+%% Expression =  ... PrimaryExpression ...
 %% -----------------------------------------------------------------------------
-%% PrimaryExpression = ... ElementaryTypeNameExpression ...        reduce/reduce
+%% PrimaryExpression = ... ElementaryTypeNameExpression ...
 %% -----------------------------------------------------------------------------
 %% TypeName = ... ElementaryTypeName ...
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -528,9 +531,9 @@ create_code(byte = Rule) ->
     Code = ?BYTE,
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(elementaryTypeName, Code, ?MAX_BASIC, false),
-%%    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
-%%    store_code(expression, Code, ?MAX_BASIC, false),
-%%    store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
+    store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -544,10 +547,10 @@ create_code(continue = Rule) ->
     ?CREATE_CODE_START,
 
     Code = [
-        "Continue;"
+        "Continue"
     ],
     store_code(Rule, Code, ?MAX_STATEMENT, false),
-    store_code(statement, Code, ?MAX_STATEMENT, false),
+    store_code(statement, [C ++ ";" || C <- Code], ?MAX_STATEMENT, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -698,23 +701,23 @@ create_code(doWhileStatement = Rule) ->
             lists:nth(rand:uniform(Statement_Length), Statement),
             " While (",
             lists:nth(rand:uniform(Expression_Length), Expression),
-            ");"
+            ")"
         ])
         || _ <- lists:seq(1, ?MAX_STATEMENT * 2)
     ],
     store_code(Rule, Code, ?MAX_STATEMENT, false),
-    store_code(statement, Code, ?MAX_STATEMENT, false),
+    store_code(statement, [C ++ ";" || C <- Code], ?MAX_STATEMENT, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ElementaryTypeName = 'address' | 'bool' | 'string' | 'var'
 %%                    | Int | Uint | Byte | Fixed | Ufixed
 %% -----------------------------------------------------------------------------
-%% ElementaryTypeNameExpression = ElementaryTypeName               reduce/reduce
+%% ElementaryTypeNameExpression = ElementaryTypeName
 %% -----------------------------------------------------------------------------
-%% Expression =  ... PrimaryExpression ...                         reduce/reduce
+%% Expression =  ... PrimaryExpression ...
 %% -----------------------------------------------------------------------------
-%% PrimaryExpression = ... ElementaryTypeNameExpression ...        reduce/reduce
+%% PrimaryExpression = ... ElementaryTypeNameExpression ...
 %% -----------------------------------------------------------------------------
 %% TypeName = ... ElementaryTypeName ...
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -729,9 +732,9 @@ create_code(elementaryTypeName = Rule) ->
         "Var"
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
-%%    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
-%%    store_code(expression, Code, ?MAX_BASIC, false),
-%%    store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
+    store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -860,14 +863,16 @@ create_code(expression = Rule) ->
             2 ->
                 lists:nth(rand:uniform(Expression_Length), Expression) ++ " -- ";
             3 -> lists:append([
-                "(",
+                " (",
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                ")"
+                ") "
             ]);
-            4 -> "!" ++ lists:nth(rand:uniform(Expression_Length), Expression);
-            5 -> "~" ++ lists:nth(rand:uniform(Expression_Length), Expression);
+            4 ->
+                " ! " ++ lists:nth(rand:uniform(Expression_Length), Expression);
+            5 ->
+                " ~ " ++ lists:nth(rand:uniform(Expression_Length), Expression);
             6 ->
-                "Delete " ++ lists:nth(rand:uniform(Expression_Length), Expression);
+                " Delete " ++ lists:nth(rand:uniform(Expression_Length), Expression);
             7 ->
                 " ++ " ++ lists:nth(rand:uniform(Expression_Length), Expression);
             8 ->
@@ -878,22 +883,22 @@ create_code(expression = Rule) ->
                 " - " ++ lists:nth(rand:uniform(Expression_Length), Expression);
             11 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "**",
+                " ** ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             12 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "*",
+                " * ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             13 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "/",
+                " / ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             14 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "%",
+                " % ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             15 -> lists:append([
@@ -928,109 +933,109 @@ create_code(expression = Rule) ->
             ]);
             21 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "|",
+                " | ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             22 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "<",
+                " < ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             23 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                ">",
+                " > ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             24 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "<=",
+                " <= ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             25 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                ">=",
+                " >= ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             26 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "==",
+                " == ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             27 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "!=",
+                " != ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             28 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "&&",
+                " && ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             29 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "||",
+                " || ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             30 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "?",
+                " ? ",
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                ":",
+                " : ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             31 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "=",
+                " = ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             32 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "|=",
+                " |= ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             33 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "^=",
+                " ^= ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             34 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "&=",
+                " &= ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             35 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "<<=",
+                " <<= ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             36 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                ">>=",
+                " >>= ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             37 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "+=",
+                " += ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             38 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "-=",
+                " -= ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             39 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "*=",
+                " *= ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             40 -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "/=",
+                " /= ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ]);
             _ -> lists:append([
                 lists:nth(rand:uniform(Expression_Length), Expression),
-                "%=",
+                " %= ",
                 lists:nth(rand:uniform(Expression_Length), Expression)
             ])
         end
@@ -1038,7 +1043,7 @@ create_code(expression = Rule) ->
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(expressionStatement, Code, ?MAX_BASIC, false),
-    store_code(simpleStatement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -1095,11 +1100,11 @@ create_code(expressionList = Rule) ->
 %% -----------------------------------------------------------------------------
 %% ElementaryTypeName = ... Fixed ...
 %% -----------------------------------------------------------------------------
-%% ElementaryTypeNameExpression = ElementaryTypeName               reduce/reduce
+%% ElementaryTypeNameExpression = ElementaryTypeName
 %% -----------------------------------------------------------------------------
-%% Expression =  ... PrimaryExpression ...                         reduce/reduce
+%% Expression =  ... PrimaryExpression ...
 %% -----------------------------------------------------------------------------
-%% PrimaryExpression = ... ElementaryTypeNameExpression ...        reduce/reduce
+%% PrimaryExpression = ... ElementaryTypeNameExpression ...
 %% -----------------------------------------------------------------------------
 %% TypeName = ... ElementaryTypeName ...
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1154,9 +1159,9 @@ create_code(fixed = Rule) ->
         ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(elementaryTypeName, Code, ?MAX_BASIC, false),
-%%    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
-%%    store_code(expression, Code, ?MAX_BASIC, false),
-%%    store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
+    store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -1273,7 +1278,8 @@ create_code(functionCall = Rule) ->
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
-    store_code(simpleStatement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -1464,7 +1470,7 @@ create_code(hexLiteral = Rule) ->
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(expressionStatement, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
-    store_code(simpleStatement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -1500,9 +1506,9 @@ create_code(hexNumber = Rule) ->
 %% -----------------------------------------------------------------------------
 %% EnumValue = Identifier
 %% -----------------------------------------------------------------------------
-%% Expression =  ... PrimaryExpression ...                         reduce/reduce
+%% Expression =  ... PrimaryExpression ...
 %% -----------------------------------------------------------------------------
-%% == PrimaryExpression = ... Identifier ...                       reduce/reduce
+%% PrimaryExpression = ... Identifier ...
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 create_code(identifier = Rule) ->
@@ -1545,8 +1551,8 @@ create_code(identifier = Rule) ->
     store_code(Rule, Code, ?MAX_BASIC, false),
 %%    store_code(assemblyItem, Code, ?MAX_BASIC, false),
     store_code(enumValue, Code, ?MAX_BASIC, false),
-%%    store_code(expression, Code, ?MAX_BASIC, false),
-%%    store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(primaryExpression, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1733,10 +1739,10 @@ create_code(indexAccess = Rule) ->
         [
             case rand:uniform(8) rem 8 of
                 1 ->
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++ "[]";
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++ " []";
                 _ -> lists:append([
                     lists:nth(rand:uniform(Expression_Length), Expression),
-                    "[",
+                    " [",
                     lists:nth(rand:uniform(Expression_Length), Expression),
                     "]"
                 ])
@@ -1745,7 +1751,8 @@ create_code(indexAccess = Rule) ->
         ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
-    store_code(simpleStatement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -1909,11 +1916,11 @@ create_code(inlineAssemblyStatement = Rule) ->
 %% -----------------------------------------------------------------------------
 %% ElementaryTypeName = ... Int ...
 %% -----------------------------------------------------------------------------
-%% ElementaryTypeNameExpression = ElementaryTypeName               reduce/reduce
+%% ElementaryTypeNameExpression = ElementaryTypeName
 %% -----------------------------------------------------------------------------
-%% Expression =  ... PrimaryExpression ...                         reduce/reduce
+%% Expression =  ... PrimaryExpression ...
 %% -----------------------------------------------------------------------------
-%% PrimaryExpression = ... ElementaryTypeNameExpression ...        reduce/reduce
+%% PrimaryExpression = ... ElementaryTypeNameExpression ...
 %% -----------------------------------------------------------------------------
 %% TypeName = ... ElementaryTypeName ...
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1924,9 +1931,9 @@ create_code(int = Rule) ->
     Code = ?INT,
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(elementaryTypeName, Code, ?MAX_BASIC, false),
-%%    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
-%%    store_code(expression, Code, ?MAX_BASIC, false),
-%%    store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
+    store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -1985,7 +1992,8 @@ create_code(memberAccess = Rule) ->
         ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
-    store_code(simpleStatement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2138,7 +2146,8 @@ create_code(newExpression = Rule) ->
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
-    store_code(simpleStatement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2189,7 +2198,7 @@ create_code(numberLiteral = Rule) ->
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(expressionStatement, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
-    store_code(simpleStatement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2294,14 +2303,14 @@ create_code(parameterList = Rule) ->
 %% Statement = ... PlaceholderStatement ';' ...
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-create_code(placeholderStatement = Rule) ->
+create_code(placeHolderStatement = Rule) ->
     ?CREATE_CODE_START,
 
     Code = [
-        "_;"
+        "_"
     ],
     store_code(Rule, Code, ?MAX_STATEMENT, false),
-    store_code(statement, Code, ?MAX_STATEMENT, false),
+    store_code(statement, [C ++ ";" || C <- Code], ?MAX_STATEMENT, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2312,23 +2321,23 @@ create_code(pragma_directive = Rule) ->
     ?CREATE_CODE_START,
 
     Code = [
-        "^1.0.1",
-        "^1.0.2",
-        "^1.0.3",
-        "^1.0.4",
-        "^1.0.5",
-        "^2.0.1",
-        "^2.0.2",
-        "^2.0.3",
-        "^2.0.4",
-        "^2.0.5",
-        "^123.456.789",
-        "^3.0.0",
-        "^3.0.1",
-        "^3.0.2",
-        "^3.0.3",
-        "^3.0.4",
-        "^3.0.5"
+        "^1.0.1;",
+        "^1.0.2;",
+        "^1.0.3;",
+        "^1.0.4;",
+        "^1.0.5;",
+        "^2.0.1;",
+        "^2.0.2;",
+        "^2.0.3;",
+        "^2.0.4;",
+        "^2.0.5;",
+        "^123.456.789;",
+        "^3.0.0;",
+        "^3.0.1;",
+        "^3.0.2;",
+        "^3.0.3;",
+        "^3.0.4;",
+        "^3.0.5;"
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
@@ -2349,8 +2358,7 @@ create_code(pragmaDirective = Rule) ->
             "Pragma ",
             lists:nth(rand:uniform(Identifier_Length), Identifier),
             " ",
-            lists:nth(rand:uniform(Pragma_directive_Length), Pragma_directive),
-            ";"
+            lists:nth(rand:uniform(Pragma_directive_Length), Pragma_directive)
         ])
         || _ <- lists:seq(1, ?MAX_STATEMENT * 2)
     ],
@@ -2396,17 +2404,14 @@ create_code(return = Rule) ->
     Expression_Length = length(Expression),
 
     Code =
-        ["Return;"] ++
+        ["Return"] ++
         [
-            lists:append([
-                "Return ",
-                lists:nth(rand:uniform(Expression_Length), Expression),
-                ";"
-            ])
+                "Return " ++
+                lists:nth(rand:uniform(Expression_Length), Expression)
             || _ <- lists:seq(1, ?MAX_STATEMENT * 2)
         ],
     store_code(Rule, Code, ?MAX_STATEMENT, false),
-    store_code(statement, Code, ?MAX_STATEMENT, false),
+    store_code(statement, [C ++ ";" || C <- Code], ?MAX_STATEMENT, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2713,7 +2718,7 @@ create_code(stringLiteral = Rule) ->
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(expressionStatement, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
-    store_code(simpleStatement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2775,10 +2780,10 @@ create_code(throw = Rule) ->
     ?CREATE_CODE_START,
 
     Code = [
-        "Throw;"
+        "Throw"
     ],
     store_code(Rule, Code, ?MAX_STATEMENT, false),
-    store_code(statement, Code, ?MAX_STATEMENT, false),
+    store_code(statement, [C ++ ";" || C <- Code], ?MAX_STATEMENT, false),
     ?CREATE_CODE_END;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2868,7 +2873,7 @@ create_code(tupleExpression = Rule) ->
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(expressionStatement, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
-    store_code(simpleStatement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2882,38 +2887,38 @@ create_code(typeNameList = Rule) ->
     TypeName_Length = length(TypeName),
 
     Code =
-%%        reduce/reduce ["()"] ++
-    [
-        lists:append([
-            "(",
-            case rand:uniform(4) rem 4 of
-                1 -> lists:append([
-                    lists:nth(rand:uniform(TypeName_Length), TypeName),
-                    ",",
-                    lists:nth(rand:uniform(TypeName_Length), TypeName),
-                    ",",
-                    lists:nth(rand:uniform(TypeName_Length), TypeName),
-                    ",",
-                    lists:nth(rand:uniform(TypeName_Length), TypeName)
-                ]);
-                2 -> lists:append([
-                    lists:nth(rand:uniform(TypeName_Length), TypeName),
-                    ",",
-                    lists:nth(rand:uniform(TypeName_Length), TypeName),
-                    ",",
-                    lists:nth(rand:uniform(TypeName_Length), TypeName)
-                ]);
-                3 -> lists:append([
-                    lists:nth(rand:uniform(TypeName_Length), TypeName),
-                    ",",
-                    lists:nth(rand:uniform(TypeName_Length), TypeName)
-                ]);
-                _ -> lists:nth(rand:uniform(TypeName_Length), TypeName)
-            end,
-            ")"
-        ])
-        || _ <- lists:seq(1, ?MAX_BASIC * 2)
-    ],
+        ["()"] ++
+        [
+            lists:append([
+                "(",
+                case rand:uniform(4) rem 4 of
+                    1 -> lists:append([
+                        lists:nth(rand:uniform(TypeName_Length), TypeName),
+                        ",",
+                        lists:nth(rand:uniform(TypeName_Length), TypeName),
+                        ",",
+                        lists:nth(rand:uniform(TypeName_Length), TypeName),
+                        ",",
+                        lists:nth(rand:uniform(TypeName_Length), TypeName)
+                    ]);
+                    2 -> lists:append([
+                        lists:nth(rand:uniform(TypeName_Length), TypeName),
+                        ",",
+                        lists:nth(rand:uniform(TypeName_Length), TypeName),
+                        ",",
+                        lists:nth(rand:uniform(TypeName_Length), TypeName)
+                    ]);
+                    3 -> lists:append([
+                        lists:nth(rand:uniform(TypeName_Length), TypeName),
+                        ",",
+                        lists:nth(rand:uniform(TypeName_Length), TypeName)
+                    ]);
+                    _ -> lists:nth(rand:uniform(TypeName_Length), TypeName)
+                end,
+                ")"
+            ])
+            || _ <- lists:seq(1, ?MAX_BASIC * 2)
+        ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2922,11 +2927,11 @@ create_code(typeNameList = Rule) ->
 %% -----------------------------------------------------------------------------
 %% ElementaryTypeName = ... Ufixed ...
 %% -----------------------------------------------------------------------------
-%% ElementaryTypeNameExpression = ElementaryTypeName               reduce/reduce
+%% ElementaryTypeNameExpression = ElementaryTypeName
 %% -----------------------------------------------------------------------------
-%% Expression =  ... PrimaryExpression ...                         reduce/reduce
+%% Expression =  ... PrimaryExpression ...
 %% -----------------------------------------------------------------------------
-%% PrimaryExpression = ... ElementaryTypeNameExpression  ...       reduce/reduce
+%% PrimaryExpression = ... ElementaryTypeNameExpression  ...
 %% -----------------------------------------------------------------------------
 %% TypeName = ... ElementaryTypeName ...
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2981,9 +2986,9 @@ create_code(uFixed = Rule) ->
         ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(elementaryTypeName, Code, ?MAX_BASIC, false),
-%%    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
-%%    store_code(expression, Code, ?MAX_BASIC, false),
-%%    store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
+    store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2992,11 +2997,11 @@ create_code(uFixed = Rule) ->
 %% -----------------------------------------------------------------------------
 %% ElementaryTypeName = ... Uint ...
 %% -----------------------------------------------------------------------------
-%% ElementaryTypeNameExpression = ElementaryTypeName               reduce/reduce
+%% ElementaryTypeNameExpression = ElementaryTypeName
 %% -----------------------------------------------------------------------------
-%% Expression =  ... PrimaryExpression ...                         reduce/reduce
+%% Expression =  ... PrimaryExpression ...
 %% -----------------------------------------------------------------------------
-%% PrimaryExpression = ... ElementaryTypeNameExpression ...        reduce/reduce
+%% PrimaryExpression = ... ElementaryTypeNameExpression ...
 %% -----------------------------------------------------------------------------
 %% TypeName = ... ElementaryTypeName ...
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3007,9 +3012,9 @@ create_code(uInt = Rule) ->
     Code = ?UINT,
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(elementaryTypeName, Code, ?MAX_BASIC, false),
-%%    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
-%%    store_code(expression, Code, ?MAX_BASIC, false),
-%%    store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
+    store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -3022,31 +3027,33 @@ create_code(uInt = Rule) ->
 create_code(userDefinedTypeName = Rule) ->
     ?CREATE_CODE_START,
     [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
-    Identifier_Length = length(Identifier),
-
-    Code = [
-            lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-            case rand:uniform(4) rem 4 of
-                1 -> lists:append([
-                    ".",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
-                    ".",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
-                    ".",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier)
-                ]);
-                2 -> lists:append([
-                    ".",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
-                    ".",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier)
-                ]);
-                3 -> "." ++
-                lists:nth(rand:uniform(Identifier_Length), Identifier);
-                _ -> []
-            end
-        || _ <- lists:seq(1, ?MAX_BASIC * 2)
-    ],
+%% wwe
+%%    Identifier_Length = length(Identifier),
+%%
+%%    Code = [
+%%            lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+%%            case rand:uniform(4) rem 4 of
+%%                1 -> lists:append([
+%%                    ".",
+%%                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+%%                    ".",
+%%                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+%%                    ".",
+%%                    lists:nth(rand:uniform(Identifier_Length), Identifier)
+%%                ]);
+%%                2 -> lists:append([
+%%                    ".",
+%%                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+%%                    ".",
+%%                    lists:nth(rand:uniform(Identifier_Length), Identifier)
+%%                ]);
+%%                3 -> "." ++
+%%                lists:nth(rand:uniform(Identifier_Length), Identifier);
+%%                _ -> []
+%%            end
+%%        || _ <- lists:seq(1, ?MAX_BASIC * 2)
+%%    ],
+    Code = Identifier,
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
@@ -3150,7 +3157,7 @@ create_code(variableDefinition = Rule) ->
             || _ <- lists:seq(1, ?MAX_STATEMENT * 2)
         ],
     store_code(Rule, Code, ?MAX_STATEMENT, false),
-    store_code(simpleStatement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_STATEMENT, false),
     ?CREATE_CODE_END;
 
@@ -3306,6 +3313,11 @@ file_write_ct(Current, Type, CompleteDescription, CompactedDetailed, File, [H | 
                         H,
                         "}}"
                     ]);
+                    "stmntsemi" -> lists:append([
+                        "Contract my_contract { Modifier my_modifier {",
+                        H,
+                        ";}}"
+                    ]);
                     _ -> H
                 end,
                 "\"),"
@@ -3329,6 +3341,11 @@ file_write_ct(Current, Type, CompleteDescription, CompactedDetailed, File, [H | 
                         "Contract my_contract { Modifier my_modifier {",
                         H,
                         "}}"
+                    ]);
+                    "stmntsemi" -> lists:append([
+                        "Contract my_contract { Modifier my_modifier {",
+                        H,
+                        ";}}"
                     ]);
                     _ -> H
                 end,
@@ -3400,6 +3417,11 @@ file_write_eunit(CompleteDescription, File, [H | T]) ->
                 "Contract my_contract { Modifier my_modifier {",
                 H,
                 "}}"
+            ]);
+            "stmntsemi" -> lists:append([
+                "Contract my_contract { Modifier my_modifier {",
+                H,
+                ";}}"
             ]);
             _ -> H
         end,

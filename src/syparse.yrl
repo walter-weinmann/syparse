@@ -109,7 +109,6 @@ elementary_type_name_expression
  tuple_expression
  type_name
  type_name_commalist
- type_name_identifier
  type_name_identifier_commalist
  type_name_list
  unary_left
@@ -258,7 +257,7 @@ Endsymbol
 %% Operator precedences.
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Nonassoc    0016 ','.                                   %% comma operator.
+Left        0016 ','.                                   %% comma operator.
 
 Right       0115 '=' '|=' '^=' '&=' '<<=' '>>='  '+=' '-=' '*=' '/=' '%=' ':='.
                                                         %% assignment operators.
@@ -289,14 +288,17 @@ Left        1303 '**'.                                  %% exponentation.
 
 Left        1402 unary_left.
 
-% wwe Right       1501 '(' ')'.
 Right       1501 unary_right.
 
-Left        2000 elementary_type_name_expression.       %% reduce/reduce conflict with type_name
-Left        2000 ELSE.
-Left        2000 parameter_list.                        %% reduce/reduce conflict with type_name_list
-Left        2000 primary_expression    .                %% reduce/reduce conflict with user_defined_type_name
-Left        2000 type_name_identifier.                  %% reduce/reduce conflict with type_name_commalist (from parameter_list vs. type_name_list)
+Nonassoc    2000 type_name_commalist.                   %% reduce/reduce: type_name_commalist vs. type_name_identifier_commalist.
+
+Nonassoc    2100 parameter_list.                        %% reduce/reduce: parameter_list vs. type_name_list.
+% wwe big problem here !!!
+% Nonassoc    2100 type_name.                             %% reduce/reduce: elementary_type_name_expression & primary_expression vs. type_name.
+Nonassoc    2100 primary_expression.                    %% reduce/reduce: elementary_type_name_expression & primary_expression vs. type_name.
+
+Nonassoc    3000 elementary_type_name_expression.
+Left        3000 ELSE.
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Grammar rules.
@@ -309,7 +311,7 @@ source_unit -> contract_definition_import_pragma_directive_list                 
 %% =============================================================================
 %% Helper definitions - test purposes.
 %% -----------------------------------------------------------------------------
-% wwe source_unit -> function_type_name                                                               : '$1'.
+% source_unit -> simple_statement                                                                 : '$1'.
 %% =============================================================================
 
 %% =============================================================================
@@ -407,8 +409,10 @@ contract_part -> enum_definition                                                
 
 %% InheritanceSpecifier = UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
 
-inheritance_specifier -> user_defined_type_name                                                 : {inheritanceSpecifier, '$1', []}.
-inheritance_specifier -> user_defined_type_name '(' expression_commalist ')'                    : {inheritanceSpecifier, '$1', '$3'}.
+inheritance_specifier -> user_defined_type_name                                                 : {inheritanceSpecifier, '$1',                          []}.
+inheritance_specifier -> identifier                                                             : {inheritanceSpecifier, {userDefinedTypeName, ['$1']}, []}.
+inheritance_specifier -> user_defined_type_name '(' expression_commalist ')'                    : {inheritanceSpecifier, '$1',                          '$3'}.
+inheritance_specifier -> identifier             '(' expression_commalist ')'                    : {inheritanceSpecifier, {userDefinedTypeName, ['$1']}, '$3'}.
 
 %% =============================================================================
 %% Helper definitions.
@@ -421,14 +425,14 @@ expression_commalist -> expression ',' expression_commalist                     
 
 state_variable_declaration -> type_name          identifier                ';'                  : {stateVariableDeclaration, '$1', [],         '$2', []}.
 state_variable_declaration -> type_name          identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', [],         '$2', '$4'}.
-state_variable_declaration -> type_name PUBLIC   identifier                ';'                  : {stateVariableDeclaration, '$1', "public",   '$3', []}.
+state_variable_declaration -> type_name CONSTANT identifier                ';'                  : {stateVariableDeclaration, '$1', "constant", '$3', []}.
+state_variable_declaration -> type_name CONSTANT identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "constant", '$3', '$5'}.
 state_variable_declaration -> type_name INTERNAL identifier                ';'                  : {stateVariableDeclaration, '$1', "internal", '$3', []}.
-state_variable_declaration -> type_name PRIVATE  identifier                ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', []}.
-state_variable_declaration -> type_name CONSTANT identifier                ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', []}.
-state_variable_declaration -> type_name PUBLIC   identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "public",   '$3', '$5'}.
 state_variable_declaration -> type_name INTERNAL identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "internal", '$3', '$5'}.
+state_variable_declaration -> type_name PRIVATE  identifier                ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', []}.
 state_variable_declaration -> type_name PRIVATE  identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', '$5'}.
-state_variable_declaration -> type_name CONSTANT identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "private",  '$3', '$5'}.
+state_variable_declaration -> type_name PUBLIC   identifier                ';'                  : {stateVariableDeclaration, '$1', "public",   '$3', []}.
+state_variable_declaration -> type_name PUBLIC   identifier '=' expression ';'                  : {stateVariableDeclaration, '$1', "public",   '$3', '$5'}.
 
 %% UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
 
@@ -553,27 +557,28 @@ indexed_parameter_commalist -> indexed_parameter ',' indexed_parameter_commalist
 %% ParameterList =        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
 
 parameter_list -> '('                                ')'                                        : {parameterList, []}.
+parameter_list -> '(' type_name_commalist            ')'                                        : {parameterList, '$2'}.
 parameter_list -> '(' type_name_identifier_commalist ')'                                        : {parameterList, '$2'}.
 
 %% =============================================================================
 %% Helper definitions.
 %% -----------------------------------------------------------------------------
-type_name_identifier -> type_name                                                               : {'$1', []}.
-type_name_identifier -> type_name identifier                                                    : {'$1', '$2'}.
-
-type_name_identifier_commalist -> type_name_identifier                                          : ['$1'].
-type_name_identifier_commalist -> type_name_identifier ',' type_name_identifier_commalist       : ['$1' | '$3'].
+type_name_identifier_commalist -> type_name                                                     : [{'$1', []}].
+type_name_identifier_commalist -> type_name identifier                                          : [{'$1', '$2'}].
+type_name_identifier_commalist -> type_name            ',' type_name_identifier_commalist       : [{'$1', []}   | '$3'].
+type_name_identifier_commalist -> type_name identifier ',' type_name_identifier_commalist       : [{'$1', '$2'} | '$4'].
 %% -----------------------------------------------------------------------------
 
 %% TypeNameList =         '(' ( TypeName (',' TypeName )* )? ')'
 
 type_name_list -> '('                     ')'                                                   : {typeNameList, []}.
+type_name_list -> '(' type_name           ')'                                                   : {typeNameList, ['$2']}.
 type_name_list -> '(' type_name_commalist ')'                                                   : {typeNameList, '$2'}.
 
 %% =============================================================================
 %% Helper definitions.
 %% -----------------------------------------------------------------------------
-type_name_commalist -> type_name                                                                : ['$1'].
+type_name_commalist -> type_name ',' type_name                                                  : lists:flatten([['$1']  | ['$3']]).
 type_name_commalist -> type_name ',' type_name_commalist                                        : ['$1' | '$3'].
 %% -----------------------------------------------------------------------------
 
@@ -590,6 +595,7 @@ variable_declaration -> type_name storage_location identifier                   
 
 type_name -> elementary_type_name                                                               : {typeName, '$1'}.
 type_name -> user_defined_type_name                                                             : {typeName, '$1'}.
+type_name -> identifier                                                                         : {typeName, {userDefinedTypeName, ['$1']}}.
 type_name -> mapping                                                                            : {typeName, '$1'}.
 type_name -> array_type_name                                                                    : {typeName, '$1'}.
 type_name -> function_type_name                                                                 : {typeName, '$1'}.
@@ -601,7 +607,7 @@ user_defined_type_name -> identifier_dotlist                                    
 %% =============================================================================
 %% Helper definitions.
 %% -----------------------------------------------------------------------------
-identifier_dotlist -> identifier                                                                : ['$1'].
+identifier_dotlist -> identifier '.' identifier                                                 : lists:flatten([['$1']  | ['$3']]).
 identifier_dotlist -> identifier '.' identifier_dotlist                                         : ['$1' | '$3'].
 %% -----------------------------------------------------------------------------
 
@@ -617,12 +623,12 @@ array_type_name -> type_name '[' expression ']'                                 
 %% FunctionTypeName = 'function' TypeNameList ( 'internal' | 'external' | StateMutability )*
 %%                    ( 'returns' TypeNameList )?
 
-function_type_name -> FUNCTION type_name_list                                                   : {functionTypeName, '$2', [],   []}.
+function_type_name -> FUNCTION type_name_list                                                   : {functionTypeName, '$2',               [],   []}.
 function_type_name -> FUNCTION type_name_list                               RETURNS type_name_list
-                                                                                                : {functionTypeName, '$2', [],   '$4'}.
-function_type_name -> FUNCTION type_name_list function_type_visibility_list                     : {functionTypeName, '$2', '$3', []}.
+                                                                                                : {functionTypeName, '$2',               [],   '$4'}.
+function_type_name -> FUNCTION type_name_list function_type_visibility_list                     : {functionTypeName, '$2',               '$3', []}.
 function_type_name -> FUNCTION type_name_list function_type_visibility_list RETURNS type_name_list
-                                                                                                : {functionTypeName, '$2', '$3', '$5'}.
+                                                                                                : {functionTypeName, '$2',               '$3', '$5'}.
 
 %% =============================================================================
 %% Helper definitions.
@@ -750,8 +756,10 @@ identifier_list -> '(' identifier_commalist ')'                                 
 %% =============================================================================
 %% Helper definitions.
 %% -----------------------------------------------------------------------------
-identifier_commalist -> identifier                                                              : ['$1'].
-identifier_commalist -> identifier ',' identifier_commalist                                     : ['$1' | '$3'].
+identifier_commalist ->                          identifier                                     : ['$1'].
+identifier_commalist ->                      ',' identifier                                     : lists:flatten([[","]  | ['$2']]).
+identifier_commalist -> identifier_commalist ','                                                : lists:flatten([['$1'] | [","]]).
+identifier_commalist -> identifier_commalist ',' identifier                                     : lists:flatten(lists:append(['$1', [","], ['$3']])).
 %% =============================================================================
 
 %% Expression

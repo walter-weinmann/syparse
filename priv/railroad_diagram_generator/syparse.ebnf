@@ -71,7 +71,7 @@ TypeName ::= ElementaryTypeName
            | ArrayTypeName
            | FunctionTypeName
 
-UserDefinedTypeName ::= Identifier ( '.' Identifier )* */
+UserDefinedTypeName ::= Identifier ( '.' Identifier )*
 
 Mapping ::= 'MAPPING' '(' ElementaryTypeName '=>' TypeName ')'
 
@@ -147,7 +147,7 @@ PrimaryExpression ::= BooleanLiteral
                     | StringLiteral
                     | TupleExpression
                     | Identifier
-                    | ElementaryTypeNameExpression */
+                    | ElementaryTypeNameExpression
 
 ExpressionList ::= Expression ( ',' Expression )*
 

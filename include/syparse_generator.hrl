@@ -59,19 +59,7 @@
     ]
 ).
 
-%% no coverage analysis for syparse_util
--define(ALL_CLAUSE_CT_PERFORMANCE, [
-    sourceUnit
-]).
-
--define(ALL_CLAUSE_CT_RELIABILITY, [
-    contractDefinition,
-    importDirective,
-    pragmaDirective,
-    sourceUnit
-]).
-
--define(ALL_CLAUSE_CT_RELIABILITY_CONTRACT_PART, [
+-define(ALL_CLAUSE_CONTRACT_PART, [
     enumDefinition,
     eventDefinition,
     functionDefinition,
@@ -81,22 +69,7 @@
     usingForDeclaration
 ]).
 
--define(ALL_CLAUSE_CT_RELIABILITY_STATEMENT, [
-    block,
-    break,
-    continue,
-    doWhileStatement,
-    forStatement,
-    ifStatement,
-    inlineAssemblyStatement,
-    placeholderStatement,
-    return,
-    simpleStatement,
-    throw,
-    whileStatement
-]).
-
--define(ALL_CLAUSE_EUNIT, [
+-define(ALL_CLAUSE_DETAILED, [
 %%%% Level 01 ..........................
 %%    booleanLiteral,
 %%    break,
@@ -108,13 +81,13 @@
 %%    identifier,
 %%    int,
 %%    numberUnit,
-%%    placeholderStatement,
+%%    placeHolderStatement,
 %%    pragma_directive,
 %%    stateMutability,
 %%    storageLocation,
 %%    stringLiteral,
 %%    throw,
-%%    uInt
+%%    uInt,
 %%%% Level 02 ..........................
 %%    assemblyLabel,
 %%    enumDefinition,
@@ -123,15 +96,18 @@
 %%    importDirective,
 %%    numberLiteral,
 %%    uFixed,
-%%    userDefinedTypeName
+%%    userDefinedTypeName,
 %%%% Level 03 ..........................
 %%    elementaryTypeName,
-%%    pragmaDirective
+%%    elementaryTypeNameExpression,
+%%    pragmaDirective,
+%%    primaryExpression,
 %%%% Level 04 ..........................
-%%    expression
+%%    expression,
 %%%% Level 05 ..........................
 %%    arrayTypeName,
 %%    expressionList,
+%%    expressionStatement,
 %%    indexAccess,
 %%    indexedParameterList,
 %%    inheritanceSpecifier,
@@ -145,71 +121,71 @@
 %%    tupleExpression,
 %%    typeNameList,
 %%    usingForDeclaration,
-%%    variableDeclaration
+%%    variableDeclaration,
 %%%% Level 06 ..........................
 %%    eventDefinition,
 %%    functionCallArguments,
 %%    functionTypeName,
 %%    modifierInvocation,
 %%    structDefinition,
-%%    variableDefinition
+%%    variableDefinition,
 %%%% Level 07 ..........................
-%%    functionCall
-%%%% Level 21 ..........................
+%%    functionCall,
+%%    typeName,
+%%%%%% Level 21 ..........................
 %%    doWhileStatement,
 %%    forStatement,
 %%    ifStatement,
-%%    whileStatement
+%%    simpleStatement,
+%%    whileStatement,
 %%%% Level 22 ..........................
-%%    block
+%%    block,
 %%%% Level 41 ..........................
-%%    functionalAssemblyExpression
+%%    functionalAssemblyExpression,
 %%%% Level 42 ..........................
 %%    assemblyAssignment,
-%%    assemblyLocalBinding
+%%    assemblyLocalBinding,
 %%%% Level 43 ..........................
-%%    inlineAssemblyBlock
+%%    inlineAssemblyBlock,
 %%%% Level 44 ..........................
-%%    inlineAssemblyStatement
+%%    inlineAssemblyStatement,
 %%%% Level 62 ..........................
 %%    modifierDefinition,
-%%    functionDefinition
+%%    functionDefinition,
 %%%% Level 63 ..........................
-%%    contractDefinition
+%%    contractDefinition,
 %%%% Level 64 ..........................
 %%    sourceUnit
 ]).
 
--define(ALL_CLAUSE_EUNIT_CONTRACT_PART, [
-    enumDefinition,
-    eventDefinition,
-    functionDefinition,
-    modifierDefinition,
-    stateVariableDeclaration,
-    structDefinition,
-    usingForDeclaration
+%% no coverage analysis for syparse_util
+-define(ALL_CLAUSE_PERFORMANCE, [
+    sourceUnit
 ]).
 
--define(ALL_CLAUSE_EUNIT_RELIABILITY, [
+-define(ALL_CLAUSE_RELIABILITY, [
     contractDefinition,
     importDirective,
     pragmaDirective,
     sourceUnit
 ]).
 
--define(ALL_CLAUSE_EUNIT_STATEMENT, [
+-define(ALL_CLAUSE_STATEMENT, [
     block,
-    break,
-    continue,
-    doWhileStatement,
     forStatement,
     ifStatement,
     inlineAssemblyStatement,
-    placeholderStatement,
+    whileStatement
+]).
+
+-define(ALL_CLAUSE_STATEMENT_SEMICOLON, [
+    break,
+    continue,
+    doWhileStatement,
+    placeHolderStatement,
     return,
     simpleStatement,
-    throw,
-    whileStatement
+    throw
 ]).
 
 -define(CODE_TEMPLATES, code_templates).
@@ -279,7 +255,44 @@
 %% wwe
 %%  {"file name" , "section name", "title", "code"}
     % --------------------------------------------------------------------------
-    {"Assembly", "Inline Assembly", "Example",
+    % abi-spec.rst
+    % --------------------------------------------------------------------------
+    {"abi-spec.rst", "Examples", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract Foo {
+            function bar(bytes3[2] xy) {}
+            function baz(uint32 x, bool y) returns (bool r) { r = x > 32 || y; }
+            function sam(bytes name, bool z, uint[] data) {}
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"abi-spec.rst", "JSON", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract Test {
+            function Test(){ b = 0x12345678901234567890123456789012; }
+            event Event1(uint indexed a, bytes32 b);
+            event Event2(uint indexed a, bytes32 b);
+            function foo(uint a) { Event1(a, b); }
+            bytes32 b;
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"abi-spec.rst", "Handling tuple types", "",
+        "
+        contract Test {
+            struct S { uint a; uint[] b; T[] c; }
+            struct T { uint x; uint y; }
+            function f(S s, T t, uint a) { }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    % assembly.rst
+    % --------------------------------------------------------------------------
+    {"assembly.rst", "Inline Assembly", "Example",
         "
         pragma solidity ^0.4.0;
 
@@ -300,146 +313,244 @@
                 }
             }
         }
+
+
+        pragma solidity ^0.4.12;
+
+        library VectorSum {
+            // This function is less efficient because the optimizer currently fails to
+            // remove the bounds checks in array access.
+            function sumSolidity(uint[] _data) returns (uint o_sum) {
+                for (uint i = 0; i < _data.length; ++i)
+                    o_sum += _data[i];
+            }
+
+            // We know that we only access the array in bounds, so we can avoid the check.
+            // 0x20 needs to be added to an array because the first slot contains the
+            // array length.
+            function sumAsm(uint[] _data) returns (uint o_sum) {
+                for (uint i = 0; i < _data.length; ++i) {
+                    assembly {
+                        o_sum := add(o_sum, mload(add(add(_data, 0x20), mul(i, 0x20))))
+                    }
+                }
+            }
+
+            // Same as above, but accomplish the entire code within inline assembly.
+            function sumPureAsm(uint[] _data) returns (uint o_sum) {
+                assembly {
+                   // Load the length (first 32 bytes)
+                   let len := mload(_data)
+
+                   // Skip over the length field.
+                   //
+                   // Keep temporary variable so it can be incremented in place.
+                   //
+                   // NOTE: incrementing _data would result in an unusable
+                   //       _data variable after this assembly block
+                   let data := add(_data, 0x20)
+
+                   // Iterate until the bound is not met.
+                   for
+                       { let end := add(data, len) }
+                       lt(data, end)
+                       { data := add(data, 0x20) }
+                   {
+                       o_sum := add(o_sum, mload(data))
+                   }
+                }
+            }
+        }
     "},
-%%        "
-%%    pragma solidity ^0.4.12;
-%%
-%%    library VectorSum {
-%%        // This function is less efficient because the optimizer currently fails to
-%%        // remove the bounds checks in array access.
-%%        function sumSolidity(uint[] _data) returns (uint o_sum) {
-%%            for (uint i = 0; i < _data.length; ++i)
-%%                o_sum += _data[i];
-%%        }
-%%
-%%        // We know that we only access the array in bounds, so we can avoid the check.
-%%        // 0x20 needs to be added to an array because the first slot contains the
-%%        // array length.
-%%        function sumAsm(uint[] _data) returns (uint o_sum) {
-%%            for (uint i = 0; i < _data.length; ++i) {
-%%                assembly {
-%%                    o_sum := add(o_sum, mload(add(add(_data, 0x20), mul(i, 0x20))))
-%%                }
-%%            }
-%%        }
-%%
-%%        // Same as above, but accomplish the entire code within inline assembly.
-%%        function sumPureAsm(uint[] _data) returns (uint o_sum) {
-%%            assembly {
-%%               // Load the length (first 32 bytes)
-%%               let len := mload(_data)
-%%
-%%               // Skip over the length field.
-%%               //
-%%               // Keep temporary variable so it can be incremented in place.
-%%               //
-%%               // NOTE: incrementing _data would result in an unusable
-%%               //       _data variable after this assembly block
-%%               let data := add(_data, 0x20)
-%%
-%%               // Iterate until the bound is not met.
-%%               for
-%%                   { let end := add(data, len) }
-%%                   lt(data, end)
-%%                   { data := add(data, 0x20) }
-%%               {
-%%                   o_sum := add(o_sum, mload(data))
-%%               }
-%%            }
-%%        }
-%%    }
-%%    "},
-%%    % --------------------------------------------------------------------------
-%%    {"Assembly", "Inline Assembly", "Access to External Variables and Functions",
-%%        "
-%%        pragma solidity ^0.4.11;
-%%
-%%        contract C {
-%%            uint b;
-%%            function f(uint x) returns (uint r) {
-%%                assembly {
-%%                    r := mul(x, sload(b_slot)) // ignore the offset, we know it is zero
-%%                }
-%%                assembly {
-%%                        let n := calldataload(4)
-%%                        let a := 1
-%%                        let b := a
-%%                    loop:
-%%                        jumpi(loopend, eq(n, 0))
-%%                        a add swap1
-%%                        n := sub(n, 1)
-%%                        jump(loop)
-%%                    loopend:
-%%                        mstore(0, a)
-%%                        return(0, 0x20)
-%%                }
-%%
-%%                assembly {
-%%                    let x := 8
-%%                    jump(two)
-%%                    one:
-%%                        // Here the stack height is 2 (because we pushed x and 7),
-%%                        // but the assembler thinks it is 1 because it reads
-%%                        // from top to bottom.
-%%                        // Accessing the stack variable x here will lead to errors.
-%%                        x := 9
-%%                        jump(three)
-%%                    two:
-%%                        7 // push something onto the stack
-%%                        jump(one)
-%%                    three:
-%%                }
-%%
-%%                assembly {
-%%                    let x := 8
-%%                    jump(two)
-%%                    0 // This code is unreachable but will adjust the stack height correctly
-%%                    one:
-%%                        x := 9 // Now x can be accessed properly.
-%%                        jump(three)
-%%                        pop // Similar negative correction.
-%%                    two:
-%%                        7 // push something onto the stack
-%%                        jump(one)
-%%                    three:
-%%                    pop // We have to pop the manually pushed value here again.
-%%                }
-%%
-%%            }
-%%        }
-%%    "},
-%%    % --------------------------------------------------------------------------
-%%    {"Assembly", "Inline Assembly", "Declaring Assembly-Local Variables",
-%%        "
-%%        pragma solidity ^0.4.0;
-%%
-%%        contract C {
-%%            function f(uint x) returns (uint b) {
-%%                assembly {
-%%                    let v := add(x, 1)
-%%                    mstore(0x80, v)
-%%                    {
-%%                        let y := add(sload(v), 1)
-%%                        b := y
-%%                    } // y is \"deallocated\" here
-%%                    b := add(b, v)
-%%                } // v is \"deallocated\" here
-%%            }
-%%        }
-%%    "},
     % --------------------------------------------------------------------------
-    {"Contracts", "Visibility and Getters", "",
+    {"assembly.rst", "Inline Assembly", "Literals",
+        "
+        contract my_contract {
+            function my_function () {
+                assembly { 2 3 add \"abc\" and }
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"assembly.rst", "Inline Assembly", "Functional Style",
+        "
+        contract my_contract {
+            function my_function () {
+                assembly {
+                     3 0x80 mload add 0x80 mstore
+
+                     mstore(0x80, add(mload(0x80), 3))
+                }
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"assembly.rst", "Inline Assembly", "Access to External Variables and Functions",
+        "
+        pragma solidity ^0.4.11;
+
+        contract C {
+            uint b;
+            function f(uint x) returns (uint r) {
+                assembly {
+                    r := mul(x, sload(b_slot)) // ignore the offset, we know it is zero
+                }
+
+                % Labels -------------------------------------------------------
+                assembly {
+                        let n := calldataload(4)
+                        let a := 1
+                        let b := a
+                    loop:
+                        jumpi(loopend, eq(n, 0))
+                        a add swap1
+                        n := sub(n, 1)
+                        jump(loop)
+                    loopend:
+                        mstore(0, a)
+                        return(0, 0x20)
+                }
+
+                assembly {
+                    let x := 8
+                    jump(two)
+                    one:
+                        // Here the stack height is 2 (because we pushed x and 7),
+                        // but the assembler thinks it is 1 because it reads
+                        // from top to bottom.
+                        // Accessing the stack variable x here will lead to errors.
+                        x := 9
+                        jump(three)
+                    two:
+                        7 // push something onto the stack
+                        jump(one)
+                    three:
+                }
+
+                assembly {
+                    let x := 8
+                    jump(two)
+                    0 // This code is unreachable but will adjust the stack height correctly
+                    one:
+                        x := 9 // Now x can be accessed properly.
+                        jump(three)
+                        pop // Similar negative correction.
+                    two:
+                        7 // push something onto the stack
+                        jump(one)
+                    three:
+                    pop // We have to pop the manually pushed value here again.
+                }
+
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"assembly.rst", "Inline Assembly", "Declaring Assembly-Local Variables",
         "
         pragma solidity ^0.4.0;
 
         contract C {
-            function f(uint a) private returns (uint b) { return a + 1; }
-            function setData(uint a) internal { data = a; }
-            uint public data;
+            function f(uint x) returns (uint b) {
+                assembly {
+                    let v := add(x, 1)
+                    mstore(0x80, v)
+                    {
+                        let y := add(sload(v), 1)
+                        b := y
+                    } // y is \"deallocated\" here
+                    b := add(b, v)
+                } // v is \"deallocated\" here
+            }
         }
     "},
     % --------------------------------------------------------------------------
-    {"Contracts", "creating Contracts", "",
+    {"assembly.rst", "Inline Assembly", "Assignments",
+        "
+        contract my_contract {
+            function my_function () {
+                assembly {
+                    let v := 0 // functional-style assignment as part of variable declaration
+                    let g := add(v, 2)
+                    sload(10)
+                    =: v // instruction style assignment, puts the result of sload(10) into v
+                }
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"assembly.rst", "Inline Assembly", "Switch",
+        "
+        contract my_contract {
+            function my_function () {
+                assembly {
+                    let x := 0
+                    switch calldataload(4)
+                    case 0 {
+                        x := calldataload(0x24)
+                    }
+                    default {
+                        x := calldataload(0x44)
+                    }
+                    sstore(0, div(x, 2))
+                }
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"assembly.rst", "Inline Assembly", "Loops",
+        "
+        contract my_contract {
+            function my_function () {
+                assembly {
+                    let x := 0
+                    for { let i := 0 } lt(i, 0x100) { i := add(i, 0x20) } {
+                        x := add(x, mload(i))
+                    }
+                }
+
+                assembly {
+                    let x := 0
+                    let i := 0
+                    for { } lt(i, 0x100) { } {     // while(i < 0x100)
+                        x := add(x, mload(i))
+                        i := add(i, 0x20)
+                    }
+                }
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"assembly.rst", "Inline Assembly", "Functions",
+        "
+        contract my_contract {
+            function my_function () {
+                assembly {
+                    let v := 0 // functional-style assignment as part of variable declaration
+                    let g := add(v, 2)
+                    sload(10)
+                    =: v // instruction style assignment, puts the result of sload(10) into v
+                }
+            }
+        }
+    "},
+    {"assembly.rst", "Standalone Assembly", "",
+        "
+        contract my_contract {
+            function my_function () {
+                assembly {
+                    let v := 0 // functional-style assignment as part of variable declaration
+                    let g := add(v, 2)
+                    sload(10)
+                    =: v // instruction style assignment, puts the result of sload(10) into v
+                }
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    % contracts.rst
+    % --------------------------------------------------------------------------
+    {"contracts.rst", "creating Contracts", "",
         "
         pragma solidity ^0.4.0;
 
@@ -517,7 +628,7 @@
         }
     "},
     % --------------------------------------------------------------------------
-    {"Contracts", "Visibility and Getters", "",
+    {"contracts.rst", "Visibility and Getters", "",
         "
         pragma solidity ^0.4.0;
 
@@ -527,49 +638,48 @@
             uint public data;
         }
     "},
-%% wwe
-%%    % --------------------------------------------------------------------------
-%%    {"Contracts", "Visibility and Getters", "Getter Functions",
-%%        "
-%%        pragma solidity ^0.4.0;
-%%
-%%        contract C {
-%%            uint public data = 42;
-%%        }
-%%
-%%
-%%        contract Caller {
-%%            C c = new C();
-%%            function f() {
-%%                uint local = c.data();
-%%            }
-%%        }
-%%
-%%
-%%        pragma solidity ^0.4.0;
-%%
-%%        contract C {
-%%            uint public data;
-%%            function x() {
-%%                data = 3; // internal access
-%%                uint val = this.data(); // external access
-%%            }
-%%        }
-%%
-%%
-%%        pragma solidity ^0.4.0;
-%%
-%%        contract Complex {
-%%           struct Data {
-%%               uint a;
-%%               bytes3 b;
-%%               mapping (uint => uint) map;
-%%           }
-%%           mapping (uint => mapping(bool => Data[])) public data;
-%%        }
-%%"},
     % --------------------------------------------------------------------------
-    {"Contracts", "Function Modifiers", "",
+    {"contracts.rst", "Visibility and Getters", "Getter Functions",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+            uint public data = 42;
+        }
+
+
+        contract Caller {
+            C c = new C();
+            function f() {
+                uint local = c.data();
+            }
+        }
+
+
+        pragma solidity ^0.4.0;
+
+        contract C {
+            uint public data;
+            function x() {
+                data = 3; // internal access
+                uint val = this.data(); // external access
+            }
+        }
+
+
+        pragma solidity ^0.4.0;
+
+        contract Complex {
+           struct Data {
+               uint a;
+               bytes3 b;
+               mapping (uint => uint) map;
+           }
+           mapping (uint => mapping(bool => Data[])) public data;
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"contracts.rst", "Function Modifiers", "",
         "
         pragma solidity ^0.4.11;
 
@@ -650,7 +760,7 @@
         }
     "},
     % --------------------------------------------------------------------------
-    {"Contracts", "Constant State Variables", "",
+    {"contracts.rst", "Constant State Variables", "",
         "
         pragma solidity ^0.4.0;
 
@@ -661,7 +771,7 @@
         }
     "},
     % --------------------------------------------------------------------------
-    {"Contracts", "View Functions", "",
+    {"contracts.rst", "View Functions", "",
         "
         pragma solidity ^0.4.16;
 
@@ -672,7 +782,7 @@
         }
     "},
     % --------------------------------------------------------------------------
-    {"Contracts", "Pure Functions", "",
+    {"contracts.rst", "Pure Functions", "",
         "
         pragma solidity ^0.4.16;
 
@@ -683,7 +793,7 @@
         }
     "},
     % --------------------------------------------------------------------------
-    {"Contracts", "Fallback Function", "",
+    {"contracts.rst", "Fallback Function", "",
         "
         pragma solidity ^0.4.0;
 
@@ -719,7 +829,7 @@
         }
     "},
     % --------------------------------------------------------------------------
-    {"Contracts", "Events", "",
+    {"contracts.rst", "Events", "",
         "
         pragma solidity ^0.4.0;
 
@@ -737,9 +847,9 @@
                 Deposit(msg.sender, _id, msg.value);
             }
         }
-        "},
+    "},
     % --------------------------------------------------------------------------
-    {"Contracts", "Inheritance", "",
+    {"contracts.rst", "Inheritance", "",
         "
         pragma solidity ^0.4.0;
 
@@ -868,9 +978,9 @@
 
         contract Final is Base2, Base1 {
         }
-        "},
+    "},
     % --------------------------------------------------------------------------
-    {"Contracts", "Inheritance", "Arguments for Base Constructors",
+    {"contracts.rst", "Inheritance", "Arguments for Base Constructors",
         "
         pragma solidity ^0.4.0;
 
@@ -884,9 +994,9 @@
             function Derived(uint _y) Base(_y * _y) {
             }
         }
-        "},
+    "},
     % --------------------------------------------------------------------------
-    {"Contracts", "Abstract Contracts", "",
+    {"contracts.rst", "Abstract Contracts", "",
         "
         pragma solidity ^0.4.0;
 
@@ -897,207 +1007,478 @@
         contract Cat is Feline {
             function utterance() returns (bytes32) { return \"miaow\"; }
         }
-        "},
+    "},
     % --------------------------------------------------------------------------
-    {"Contracts", "Interfaces", "",
+    {"contracts.rst", "Interfaces", "",
         "
         pragma solidity ^0.4.11;
 
         interface Token {
            function transfer(address recipient, uint amount);
         }
-        "},
-%% wwe
-%%    % --------------------------------------------------------------------------
-%%    {"Contracts", "Libraries", "",
-%%        "
-%%        pragma solidity ^0.4.11;
-%%
-%%        library Set {
-%%          // We define a new struct datatype that will be used to
-%%          // hold its data in the calling contract.
-%%          struct Data { mapping(uint => bool) flags; }
-%%
-%%          // Note that the first parameter is of type \"storage
-%%          // reference\" and thus only its storage address and not
-%%          // its contents is passed as part of the call.  This is a
-%%          // special feature of library functions.  It is idiomatic
-%%          // to call the first parameter 'self', if the function can
-%%          // be seen as a method of that object.
-%%          function insert(Data storage self, uint value)
-%%              returns (bool)
-%%          {
-%%              if (self.flags[value])
-%%                  return false; // already there
-%%              self.flags[value] = true;
-%%              return true;
-%%          }
-%%
-%%          function remove(Data storage self, uint value)
-%%              returns (bool)
-%%          {
-%%              if (!self.flags[value])
-%%                  return false; // not there
-%%              self.flags[value] = false;
-%%              return true;
-%%          }
-%%
-%%          function contains(Data storage self, uint value)
-%%              returns (bool)
-%%          {
-%%              return self.flags[value];
-%%          }
-%%        }
-%%
-%%
-%%        contract C {
-%%            Set.Data knownValues;
-%%
-%%            function register(uint value) {
-%%                // The library functions can be called without a
-%%                // specific instance of the library, since the
-%%                // \"instance\" will be the current contract.
-%%                require(Set.insert(knownValues, value));
-%%            }
-%%            // In this contract, we can also directly access knownValues.flags, if we want.
-%%        }
-%%
-%%
-%%        pragma solidity ^0.4.0;
-%%
-%%        library BigInt {
-%%            struct bigint {
-%%                uint[] limbs;
-%%            }
-%%
-%%            function fromUint(uint x) internal returns (bigint r) {
-%%                r.limbs = new uint[](1);
-%%                r.limbs[0] = x;
-%%            }
-%%
-%%            function add(bigint _a, bigint _b) internal returns (bigint r) {
-%%                r.limbs = new uint[](max(_a.limbs.length, _b.limbs.length));
-%%                uint carry = 0;
-%%                for (uint i = 0; i < r.limbs.length; ++i) {
-%%                    uint a = limb(_a, i);
-%%                    uint b = limb(_b, i);
-%%                    r.limbs[i] = a + b + carry;
-%%                    if (a + b < a || (a + b == uint(-1) && carry > 0))
-%%                        carry = 1;
-%%                    else
-%%                        carry = 0;
-%%                }
-%%                if (carry > 0) {
-%%                    // too bad, we have to add a limb
-%%                    uint[] memory newLimbs = new uint[](r.limbs.length + 1);
-%%                    for (i = 0; i < r.limbs.length; ++i)
-%%                        newLimbs[i] = r.limbs[i];
-%%                    newLimbs[i] = carry;
-%%                    r.limbs = newLimbs;
-%%                }
-%%            }
-%%
-%%            function limb(bigint _a, uint _limb) internal returns (uint) {
-%%                return _limb < _a.limbs.length ? _a.limbs[_limb] : 0;
-%%            }
-%%
-%%            function max(uint a, uint b) private returns (uint) {
-%%                return a > b ? a : b;
-%%            }
-%%        }
-%%
-%%
-%%        contract C {
-%%            using BigInt for BigInt.bigint;
-%%
-%%            function f() {
-%%                var x = BigInt.fromUint(7);
-%%                var y = BigInt.fromUint(uint(-1));
-%%                var z = x.add(y);
-%%            }
-%%        }
-%%        "},
-    %% wwe
-%%    % --------------------------------------------------------------------------
-%%    {"Contracts", "Using For", "",
-%%        "
-%%        pragma solidity ^0.4.11;
-%%
-%%        // This is the same code as before, just without comments
-%%        library Set {
-%%          struct Data { mapping(uint => bool) flags; }
-%%
-%%          function insert(Data storage self, uint value)
-%%              returns (bool)
-%%          {
-%%              if (self.flags[value])
-%%                return false; // already there
-%%              self.flags[value] = true;
-%%              return true;
-%%          }
-%%
-%%          function remove(Data storage self, uint value)
-%%              returns (bool)
-%%          {
-%%              if (!self.flags[value])
-%%                  return false; // not there
-%%              self.flags[value] = false;
-%%              return true;
-%%          }
-%%
-%%          function contains(Data storage self, uint value)
-%%              returns (bool)
-%%          {
-%%              return self.flags[value];
-%%          }
-%%        }
-%%
-%%
-%%        contract C {
-%%            using Set for Set.Data; // this is the crucial change
-%%            Set.Data knownValues;
-%%
-%%            function register(uint value) {
-%%                // Here, all variables of type Set.Data have
-%%                // corresponding member functions.
-%%                // The following function call is identical to
-%%                // Set.insert(knownValues, value)
-%%                require(knownValues.insert(value));
-%%            }
-%%        }
-%%
-%%
-%%        pragma solidity ^0.4.0;
-%%
-%%        library Search {
-%%            function indexOf(uint[] storage self, uint value) returns (uint) {
-%%                for (uint i = 0; i < self.length; i++)
-%%                    if (self[i] == value) return i;
-%%                return uint(-1);
-%%            }
-%%        }
-%%
-%%
-%%        contract C {
-%%            using Search for uint[];
-%%            uint[] data;
-%%
-%%            function append(uint value) {
-%%                data.push(value);
-%%            }
-%%
-%%            function replace(uint _old, uint _new) {
-%%                // This performs the library function call
-%%                uint index = data.indexOf(_old);
-%%                if (index == uint(-1))
-%%                    data.push(_new);
-%%                else
-%%                    data[index] = _new;
-%%            }
-%%        }
-%%        "},
+    "},
     % --------------------------------------------------------------------------
-    {"Introduction to Smart Contracts", "A Simple Smart Contract", "Storage",
+    {"contracts.rst", "Libraries", "",
+        "
+        pragma solidity ^0.4.11;
+
+        library Set {
+          // We define a new struct datatype that will be used to
+          // hold its data in the calling contract.
+          struct Data { mapping(uint => bool) flags; }
+
+          // Note that the first parameter is of type \"storage
+          // reference\" and thus only its storage address and not
+          // its contents is passed as part of the call.  This is a
+          // special feature of library functions.  It is idiomatic
+          // to call the first parameter 'self', if the function can
+          // be seen as a method of that object.
+          function insert(Data storage self, uint value)
+              returns (bool)
+          {
+              if (self.flags[value])
+                  return false; // already there
+              self.flags[value] = true;
+              return true;
+          }
+
+          function remove(Data storage self, uint value)
+              returns (bool)
+          {
+              if (!self.flags[value])
+                  return false; // not there
+              self.flags[value] = false;
+              return true;
+          }
+
+          function contains(Data storage self, uint value)
+              returns (bool)
+          {
+              return self.flags[value];
+          }
+        }
+
+
+        contract C {
+            Set.Data knownValues;
+
+            function register(uint value) {
+                // The library functions can be called without a
+                // specific instance of the library, since the
+                // \"instance\" will be the current contract.
+                require(Set.insert(knownValues, value));
+            }
+            // In this contract, we can also directly access knownValues.flags, if we want.
+        }
+
+
+        pragma solidity ^0.4.0;
+
+        library BigInt {
+            struct bigint {
+                uint[] limbs;
+            }
+
+            function fromUint(uint x) internal returns (bigint r) {
+                r.limbs = new uint[](1);
+                r.limbs[0] = x;
+            }
+
+            function add(bigint _a, bigint _b) internal returns (bigint r) {
+                r.limbs = new uint[](max(_a.limbs.length, _b.limbs.length));
+                uint carry = 0;
+                for (uint i = 0; i < r.limbs.length; ++i) {
+                    uint a = limb(_a, i);
+                    uint b = limb(_b, i);
+                    r.limbs[i] = a + b + carry;
+                    if (a + b < a || (a + b == uint(-1) && carry > 0))
+                        carry = 1;
+                    else
+                        carry = 0;
+                }
+                if (carry > 0) {
+                    // too bad, we have to add a limb
+                    uint[] memory newLimbs = new uint[](r.limbs.length + 1);
+                    for (i = 0; i < r.limbs.length; ++i)
+                        newLimbs[i] = r.limbs[i];
+                    newLimbs[i] = carry;
+                    r.limbs = newLimbs;
+                }
+            }
+
+            function limb(bigint _a, uint _limb) internal returns (uint) {
+                return _limb < _a.limbs.length ? _a.limbs[_limb] : 0;
+            }
+
+            function max(uint a, uint b) private returns (uint) {
+                return a > b ? a : b;
+            }
+        }
+
+
+        contract C {
+            using BigInt for BigInt.bigint;
+
+            function f() {
+                var x = BigInt.fromUint(7);
+                var y = BigInt.fromUint(uint(-1));
+                var z = x.add(y);
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"contracts.rst", "Using For", "",
+        "
+        pragma solidity ^0.4.11;
+
+        // This is the same code as before, just without comments
+        library Set {
+          struct Data { mapping(uint => bool) flags; }
+
+          function insert(Data storage self, uint value)
+              returns (bool)
+          {
+              if (self.flags[value])
+                return false; // already there
+              self.flags[value] = true;
+              return true;
+          }
+
+          function remove(Data storage self, uint value)
+              returns (bool)
+          {
+              if (!self.flags[value])
+                  return false; // not there
+              self.flags[value] = false;
+              return true;
+          }
+
+          function contains(Data storage self, uint value)
+              returns (bool)
+          {
+              return self.flags[value];
+          }
+        }
+
+
+        contract C {
+            using Set for Set.Data; // this is the crucial change
+            Set.Data knownValues;
+
+            function register(uint value) {
+                // Here, all variables of type Set.Data have
+                // corresponding member functions.
+                // The following function call is identical to
+                // Set.insert(knownValues, value)
+                require(knownValues.insert(value));
+            }
+        }
+
+
+        pragma solidity ^0.4.0;
+
+        library Search {
+            function indexOf(uint[] storage self, uint value) returns (uint) {
+                for (uint i = 0; i < self.length; i++)
+                    if (self[i] == value) return i;
+                return uint(-1);
+            }
+        }
+
+
+        contract C {
+            using Search for uint[];
+            uint[] data;
+
+            function append(uint value) {
+                data.push(value);
+            }
+
+            function replace(uint _old, uint _new) {
+                // This performs the library function call
+                uint index = data.indexOf(_old);
+                if (index == uint(-1))
+                    data.push(_new);
+                else
+                    data[index] = _new;
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    % control-structure.rst
+    % --------------------------------------------------------------------------
+    {"control-structure.rst", "Input Parameters and Output Parameters", "Input Parameters",
+        "
+        pragma solidity ^0.4.0;
+
+        contract Simple {
+            function taker(uint _a, uint _b) {
+                // do something with _a and _b.
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"control-structure.rst", "Input Parameters and Output Parameters", "Output Parameters",
+        "
+        pragma solidity ^0.4.0;
+
+        contract Simple {
+            function arithmetics(uint _a, uint _b) returns (uint o_sum, uint o_product) {
+                o_sum = _a + _b;
+                o_product = _a * _b;
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"control-structure.rst", "Function Calls", "Internal Function Calls",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+            function g(uint a) returns (uint ret) { return f(); }
+            function f() returns (uint ret) { return g(7) + f(); }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"control-structure.rst", "Function Calls", "External Function Calls",
+        "
+        pragma solidity ^0.4.0;
+
+        contract InfoFeed {
+            function info() payable returns (uint ret) { return 42; }
+        }
+
+        contract Consumer {
+            InfoFeed feed;
+            function setFeed(address addr) { feed = InfoFeed(addr); }
+            function callFeed() { feed.info.value(10).gas(800)(); }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"control-structure.rst", "Function Calls", "Named Calls and Anonymous Function Parameters",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+            function f(uint key, uint value) {
+                // ...
+            }
+
+            function g() {
+                // named arguments
+                f({value: 2, key: 3});
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"control-structure.rst", "Function Calls", "Omitted Function Parameter Names",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+            // omitted name for parameter
+            function func(uint k, uint) returns(uint) {
+                return k;
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"control-structure.rst", "Function Calls", "Creating Contracts via ``new``",
+        "
+        pragma solidity ^0.4.0;
+
+        contract D {
+            uint x;
+            function D(uint a) payable {
+                x = a;
+            }
+        }
+
+        contract C {
+            D d = new D(4); // will be executed as part of C's constructor
+
+            function createD(uint arg) {
+                D newD = new D(arg);
+            }
+
+            function createAndEndowD(uint arg, uint amount) payable {
+                // Send ether along with the creation
+                D newD = (new D).value(amount)(arg);
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"control-structure.rst", "Assignment", "Destructuring Assignments and Returning Multiple Values",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+            uint[] data;
+
+            function f() returns (uint, bool, uint) {
+                return (7, true, 2);
+            }
+
+            function g() {
+                // Declares and assigns the variables. Specifying the type explicitly is not possible.
+                var (x, b, y) = f();
+                // Assigns to a pre-existing variable.
+                (x, y) = (2, 7);
+                // Common trick to swap values -- does not work for non-value storage types.
+                (x, y) = (y, x);
+                // Components can be left out (also for variable declarations).
+                // If the tuple ends in an empty component,
+                // the rest of the values are discarded.
+                (data.length,) = f(); // Sets the length to 7
+                // The same can be done on the left side.
+                (,data[3]) = f(); // Sets data[3] to 2
+                // Components can only be left out at the left-hand-side of assignments, with
+                // one exception:
+                (x,) = (1,);
+                // (1,) is the only way to specify a 1-component tuple, because (1) is
+                // equivalent to 1.
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"control-structure.rst", "Assignment", "Error handling: Assert, Require, Revert and Exceptions",
+        "
+        pragma solidity ^0.4.0;
+
+        contract Sharer {
+            function sendHalf(address addr) payable returns (uint balance) {
+                require(msg.value % 2 == 0); // Only allow even numbers
+                uint balanceBeforeTransfer = this.balance;
+                addr.transfer(msg.value / 2);
+                // Since transfer throws an exception on failure and
+                // cannot call back here, there should be no way for us to
+                // still have half of the money.
+                assert(this.balance == balanceBeforeTransfer - msg.value / 2);
+                return this.balance;
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"frequently-asked-questions.rst", "What are some examples of basic string manipulation (``substring``, ``indexOf``, ``charAt``, etc)?", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+            string s;
+
+            function append(byte c) {
+                bytes(s).push(c);
+            }
+
+            function set(uint i, byte c) {
+                bytes(s)[i] = c;
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"frequently-asked-questions.rst", "When returning a value of say ``uint`` type, is it possible to return an ``undefined`` or 'null'-like value?", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+            uint[] counters;
+
+            function getCounter(uint index)
+                returns (uint counter, bool error) {
+                    if (index >= counters.length)
+                        return (0, true);
+                    else
+                        return (counters[index], false);
+            }
+
+            function checkCounter(uint index) {
+                var (counter, error) = getCounter(index);
+                if (error) {
+                    // ...
+                } else {
+                    // ...
+                }
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"frequently-asked-questions.rst", "What is the ``memory`` keyword? What does it do?", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+            uint[] data1;
+            uint[] data2;
+
+            function appendOne() {
+                append(data1);
+            }
+
+            function appendTwo() {
+                append(data2);
+            }
+
+            function append(uint[] storage d) internal {
+                d.push(1);
+            }
+        }
+
+
+        pragma solidity ^0.4.0;
+
+        contract C {
+            uint someVariable;
+            uint[] data;
+
+            function f() {
+                uint[] x = data;
+                x.push(2);
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"frequently-asked-questions.rst", "How do I initialize a contract with only a specific amount of wei?", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract B {
+            function B() payable {}
+        }
+
+        contract A {
+            address child;
+
+            function test() {
+                child = (new B).value(10)(); //construct a new B with 10 wei
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"frequently-asked-questions.rst", "Can a contract pass an array (static size) or string or ``bytes`` (dynamic size) to another contract?", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+            uint[20] x;
+
+            function f() {
+                g(x);
+                h(x);
+            }
+
+            function g(uint[20] y) internal {
+                y[2] = 3;
+            }
+
+            function h(uint[20] storage y) internal {
+                y[3] = 4;
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    % introduction-to-smart-contracts.rst
+    % --------------------------------------------------------------------------
+    {"introduction-to-smart-contracts.rst", "A Simple Smart Contract", "Storage",
         "
         pragma solidity ^0.4.0;
 
@@ -1112,9 +1493,9 @@
                 return storedData;
             }
         }
-        "},
+    "},
     % --------------------------------------------------------------------------
-    {"Introduction to Smart Contracts", "A Simple Smart Contract", "Subcurrency Example",
+    {"introduction-to-smart-contracts.rst", "A Simple Smart Contract", "Subcurrency Example",
         "
         pragma solidity ^0.4.0;
 
@@ -1144,6 +1525,515 @@
                 balances[msg.sender] -= amount;
                 balances[receiver] += amount;
                 Sent(msg.sender, receiver, amount);
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    % layout-of-source-files.rst
+    % --------------------------------------------------------------------------
+    {"layout-of-source-files.rst", "Comments", "",
+        "
+        pragma solidity ^0.4.0;
+
+        /** @title Shape calculator. */
+        contract shapeCalculator {
+            /** @dev Calculates a rectangle's surface and perimeter.
+              * @param w Width of the rectangle.
+              * @param h Height of the rectangle.
+              * @return s The calculated surface.
+              * @return p The calculated perimeter.
+              */
+            function rectangle(uint w, uint h) returns (uint s, uint p) {
+                s = w * h;
+                p = 2 * (w + h);
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    % miscellaneous.rst
+    % --------------------------------------------------------------------------
+    {"miscellaneous.rst", "Layout of State Variables in Storage", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+          struct s { uint a; uint b; }
+          uint x;
+          mapping(uint => mapping(uint => s)) data;
+        }
+    "},
+    % --------------------------------------------------------------------------
+    % security-considerations.rst
+    % --------------------------------------------------------------------------
+    {"security-considerations.rst", "Re-Entrancy", "",
+        "
+        pragma solidity ^0.4.0;
+
+        // THIS CONTRACT CONTAINS A BUG - DO NOT USE
+        contract Fund {
+          /// Mapping of ether shares of the contract.
+          mapping(address => uint) shares;
+          /// Withdraw your share.
+          function withdraw() {
+              if (msg.sender.send(shares[msg.sender]))
+                  shares[msg.sender] = 0;
+          }
+        }
+
+        pragma solidity ^0.4.11;
+
+        contract Fund {
+          /// Mapping of ether shares of the contract.
+          mapping(address => uint) shares;
+          /// Withdraw your share.
+          function withdraw() {
+              var share = shares[msg.sender];
+              shares[msg.sender] = 0;
+              msg.sender.transfer(share);
+          }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"security-considerations.rst", "tx.origin", "",
+        "
+        pragma solidity ^0.4.11;
+
+        // THIS CONTRACT CONTAINS A BUG - DO NOT USE
+        contract TxUserWallet {
+            address owner;
+
+            function TxUserWallet() {
+                owner = msg.sender;
+            }
+
+            function transferTo(address dest, uint amount) {
+                require(tx.origin == owner);
+                dest.transfer(amount);
+            }
+        }
+
+
+        pragma solidity ^0.4.11;
+
+        interface TxUserWallet {
+            function transferTo(address dest, uint amount);
+        }
+
+        contract TxAttackWallet {
+            address owner;
+
+            function TxAttackWallet() {
+                owner = msg.sender;
+            }
+
+            function() {
+                TxUserWallet(msg.sender).transferTo(owner, msg.sender.balance);
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    % structure-of-a-contract.rst
+    % --------------------------------------------------------------------------
+    {"structure-of-a-contract.rst", "State Variables", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract SimpleStorage {
+          uint storedData; // State variable
+          // ...
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"structure-of-a-contract.rst", "Functions", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract SimpleAuction {
+          function bid() payable { // Function
+              // ...
+          }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"structure-of-a-contract.rst", "Function Modifiers", "",
+        "
+        pragma solidity ^0.4.11;
+
+        contract Purchase {
+          address public seller;
+
+          modifier onlySeller() { // Modifier
+              require(msg.sender == seller);
+              _;
+          }
+
+          function abort() onlySeller { // Modifier usage
+              // ...
+          }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"structure-of-a-contract.rst", "Events", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract SimpleAuction {
+          event HighestBidIncreased(address bidder, uint amount); // Event
+
+          function bid() payable {
+              // ...
+              HighestBidIncreased(msg.sender, msg.value); // Triggering event
+          }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"structure-of-a-contract.rst", "Structs Types", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract Ballot {
+          struct Voter { // Struct
+              uint weight;
+              bool voted;
+              address delegate;
+              uint vote;
+          }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"structure-of-a-contract.rst", "Enum Types", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract Purchase {
+          enum State { Created, Locked, Inactive } // Enum
+        }
+    "},
+    % --------------------------------------------------------------------------
+    % types.rst
+    % --------------------------------------------------------------------------
+    {"types.rst", "Enums", "",
+        "
+        pragma solidity ^0.4.0;
+        
+        contract test {
+            enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
+            ActionChoices choice;
+            ActionChoices constant defaultChoice = ActionChoices.GoStraight;
+        
+            function setGoStraight() {
+                choice = ActionChoices.GoStraight;
+            }
+        
+            // Since enum types are not part of the ABI, the signature of \"getChoice\"
+            // will automatically be changed to \"getChoice() returns (uint8)\"
+            // for all matters external to Solidity. The integer type used is just
+            // large enough to hold all enum values, i.e. if you have more values,
+            // `uint16` will be used and so on.
+            function getChoice() returns (ActionChoices) {
+                return choice;
+            }
+        
+            function getDefaultChoice() returns (uint) {
+                return uint(defaultChoice);
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"types.rst", "Function Types", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract Selector {
+          function f() returns (bytes4) {
+            return this.f.selector;
+          }
+        }
+
+
+        pragma solidity ^0.4.5;
+
+        library ArrayUtils {
+          // internal functions can be used in internal library functions because
+          // they will be part of the same code context
+          function map(uint[] memory self, function (uint) returns (uint) f)
+            internal
+            returns (uint[] memory r)
+          {
+            r = new uint[](self.length);
+            for (uint i = 0; i < self.length; i++) {
+              r[i] = f(self[i]);
+            }
+          }
+          function reduce(
+            uint[] memory self,
+            function (uint, uint) returns (uint) f
+          )
+            internal
+            returns (uint r)
+          {
+            r = self[0];
+            for (uint i = 1; i < self.length; i++) {
+              r = f(r, self[i]);
+            }
+          }
+          function range(uint length) internal returns (uint[] memory r) {
+            r = new uint[](length);
+            for (uint i = 0; i < r.length; i++) {
+              r[i] = i;
+            }
+          }
+        }
+
+        contract Pyramid {
+          using ArrayUtils for *;
+          function pyramid(uint l) returns (uint) {
+            return ArrayUtils.range(l).map(square).reduce(sum);
+          }
+          function square(uint x) internal returns (uint) {
+            return x * x;
+          }
+          function sum(uint x, uint y) internal returns (uint) {
+            return x + y;
+          }
+        }
+
+
+        pragma solidity ^0.4.11;
+
+        contract Oracle {
+          struct Request {
+            bytes data;
+            function(bytes memory) external callback;
+          }
+          Request[] requests;
+          event NewRequest(uint);
+          function query(bytes data, function(bytes memory) external callback) {
+            requests.push(Request(data, callback));
+            NewRequest(requests.length - 1);
+          }
+          function reply(uint requestID, bytes response) {
+            // Here goes the check that the reply comes from a trusted source
+            requests[requestID].callback(response);
+          }
+        }
+
+        contract OracleUser {
+          Oracle constant oracle = Oracle(0x1234567); // known contract
+          function buySomething() {
+            oracle.query(\"USD\", this.oracleResponse);
+          }
+          function oracleResponse(bytes response) {
+            require(msg.sender == address(oracle));
+            // Use the data
+          }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"types.rst", "Data location", "",
+        "
+        contract C {
+            uint[] x; // the data location of x is storage
+
+            // the data location of memoryArray is memory
+            function f(uint[] memoryArray) {
+                x = memoryArray; // works, copies the whole array to storage
+                var y = x; // works, assigns a pointer, data location of y is storage
+                y[7]; // fine, returns the 8th element
+                y.length = 2; // fine, modifies x through y
+                delete x; // fine, clears the array, also modifies y
+                // The following does not work; it would need to create a new temporary /
+                // unnamed array in storage, but storage is \"statically\" allocated:
+                // y = memoryArray;
+                // This does not work either, since it would \"reset\" the pointer, but there
+                // is no sensible location it could point to.
+                // delete y;
+                g(x); // calls g, handing over a reference to x
+                h(x); // calls h and creates an independent, temporary copy in memory
+            }
+
+            function g(uint[] storage storageArray) internal {}
+            function h(uint[] memoryArray) {}
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"types.rst", "Allocating Memory Arrays", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+            function f(uint len) {
+                uint[] memory a = new uint[](7);
+                bytes memory b = new bytes(len);
+                // Here we have a.length == 7 and b.length == len
+                a[6] = 8;
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"types.rst", "Array Literals / Inline Arrays", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract C {
+            function f() {
+                g([uint(1), 2, 3]);
+            }
+            function g(uint[3] _data) {
+                // ...
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"types.rst", "Members", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract ArrayContract {
+            uint[2**20] m_aLotOfIntegers;
+            // Note that the following is not a pair of dynamic arrays but a
+            // dynamic array of pairs (i.e. of fixed size arrays of length two).
+            bool[2][] m_pairsOfFlags;
+            // newPairs is stored in memory - the default for function arguments
+
+            function setAllFlagPairs(bool[2][] newPairs) {
+                // assignment to a storage array replaces the complete array
+                m_pairsOfFlags = newPairs;
+            }
+
+            function setFlagPair(uint index, bool flagA, bool flagB) {
+                // access to a non-existing index will throw an exception
+                m_pairsOfFlags[index][0] = flagA;
+                m_pairsOfFlags[index][1] = flagB;
+            }
+
+            function changeFlagArraySize(uint newSize) {
+                // if the new size is smaller, removed array elements will be cleared
+                m_pairsOfFlags.length = newSize;
+            }
+
+            function clear() {
+                // these clear the arrays completely
+                delete m_pairsOfFlags;
+                delete m_aLotOfIntegers;
+                // identical effect here
+                m_pairsOfFlags.length = 0;
+            }
+
+            bytes m_byteData;
+
+            function byteArrays(bytes data) {
+                // byte arrays (\"bytes\") are different as they are stored without padding,
+                // but can be treated identical to \"uint8[]\"
+                m_byteData = data;
+                m_byteData.length += 7;
+                m_byteData[3] = 8;
+                delete m_byteData[2];
+            }
+
+            function addFlag(bool[2] flag) returns (uint) {
+                return m_pairsOfFlags.push(flag);
+            }
+
+            function createMemoryArray(uint size) returns (bytes) {
+                // Dynamic memory arrays are created using `new`:
+                uint[2][] memory arrayOfPairs = new uint[2][](size);
+                // Create a dynamic byte array:
+                bytes memory b = new bytes(200);
+                for (uint i = 0; i < b.length; i++)
+                    b[i] = byte(i);
+                return b;
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"types.rst", "Structs", "",
+        "
+        pragma solidity ^0.4.11;
+
+        contract CrowdFunding {
+            // Defines a new type with two fields.
+            struct Funder {
+                address addr;
+                uint amount;
+            }
+
+            struct Campaign {
+                address beneficiary;
+                uint fundingGoal;
+                uint numFunders;
+                uint amount;
+                mapping (uint => Funder) funders;
+            }
+
+            uint numCampaigns;
+            mapping (uint => Campaign) campaigns;
+
+            function newCampaign(address beneficiary, uint goal) returns (uint campaignID) {
+                campaignID = numCampaigns++; // campaignID is return variable
+                // Creates new struct and saves in storage. We leave out the mapping type.
+                campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0);
+            }
+
+            function contribute(uint campaignID) payable {
+                Campaign storage c = campaigns[campaignID];
+                // Creates a new temporary memory struct, initialised with the given values
+                // and copies it over to storage.
+                // Note that you can also use Funder(msg.sender, msg.value) to initialise.
+                c.funders[c.numFunders++] = Funder({addr: msg.sender, amount: msg.value});
+                c.amount += msg.value;
+            }
+
+            function checkGoalReached(uint campaignID) returns (bool reached) {
+                Campaign storage c = campaigns[campaignID];
+                if (c.amount < c.fundingGoal)
+                    return false;
+                uint amount = c.amount;
+                c.amount = 0;
+                c.beneficiary.transfer(amount);
+                return true;
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"types.rst", "Mappings", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract MappingExample {
+            mapping(address => uint) public balances;
+
+            function update(uint newBalance) {
+                balances[msg.sender] = newBalance;
+            }
+        }
+
+        contract MappingUser {
+            function f() returns (uint) {
+                MappingExample m = new MappingExample();
+                m.update(100);
+                return m.balances(this);
+            }
+        }
+    "},
+    % --------------------------------------------------------------------------
+    {"types.rst", "Delete", "",
+        "
+        pragma solidity ^0.4.0;
+
+        contract DeleteExample {
+            uint data;
+            uint[] dataArray;
+
+            function f() {
+                uint x = data;
+                delete x; // sets x to 0, does not affect data
+                delete data; // sets data to 0, does not affect x which still holds a copy
+                uint[] y = dataArray;
+                delete dataArray; // this sets dataArray.length to zero, but as uint[] is a complex object, also
+                // y is affected which is an alias to the storage object
+                // On the other hand: \"delete y\" is not valid, as assignments to local variables
+                // referencing storage objects can only be made from existing storage objects.
             }
         }
     "}
