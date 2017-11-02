@@ -220,6 +220,7 @@ The documentation for **syparse** is available here: [Wiki](https://github.com/w
 
 ## 3. Known issues
 
+**Due to deficiencies in the grammar definition of the rules `PrimaryExpression` and `TypeName`, the usability of the parser is still very limited.**
 ### ElementaryTypeNameExpression
 
 Due to a reduce / reduce conflict between
