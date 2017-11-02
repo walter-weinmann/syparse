@@ -127,13 +127,14 @@ pt_to_source(FType, Fun, Ctx, Lvl, {assemblyAssignment, Value1, Value2} = ST) ->
     RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% assemblyItem / contractPart / enumValue / expressionStatement /
+% assemblyItem / contractPart / elementaryTypeNameExpression / enumValue / expressionStatement /
 % primaryExpression / typeName
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, Value} = ST)
     when Type == assemblyItem;
     Type == contractPart;
+    Type == elementaryTypeNameExpression;
     Type == enumValue;
     Type == expressionStatement;
     Type == primaryExpression;
@@ -221,8 +222,8 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                     end,
                     SubAcc
                 ]), CtxAcc1};
-            {expression, _}
-                when Type == expressionList ->
+            {enumValue, _}
+                when Type == enumValueCommalist ->
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {lists:append([
                     Acc,
@@ -232,8 +233,8 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, Values} = ST)
                     end,
                     SubAcc
                 ]), CtxAcc1};
-            {identifier, _}
-                when Type == enumValueCommalist ->
+            {expression, _}
+                when Type == expressionList ->
                 {SubAcc, CtxAcc1} = pt_to_source(FType, Fun, CtxAcc, Lvl + 1, F),
                 {lists:append([
                     Acc,
@@ -517,12 +518,14 @@ pt_to_source(FType, Fun, Ctx, Lvl, {block, Values} = ST)
     RT;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% booleanLiteral / elementaryTypeName/ hexLiteral / identifier / numberUnit / placeHolderStatement /
-% stateMutability / storageLocation / stringLiteral
+% booleanLiteral / break / continue / elementaryTypeName/ hexLiteral / identifier / numberUnit /
+% placeHolderStatement / stateMutability / storageLocation / stringLiteral / throw
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pt_to_source(FType, Fun, Ctx, _Lvl, {Type, Value} = ST)
     when Type == booleanLiteral;
+    Type == break;
+    Type == continue;
     Type == elementaryTypeName;
     Type == hexLiteral;
     Type == identifier;
@@ -530,7 +533,8 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {Type, Value} = ST)
     Type == placeHolderStatement;
     Type == stateMutability;
     Type == storageLocation;
-    Type == stringLiteral ->
+    Type == stringLiteral;
+    Type == throw ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [_Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2478,11 +2482,15 @@ pt_to_source(FType, Fun, Ctx, _Lvl, {Type, {SubType, Value}} = ST)
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _} = Value} = ST)
-    when Type == statement, SubType == block;
-    Type == statement, SubType == expression;
+    when Type == simpleStatement, SubType == expressionStatement;
+    Type == statement, SubType == block;
+    Type == statement, SubType == break;
+    Type == statement, SubType == continue;
     Type == statement, SubType == inlineAssemblyStatement;
     Type == statement, SubType == placeHolderStatement;
-    Type == statement, SubType == return ->
+    Type == statement, SubType == return;
+    Type == statement, SubType == simpleStatement;
+    Type == statement, SubType == throw ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2504,10 +2512,10 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _} = Value} = ST)
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _, _} = Value} = ST)
-    when Type == statement, SubType == doWhileStatement;
-    Type == statement, SubType == expression;
+    when Type == expressionStatement, SubType == expression;
+    Type == simpleStatement, SubType == variableDefinition;
+    Type == statement, SubType == doWhileStatement;
     Type == statement, SubType == inlineAssemblyStatement;
-    Type == statement, SubType == variableDefinition;
     Type == statement, SubType == whileStatement ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
@@ -2523,8 +2531,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _, _} = Value} = ST)
                           statement ->
                               case SubType of
                                   doWhileStatement -> ";";
-                                  expression -> ";";
-                                  variableDefinition -> ";";
+                                  simpleStatement -> ";";
                                   _ -> []
                               end;
                           _ -> []
@@ -2532,7 +2539,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _, _} = Value} = ST)
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _, _, _} = Value} = ST)
-    when Type == statement, SubType == expression;
+    when Type == expressionStatement, SubType == expression;
     Type == statement, SubType == ifStatement ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
@@ -2547,16 +2554,14 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _, _, _} = Value} = ST)
     RT = {ValueNew ++ case Type of
                           statement ->
                               case SubType of
-                                  expression -> ";";
+                                  expressionStatement -> ";";
                                   _ -> []
                               end;
                           _ -> []
                       end, NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
-pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _, _, _, _} = Value} = ST)
-    when Type == statement, SubType == expression;
-    Type == statement, SubType == forStatement ->
+pt_to_source(FType, Fun, Ctx, Lvl, {statement, {forStatement, _, _, _, _} = Value} = ST) ->
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> Start ~p~n ST: ~p~n", [Lvl, ST]),
     NewCtx = case FType of
                  top_down -> Fun(ST, Ctx);
@@ -2567,14 +2572,7 @@ pt_to_source(FType, Fun, Ctx, Lvl, {Type, {SubType, _, _, _, _} = Value} = ST)
                   top_down -> NewCtx1;
                   bottom_up -> Fun(ST, NewCtx1)
               end,
-    RT = {ValueNew ++ case Type of
-                          statement ->
-                              case SubType of
-                                  expression -> ";";
-                                  _ -> []
-                              end;
-                          _ -> []
-                      end, NewCtx2},
+    RT = {ValueNew, NewCtx2},
     ?debugFmt(?MODULE_STRING ++ ":pt_to_source ===> ~n RT: ~p~n", [RT]),
     RT;
 

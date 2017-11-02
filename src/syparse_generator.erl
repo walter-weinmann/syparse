@@ -88,7 +88,7 @@ create_code() ->
     create_code(identifier),
     create_code(int),
     create_code(numberUnit),
-    create_code(placeholderStatement),
+    create_code(placeHolderStatement),
     create_code(pragma_directive),
     create_code(referenceExamples),
     create_code(special),
@@ -489,7 +489,9 @@ create_code(booleanLiteral = Rule) ->
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -529,6 +531,7 @@ create_code(byte = Rule) ->
     Code = ?BYTE,
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(elementaryTypeName, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
@@ -729,6 +732,7 @@ create_code(elementaryTypeName = Rule) ->
         "Var"
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
@@ -742,6 +746,8 @@ create_code(elementaryTypeName = Rule) ->
 
 create_code(enumDefinition = Rule) ->
     ?CREATE_CODE_START,
+    [{enumValue, EnumValue}] = dets:lookup(?CODE_TEMPLATES, enumValue),
+    EnumValue_Length = length(EnumValue),
     [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
 
@@ -752,27 +758,27 @@ create_code(enumDefinition = Rule) ->
             "{",
             case rand:uniform(5) rem 5 of
                 1 -> lists:append([
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+                    lists:nth(rand:uniform(EnumValue_Length), EnumValue),
                     ",",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+                    lists:nth(rand:uniform(EnumValue_Length), EnumValue),
                     ",",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+                    lists:nth(rand:uniform(EnumValue_Length), EnumValue),
                     ",",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier)
+                    lists:nth(rand:uniform(EnumValue_Length), EnumValue)
                 ]);
                 2 -> lists:append([
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+                    lists:nth(rand:uniform(EnumValue_Length), EnumValue),
                     ",",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+                    lists:nth(rand:uniform(EnumValue_Length), EnumValue),
                     ",",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier)
+                    lists:nth(rand:uniform(EnumValue_Length), EnumValue)
                 ]);
                 3 -> lists:append([
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+                    lists:nth(rand:uniform(EnumValue_Length), EnumValue),
                     ",",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier)
+                    lists:nth(rand:uniform(EnumValue_Length), EnumValue)
                 ]);
-                4 -> lists:nth(rand:uniform(Identifier_Length), Identifier);
+                4 -> lists:nth(rand:uniform(EnumValue_Length), EnumValue);
                 _ -> ""
             end,
             "}"
@@ -1036,6 +1042,8 @@ create_code(expression = Rule) ->
         || _ <- lists:seq(1, ?MAX_BASIC * 2)
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -1151,6 +1159,7 @@ create_code(fixed = Rule) ->
         ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(elementaryTypeName, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
@@ -1166,19 +1175,19 @@ create_code(forStatement = Rule) ->
     ?CREATE_CODE_START,
     [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
+    [{expressionStatement, ExpressionStatement}] = dets:lookup(?CODE_TEMPLATES, expressionStatement),
+    ExpressionStatement_Length = length(ExpressionStatement),
+    [{simpleStatement, SimpleStatement}] = dets:lookup(?CODE_TEMPLATES, simpleStatement),
+    SimpleStatement_Length = length(SimpleStatement),
     [{statement, Statement}] = dets:lookup(?CODE_TEMPLATES, statement),
     Statement_Length = length(Statement),
-    [{variableDefinition, VariableDefinition}] = dets:lookup(?CODE_TEMPLATES, variableDefinition),
-    VariableDefinition_Length = length(VariableDefinition),
 
     Code = [
         lists:append([
             "For (",
-            case rand:uniform(3) rem 3 of
+            case rand:uniform(2) rem 2 of
                 1 ->
-                    lists:nth(rand:uniform(Expression_Length), Expression);
-                2 ->
-                    lists:nth(rand:uniform(VariableDefinition_Length), VariableDefinition);
+                    lists:nth(rand:uniform(SimpleStatement_Length), SimpleStatement);
                 _ -> ";"
             end,
             case rand:uniform(2) rem 2 of
@@ -1188,7 +1197,7 @@ create_code(forStatement = Rule) ->
             ";",
             case rand:uniform(2) rem 2 of
                 1 ->
-                    lists:nth(rand:uniform(Expression_Length), Expression);
+                    lists:nth(rand:uniform(ExpressionStatement_Length), ExpressionStatement);
                 _ -> []
             end,
             ") ",
@@ -1269,6 +1278,8 @@ create_code(functionCall = Rule) ->
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -1457,7 +1468,9 @@ create_code(hexLiteral = Rule) ->
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(assemblyItem, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -1537,6 +1550,7 @@ create_code(identifier = Rule) ->
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
 %%    store_code(assemblyItem, Code, ?MAX_BASIC, false),
+    store_code(enumValue, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
@@ -1725,7 +1739,7 @@ create_code(indexAccess = Rule) ->
         [
             case rand:uniform(8) rem 8 of
                 1 ->
-                    lists:nth(rand:uniform(Expression_Length), Expression) ++ "[]";
+                    lists:nth(rand:uniform(Expression_Length), Expression) ++ " []";
                 _ -> lists:append([
                     lists:nth(rand:uniform(Expression_Length), Expression),
                     " [",
@@ -1737,6 +1751,8 @@ create_code(indexAccess = Rule) ->
         ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -1915,6 +1931,7 @@ create_code(int = Rule) ->
     Code = ?INT,
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(elementaryTypeName, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
@@ -1975,6 +1992,8 @@ create_code(memberAccess = Rule) ->
         ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2127,6 +2146,8 @@ create_code(newExpression = Rule) ->
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2175,7 +2196,9 @@ create_code(numberLiteral = Rule) ->
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(assemblyItem, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2280,7 +2303,7 @@ create_code(parameterList = Rule) ->
 %% Statement = ... PlaceholderStatement ';' ...
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-create_code(placeholderStatement = Rule) ->
+create_code(placeHolderStatement = Rule) ->
     ?CREATE_CODE_START,
 
     Code = [
@@ -2298,23 +2321,23 @@ create_code(pragma_directive = Rule) ->
     ?CREATE_CODE_START,
 
     Code = [
-        "^1.0.1",
-        "^1.0.2",
-        "^1.0.3",
-        "^1.0.4",
-        "^1.0.5",
-        "^2.0.1",
-        "^2.0.2",
-        "^2.0.3",
-        "^2.0.4",
-        "^2.0.5",
-        "^123.456.789",
-        "^3.0.0",
-        "^3.0.1",
-        "^3.0.2",
-        "^3.0.3",
-        "^3.0.4",
-        "^3.0.5"
+        "^1.0.1;",
+        "^1.0.2;",
+        "^1.0.3;",
+        "^1.0.4;",
+        "^1.0.5;",
+        "^2.0.1;",
+        "^2.0.2;",
+        "^2.0.3;",
+        "^2.0.4;",
+        "^2.0.5;",
+        "^123.456.789;",
+        "^3.0.0;",
+        "^3.0.1;",
+        "^3.0.2;",
+        "^3.0.3;",
+        "^3.0.4;",
+        "^3.0.5;"
     ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
@@ -2335,8 +2358,7 @@ create_code(pragmaDirective = Rule) ->
             "Pragma ",
             lists:nth(rand:uniform(Identifier_Length), Identifier),
             " ",
-            lists:nth(rand:uniform(Pragma_directive_Length), Pragma_directive),
-            ";"
+            lists:nth(rand:uniform(Pragma_directive_Length), Pragma_directive)
         ])
         || _ <- lists:seq(1, ?MAX_STATEMENT * 2)
     ],
@@ -2694,7 +2716,9 @@ create_code(stringLiteral = Rule) ->
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(assemblyItem, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2847,7 +2871,9 @@ create_code(tupleExpression = Rule) ->
         ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
+    store_code(expressionStatement, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_BASIC, false),
     ?CREATE_CODE_END;
 
@@ -2960,6 +2986,7 @@ create_code(uFixed = Rule) ->
         ],
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(elementaryTypeName, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
@@ -2985,6 +3012,7 @@ create_code(uInt = Rule) ->
     Code = ?UINT,
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(elementaryTypeName, Code, ?MAX_BASIC, false),
+    store_code(elementaryTypeNameExpression, Code, ?MAX_BASIC, false),
     store_code(expression, Code, ?MAX_BASIC, false),
     store_code(primaryExpression, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
@@ -2999,31 +3027,33 @@ create_code(uInt = Rule) ->
 create_code(userDefinedTypeName = Rule) ->
     ?CREATE_CODE_START,
     [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
-    Identifier_Length = length(Identifier),
-
-    Code = [
-            lists:nth(rand:uniform(Identifier_Length), Identifier) ++
-            case rand:uniform(4) rem 4 of
-                1 -> lists:append([
-                    ".",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
-                    ".",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
-                    ".",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier)
-                ]);
-                2 -> lists:append([
-                    ".",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier),
-                    ".",
-                    lists:nth(rand:uniform(Identifier_Length), Identifier)
-                ]);
-                3 -> "." ++
-                lists:nth(rand:uniform(Identifier_Length), Identifier);
-                _ -> []
-            end
-        || _ <- lists:seq(1, ?MAX_BASIC * 2)
-    ],
+%% wwe
+%%    Identifier_Length = length(Identifier),
+%%
+%%    Code = [
+%%            lists:nth(rand:uniform(Identifier_Length), Identifier) ++
+%%            case rand:uniform(4) rem 4 of
+%%                1 -> lists:append([
+%%                    ".",
+%%                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+%%                    ".",
+%%                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+%%                    ".",
+%%                    lists:nth(rand:uniform(Identifier_Length), Identifier)
+%%                ]);
+%%                2 -> lists:append([
+%%                    ".",
+%%                    lists:nth(rand:uniform(Identifier_Length), Identifier),
+%%                    ".",
+%%                    lists:nth(rand:uniform(Identifier_Length), Identifier)
+%%                ]);
+%%                3 -> "." ++
+%%                lists:nth(rand:uniform(Identifier_Length), Identifier);
+%%                _ -> []
+%%            end
+%%        || _ <- lists:seq(1, ?MAX_BASIC * 2)
+%%    ],
+    Code = Identifier,
     store_code(Rule, Code, ?MAX_BASIC, false),
     store_code(typeName, Code, ?MAX_BASIC, false),
     ?CREATE_CODE_END;
@@ -3127,6 +3157,7 @@ create_code(variableDefinition = Rule) ->
             || _ <- lists:seq(1, ?MAX_STATEMENT * 2)
         ],
     store_code(Rule, Code, ?MAX_STATEMENT, false),
+    store_code(simpleStatement, Code, ?MAX_BASIC, false),
     store_code(statement, [C ++ ";" || C <- Code], ?MAX_STATEMENT, false),
     ?CREATE_CODE_END;
 

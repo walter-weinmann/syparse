@@ -81,13 +81,13 @@
 %%    identifier,
 %%    int,
 %%    numberUnit,
-%%    placeholderStatement,
+%%    placeHolderStatement,
 %%    pragma_directive,
 %%    stateMutability,
 %%    storageLocation,
 %%    stringLiteral,
 %%    throw,
-%%    uInt
+%%    uInt,
 %%%% Level 02 ..........................
 %%    assemblyLabel,
 %%    enumDefinition,
@@ -96,15 +96,18 @@
 %%    importDirective,
 %%    numberLiteral,
 %%    uFixed,
-%%    userDefinedTypeName
+%%    userDefinedTypeName,
 %%%% Level 03 ..........................
 %%    elementaryTypeName,
-%%    pragmaDirective
+%%    elementaryTypeNameExpression,
+%%    pragmaDirective,
+%%    primaryExpression,
 %%%% Level 04 ..........................
-%%    expression
+%%    expression,
 %%%% Level 05 ..........................
 %%    arrayTypeName,
 %%    expressionList,
+%%    expressionStatement,
 %%    indexAccess,
 %%    indexedParameterList,
 %%    inheritanceSpecifier,
@@ -118,37 +121,39 @@
 %%    tupleExpression,
 %%    typeNameList,
 %%    usingForDeclaration,
-%%    variableDeclaration
+%%    variableDeclaration,
 %%%% Level 06 ..........................
 %%    eventDefinition,
 %%    functionCallArguments,
 %%    functionTypeName,
 %%    modifierInvocation,
 %%    structDefinition,
-%%    variableDefinition
+%%    variableDefinition,
 %%%% Level 07 ..........................
-%%    functionCall
-%%%% Level 21 ..........................
+%%    functionCall,
+%%    typeName,
+%%%%%% Level 21 ..........................
 %%    doWhileStatement,
 %%    forStatement,
 %%    ifStatement,
-%%    whileStatement
+%%    simpleStatement,
+%%    whileStatement,
 %%%% Level 22 ..........................
-%%    block
+%%    block,
 %%%% Level 41 ..........................
-%%    functionalAssemblyExpression
+%%    functionalAssemblyExpression,
 %%%% Level 42 ..........................
 %%    assemblyAssignment,
-%%    assemblyLocalBinding
+%%    assemblyLocalBinding,
 %%%% Level 43 ..........................
-%%    inlineAssemblyBlock
+%%    inlineAssemblyBlock,
 %%%% Level 44 ..........................
-%%    inlineAssemblyStatement
+%%    inlineAssemblyStatement,
 %%%% Level 62 ..........................
 %%    modifierDefinition,
-%%    functionDefinition
+%%    functionDefinition,
 %%%% Level 63 ..........................
-%%    contractDefinition
+%%    contractDefinition,
 %%%% Level 64 ..........................
 %%    sourceUnit
 ]).
@@ -177,11 +182,10 @@
     break,
     continue,
     doWhileStatement,
-    expression,
-    placeholderStatement,
+    placeHolderStatement,
     return,
-    throw,
-    variableDefinition
+    simpleStatement,
+    throw
 ]).
 
 -define(CODE_TEMPLATES, code_templates).
