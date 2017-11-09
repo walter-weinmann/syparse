@@ -59,7 +59,23 @@
     ]
 ).
 
--define(ALL_CLAUSE_CONTRACT_PART, [
+%% no coverage analysis for syparse_util
+-define(ALL_CLAUSE_PERFORMANCE, [
+    referenceExamples,
+    sourceUnit,
+    special
+]).
+
+-define(ALL_CLAUSE_RELIABILITY, [
+    contractDefinition,
+    importDirective,
+    pragmaDirective,
+    referenceExamples,
+    sourceUnit,
+    special
+]).
+
+-define(ALL_CLAUSE_RELIABILITY_CONTRACT_PART, [
     enumDefinition,
     eventDefinition,
     functionDefinition,
@@ -69,7 +85,7 @@
     usingForDeclaration
 ]).
 
--define(ALL_CLAUSE_DETAILED, [
+-define(ALL_CLAUSE_RELIABILITY_DETAILED, [
 %%%% Level 01 ..........................
 %%    booleanLiteral,
 %%    break,
@@ -158,19 +174,7 @@
 %%    sourceUnit
 ]).
 
-%% no coverage analysis for syparse_util
--define(ALL_CLAUSE_PERFORMANCE, [
-    sourceUnit
-]).
-
--define(ALL_CLAUSE_RELIABILITY, [
-    contractDefinition,
-    importDirective,
-    pragmaDirective,
-    sourceUnit
-]).
-
--define(ALL_CLAUSE_STATEMENT, [
+-define(ALL_CLAUSE_RELIABILITY_STATEMENT, [
     block,
     forStatement,
     ifStatement,
@@ -178,7 +182,7 @@
     whileStatement
 ]).
 
--define(ALL_CLAUSE_STATEMENT_SEMICOLON, [
+-define(ALL_CLAUSE_RELIABILITY_STATEMENT_SEMICOLON, [
     break,
     continue,
     doWhileStatement,
@@ -205,6 +209,11 @@
 ).
 
 -define(F_RANDOM, fun(X, Y) -> erlang:phash2(X) < erlang:phash2(Y) end).
+
+-define(GENERATE_COMPACTED, true).                         % true: compacted / false: detailed.
+-define(GENERATE_CT, true).
+-define(GENERATE_EUNIT, true).
+-define(GENERATE_PERFORMANCE, true).
 
 -define(INT,
     [

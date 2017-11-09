@@ -43,28 +43,39 @@ generate() ->
 
     %% Common tests ............................................................
 
-    ok = file_create_ct_all("performance", "complete_", "compacted", ?ALL_CLAUSE_PERFORMANCE),
-
-    ok = file_create_ct_all("reliability", "complete_", "compacted", ?ALL_CLAUSE_RELIABILITY),
-    ok = file_create_ct_all("reliability", "complete_", "detailed", [referenceExamples]),
-    ok = file_create_ct_all("reliability", "complete_", "detailed", [special]),
-    ok = file_create_ct_all("reliability", "contract_", "compacted", ?ALL_CLAUSE_CONTRACT_PART),
-%%    ok = file_create_ct_all("reliability", "contract_", "detailed", ?ALL_CLAUSE_CONTRACT_PART),
-    ok = file_create_ct_all("reliability", "statement", "compacted", ?ALL_CLAUSE_STATEMENT),
-%%    ok = file_create_ct_all("reliability", "statement", "detailed", ?ALL_CLAUSE_STATEMENT),
-    ok = file_create_ct_all("reliability", "stmntsemi", "compacted", ?ALL_CLAUSE_STATEMENT_SEMICOLON),
-%%    ok = file_create_ct_all("reliability", "stmntsemi", "detailed", ?ALL_CLAUSE_STATEMENT_SEMICOLON),
+    case ?GENERATE_CT of
+        true ->
+            case ?GENERATE_PERFORMANCE of
+                true ->
+                    ok = file_create_ct_all("performance", "complete_", "compacted", ?ALL_CLAUSE_PERFORMANCE);
+                _ -> ok
+            end,
+            case ?GENERATE_COMPACTED of
+                true ->
+                    ok = file_create_ct_all("reliability", "complete_", "compacted", ?ALL_CLAUSE_RELIABILITY),
+                    ok = file_create_ct_all("reliability", "contract_", "compacted", ?ALL_CLAUSE_RELIABILITY_CONTRACT_PART),
+                    ok = file_create_ct_all("reliability", "statement", "compacted", ?ALL_CLAUSE_RELIABILITY_STATEMENT),
+                    ok = file_create_ct_all("reliability", "stmntsemi", "compacted", ?ALL_CLAUSE_RELIABILITY_STATEMENT_SEMICOLON);
+                _ ->
+                    ok = file_create_ct_all("reliability", "complete_", "detailed", ?ALL_CLAUSE_RELIABILITY),
+                    ok = file_create_ct_all("reliability", "contract_", "detailed", ?ALL_CLAUSE_RELIABILITY_CONTRACT_PART),
+                    ok = file_create_ct_all("reliability", "statement", "detailed", ?ALL_CLAUSE_RELIABILITY_STATEMENT),
+                    ok = file_create_ct_all("reliability", "stmntsemi", "detailed", ?ALL_CLAUSE_RELIABILITY_STATEMENT_SEMICOLON)
+            end;
+        _ -> ok
+    end,
 
     %% EUnit tests .............................................................
 
-    ok = file_create_eunit_all("performance", "complete_", [referenceExamples]),
-    ok = file_create_eunit_all("performance", "complete_", [special]),
-
-    ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_DETAILED),
-    ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_RELIABILITY),
-    ok = file_create_eunit_all("reliability", "contract_", ?ALL_CLAUSE_CONTRACT_PART),
-    ok = file_create_eunit_all("reliability", "statement", ?ALL_CLAUSE_STATEMENT),
-    ok = file_create_eunit_all("reliability", "stmntsemi", ?ALL_CLAUSE_STATEMENT_SEMICOLON),
+    case ?GENERATE_EUNIT of
+        true ->
+            ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_RELIABILITY),
+            ok = file_create_eunit_all("reliability", "contract_", ?ALL_CLAUSE_RELIABILITY_CONTRACT_PART),
+            ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_RELIABILITY_DETAILED),
+            ok = file_create_eunit_all("reliability", "statement", ?ALL_CLAUSE_RELIABILITY_STATEMENT),
+            ok = file_create_eunit_all("reliability", "stmntsemi", ?ALL_CLAUSE_RELIABILITY_STATEMENT_SEMICOLON);
+        _ -> ok
+    end,
 
     dets:close(?CODE_TEMPLATES).
 
@@ -76,6 +87,86 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 01
+%% -----------------------------------------------------------------------------
+%%
+%% BooleanLiteral ::= 'TRUE' | 'FALSE'
+%%
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... BooleanLiteral ,,,
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% Break ::= 'BREAK'
+%%
+%% ==> Statement                           == Statement ::= ... Break ';' ...
+%%
+%% Byte ::= 'BYTE' | 'BYTES' | ... | 'BYTES32'
+%%
+%% ==> ElementaryTypeName                  == ElementaryTypeName ::= ... Byte ...
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
+%% Continue ::= 'CONTINUE'
+%%
+%% ==> Statement                           == Statement ::= ... Continue ';' ...
+%%
+%% DecimalNumber ::= [0-9]+
+%%
+%% HexLiteral ::= 'HEX' ('"' ([0-9a-fA-F][0-9a-fA-F])* '"' | "'" ([0-9a-fA-F][0-9a-fA-F])* "'")
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... HexLiteral ...
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... HexLiteral ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% HexNumber ::= '0x' [0-9a-fA-F]+
+%%
+%% Identifier ::= [a-zA-Z_$] [a-zA-Z_$0-9]*
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= Identifier
+%% ==> EnumValue                           == EnumValue ::= Identifier
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... Identifier ...
+%%
+%% Int ::= 'INT' | 'INT8' | ... | 'INT256'
+%%
+%% ==> ElementaryTypeName                  == ElementaryTypeName ::= ... Int ...
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
+%% NumberUnit ::= 'WEI' | 'SZABO' | 'FINNEY' | 'ETHER'
+%%              | 'SECONDS' | 'MINUTES' | 'HOURS' | 'DAYS' | 'WEEKS' | 'YEARS'
+%%
+%% PlaceholderStatement ::= '_'
+%%
+%% ==> Statement                           == Statement ::= ... PlaceholderStatement ';' ...
+%%
+%% PRAGMA_DIRECTIVE ::= ([^;]+;)
+%%
+%% StateMutability ::= 'PURE' | 'CONSTANT' | 'VIEW' | 'PAYABLE'
+%%
+%% StorageLocation ::= 'MEMORY' | 'STORAGE'
+%%
+%% StringLiteral ::= '"' ([^"\r\n\\] | '\\' .)* '"'
+%% ==> AssemblyItem                        == AssemblyItem ::= ... StringLiteral ...
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... StringLiteral ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% Throw ::= 'THROW'
+%%
+%% ==> Statement                           == Statement ::= ... Throw ';' ...
+%%
+%% Uint ::= 'UINT' | 'UINT8' | ... | 'UINT256'
+%%
+%% ==> ElementaryTypeName                  == ElementaryTypeName ::= ... Uint ...
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(booleanLiteral),
@@ -100,6 +191,49 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 02
+%% -----------------------------------------------------------------------------
+%%
+%% AssemblyLabel ::= Identifier ':'
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... AssemblyLabel ...
+%%
+%% EnumDefinition ::= 'ENUM' Identifier '{' EnumValue? (',' EnumValue)* '}'
+%%
+%% ==> ContractPart                        ==
+%%
+%% Fixed ::= 'FIXED' | ( 'FIXED' DecimalNumber 'x' DecimalNumber )
+%%
+%% ==> ElementaryTypeName                  == ElementaryTypeName ::= ... Fixed ...
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
+%% IdentifierList ::= '(' ( Identifier? ',' )* Identifier? ')'
+%%
+%% ImportDirective ::= 'IMPORT' StringLiteral ('AS' Identifier)? ';'
+%%                   | 'IMPORT' ('*' | Identifier) ('AS' Identifier)? 'FROM' StringLiteral ';'
+%%                   | 'IMPORT' '{' Identifier ('AS' Identifier)? ( ',' Identifier ('AS' Identifier)? )* '}' 'FROM' StringLiteral ';'
+%%
+%% NumberLiteral ::= ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... NumberLiteral ...
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... NumberLiteral ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% PragmaDirective ::= 'PRAGMA' Identifier ([^;]+) ';'
+%%
+%% Ufixed ::= 'UFIXED' | ( 'UFIXED' DecimalNumber 'x' DecimalNumber )
+%%
+%% ==> ElementaryTypeName                  == ElementaryTypeName ::= ... | Ufixed
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
+%% UserDefinedTypeName ::= Identifier ( '.' Identifier )*
+%%
+%% ==> TypeName                            == TypeName ::= ... UserDefinedTypeName ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(assemblyLabel),
@@ -114,6 +248,23 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 03
+%% -----------------------------------------------------------------------------
+%%
+%% ElementaryTypeName ::= 'ADDRESS'
+%%                      | 'BOOL'
+%%                      | 'STRING'
+%%                      | 'VAR'
+%% ==                      | Int
+%% ==                      | Uint
+%% ==                      | Byte
+%% ==                      | Fixed
+%% ==                      | Ufixed
+%%
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
+%% PragmaDirective ::= 'PRAGMA' Identifier ([^;]+) ';'
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(elementaryTypeName),
@@ -121,12 +272,105 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 04
+%% -----------------------------------------------------------------------------
+%%
+%% Expression ::= Expression ('++' | '--')
+%%              | NewExpression
+%%              | IndexAccess
+%%              | MemberAccess
+%%              | FunctionCall
+%%              | '(' Expression ')'
+%%              | ('!' | '~' | 'delete' | '++' | '--' | '+' | '-') Expression
+%%              | Expression '**' Expression
+%%              | Expression ('*' | '/' | '%') Expression
+%%              | Expression ('+' | '-') Expression
+%%              | Expression ('<<' | '>>') Expression
+%%              | Expression '&' Expression
+%%              | Expression '^' Expression
+%%              | Expression '|' Expression
+%%              | Expression ('<' | '>' | '<=' | '>=') Expression
+%%              | Expression ('==' | '!=') Expression
+%%              | Expression '&&' Expression
+%%              | Expression '||' Expression
+%%              | Expression '?' Expression ':' Expression
+%%              | Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') Expression
+%%              | PrimaryExpression
+%%
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(expression),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 05
+%% -----------------------------------------------------------------------------
+%%
+%% ArrayTypeName ::= TypeName '[' Expression? ']'
+%%
+%% ==> TypeName                            == TypeName ::= ... ArrayTypeName ...
+%%
+%% ExpressionList ::= Expression ( ',' Expression )*
+%%
+%% ==> FunctionCallArguments               == FunctionCallArguments ::= ... ExpressionList? ...
+%%
+%% IndexAccess ::= Expression '[' Expression? ']'
+%%
+%% ==> Expression                          == Expression ::= ... IndexAccess ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% IndexedParameterList ::= '(' ( TypeName 'INDEXED'? Identifier? (',' TypeName 'INDEXED'? Identifier?)* )? ')'
+%%
+%% InheritanceSpecifier ::= UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
+%%
+%% Mapping ::= 'MAPPING' '(' ElementaryTypeName '=>' TypeName ')'
+%%
+%% ==> TypeName                            == TypeName ::= ... Mapping ...
+%%
+%% MemberAccess ::= Expression '.' Identifier
+%%
+%% ==> Expression                          == Expression ::= ... MemberAccess ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% NameValueList ::= Identifier ':' Expression ( ',' Identifier ':' Expression )*
+%%
+%% NewExpression ::= 'NEW' TypeName
+%%
+%% ==> Expression                          == Expression ::= ... NewExpression ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% ParameterList ::=        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
+%%
+%% Return ::= 'RETURN' Expression?
+%%
+%% ==> Statement                           == Statement ::= ... Return ';' ...
+%%
+%% StateVariableDeclaration ::= TypeName ( 'PUBLIC' | 'INTERNAL' | 'PRIVATE' | 'CONSTANT' )? Identifier ('=' Expression)? ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... StateVariableDeclaration ...
+%%
+%% TupleExpression ::= '(' ( Expression ( ',' Expression )*  )? ')'
+%%                   | '[' ( Expression ( ',' Expression )*  )? ']'
+%%
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... TupleExpression ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% TypeNameList ::=         '(' ( TypeName (',' TypeName )* )? ')'
+%%
+%% UsingForDeclaration ::= 'USING' Identifier 'FOR' ('*' | TypeName) ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... UsingForDeclaration ...
+%%
+%% VariableDeclaration ::= TypeName StorageLocation? Identifier
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(arrayTypeName),
@@ -148,6 +392,32 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 06
+%% -----------------------------------------------------------------------------
+%%
+%% EventDefinition ::= 'EVENT' Identifier IndexedParameterList 'ANONYMOUS'? ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... EventDefinition ...
+%%
+%% FunctionCallArguments ::= '{' NameValueList? '}'
+%%                         | ExpressionList?
+%%
+%% FunctionTypeName ::= 'FUNCTION' TypeNameList ( 'INTERNAL' | 'EXTERNAL' | StateMutability )*
+%%                      ( 'RETURNS' TypeNameList )?
+%%
+%% ==> TypeName                            == TypeName ::= ... FunctionTypeName ...
+%%
+%% ModifierInvocation ::= Identifier ( '(' ExpressionList? ')' )?
+%%
+%% StructDefinition ::= 'STRUCT' Identifier '{'
+%%                      ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... StructDefinition ...
+%%
+%% VariableDefinition ::= ('var' IdentifierList | VariableDeclaration) ( '=' Expression )?
+%%
+%% ==> SimpleStatement                     == SimpleStatement ::= ... VariableDefinition ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(eventDefinition),
@@ -159,18 +429,119 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 07
+%% -----------------------------------------------------------------------------
+%%
+%% FunctionCall ::= Expression '(' FunctionCallArguments ')'
+%%
+%% ==> Expression                          == Expression ::= ... FunctionCall ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(functionCall),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 14
+%% -----------------------------------------------------------------------------
+%%
+%% Expression ::= Expression ('++' | '--')
+%%              | NewExpression
+%%              | IndexAccess
+%%              | MemberAccess
+%%              | FunctionCall
+%%              | '(' Expression ')'
+%%              | ('!' | '~' | 'delete' | '++' | '--' | '+' | '-') Expression
+%%              | Expression '**' Expression
+%%              | Expression ('*' | '/' | '%') Expression
+%%              | Expression ('+' | '-') Expression
+%%              | Expression ('<<' | '>>') Expression
+%%              | Expression '&' Expression
+%%              | Expression '^' Expression
+%%              | Expression '|' Expression
+%%              | Expression ('<' | '>' | '<=' | '>=') Expression
+%%              | Expression ('==' | '!=') Expression
+%%              | Expression '&&' Expression
+%%              | Expression '||' Expression
+%%              | Expression '?' Expression ':' Expression
+%%              | Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') Expression
+%%              | PrimaryExpression
+%%
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(expression),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 15
+%% -----------------------------------------------------------------------------
+%%
+%% ArrayTypeName ::= TypeName '[' Expression? ']'
+%%
+%% ==> TypeName                            == TypeName ::= ... ArrayTypeName ...
+%%
+%% ExpressionList ::= Expression ( ',' Expression )*
+%%
+%% ==> FunctionCallArguments               == FunctionCallArguments ::= ... ExpressionList? ...
+%%
+%% IndexAccess ::= Expression '[' Expression? ']'
+%%
+%% ==> Expression                          == Expression ::= ... IndexAccess ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% IndexedParameterList ::= '(' ( TypeName 'INDEXED'? Identifier? (',' TypeName 'INDEXED'? Identifier?)* )? ')'
+%%
+%% InheritanceSpecifier ::= UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
+%%
+%% Mapping ::= 'MAPPING' '(' ElementaryTypeName '=>' TypeName ')'
+%%
+%% ==> TypeName                            == TypeName ::= ... Mapping ...
+%%
+%% MemberAccess ::= Expression '.' Identifier
+%%
+%% ==> Expression                          == Expression ::= ... MemberAccess ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% NameValueList ::= Identifier ':' Expression ( ',' Identifier ':' Expression )*
+%%
+%% NewExpression ::= 'NEW' TypeName
+%%
+%% ==> Expression                          == Expression ::= ... NewExpression ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% ParameterList ::=        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
+%%
+%% Return ::= 'RETURN' Expression?
+%%
+%% ==> Statement                           == Statement ::= ... Return ';' ...
+%%
+%% StateVariableDeclaration ::= TypeName ( 'PUBLIC' | 'INTERNAL' | 'PRIVATE' | 'CONSTANT' )? Identifier ('=' Expression)? ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... StateVariableDeclaration ...
+%%
+%% TupleExpression ::= '(' ( Expression ( ',' Expression )*  )? ')'
+%%                   | '[' ( Expression ( ',' Expression )*  )? ']'
+%%
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... TupleExpression ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% TypeNameList ::=         '(' ( TypeName (',' TypeName )* )? ')'
+%%
+%% UsingForDeclaration ::= 'USING' Identifier 'FOR' ('*' | TypeName) ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... UsingForDeclaration ...
+%%
+%% VariableDeclaration ::= TypeName StorageLocation? Identifier
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(arrayTypeName),
@@ -192,6 +563,32 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 16
+%% -----------------------------------------------------------------------------
+%%
+%% EventDefinition ::= 'EVENT' Identifier IndexedParameterList 'ANONYMOUS'? ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... EventDefinition ...
+%%
+%% FunctionCallArguments ::= '{' NameValueList? '}'
+%%                         | ExpressionList?
+%%
+%% FunctionTypeName ::= 'FUNCTION' TypeNameList ( 'INTERNAL' | 'EXTERNAL' | StateMutability )*
+%%                      ( 'RETURNS' TypeNameList )?
+%%
+%% ==> TypeName                            == TypeName ::= ... FunctionTypeName ...
+%%
+%% ModifierInvocation ::= Identifier ( '(' ExpressionList? ')' )?
+%%
+%% StructDefinition ::= 'STRUCT' Identifier '{'
+%%                      ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... StructDefinition ...
+%%
+%% VariableDefinition ::= ('var' IdentifierList | VariableDeclaration) ( '=' Expression )?
+%%
+%% ==> SimpleStatement                     == SimpleStatement ::= ... VariableDefinition ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(eventDefinition),
@@ -203,12 +600,38 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 17
+%% -----------------------------------------------------------------------------
+%%
+%% FunctionCall ::= Expression '(' FunctionCallArguments ')'
+%%
+%% ==> Expression                          == Expression ::= ... FunctionCall ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(functionCall),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 21
+%% -----------------------------------------------------------------------------
+%%
+%% DoWhileStatement ::= 'DO' Statement 'WHILE' '(' Expression ')'
+%%
+%% ==> Statement                           == Statement ::= ... DoWhileStatement ';' ...
+%%
+%% ForStatement ::= 'FOR' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
+%%
+%% ==> Statement                           == Statement ::= ... ForStatement ...
+%%
+%% IfStatement ::= 'IF' '(' Expression ')' Statement ( 'ELSE' Statement )?
+%%
+%% ==> Statement                           == Statement ::= ... IfStatement ...
+%%
+%% WhileStatement ::= 'WHILE' '(' Expression ')' Statement
+%%
+%% ==> Statement                           == Statement ::= ... WhileStatement ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(doWhileStatement),
@@ -218,12 +641,36 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 22
+%% -----------------------------------------------------------------------------
+%%
+%% Block ::= '{' Statement* '}'
+%%
+%% ==> Statement                           == Statement ::= ... Block ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(block),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 31
+%% -----------------------------------------------------------------------------
+%%
+%% DoWhileStatement ::= 'DO' Statement 'WHILE' '(' Expression ')'
+%%
+%% ==> Statement                           == Statement ::= ... DoWhileStatement ';' ...
+%%
+%% ForStatement ::= 'FOR' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
+%%
+%% ==> Statement                           == Statement ::= ... ForStatement ...
+%%
+%% IfStatement ::= 'IF' '(' Expression ')' Statement ( 'ELSE' Statement )?
+%%
+%% ==> Statement                           == Statement ::= ... IfStatement ...
+%%
+%% WhileStatement ::= 'WHILE' '(' Expression ')' Statement
+%%
+%% ==> Statement                           == Statement ::= ... WhileStatement ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(doWhileStatement),
@@ -233,18 +680,40 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 32
+%% -----------------------------------------------------------------------------
+%%
+%% Block ::= '{' Statement* '}'
+%%
+%% ==> Statement                           == Statement ::= ... Block ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(block),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 41
+%% -----------------------------------------------------------------------------
+%%
+%% FunctionalAssemblyExpression ::= Identifier '(' AssemblyItem? ( ',' AssemblyItem )* ')'
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... FunctionalAssemblyExpression ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(functionalAssemblyExpression),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 42
+%% -----------------------------------------------------------------------------
+%%
+%% AssemblyAssignment ::= ( Identifier ':=' FunctionalAssemblyExpression ) | ( '=:' Identifier )
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... AssemblyAssignment ...
+%%
+%% AssemblyLocalBinding ::= 'LET' Identifier ':=' FunctionalAssemblyExpression
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... AssemblyLocalBinding ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(assemblyAssignment),
@@ -252,24 +721,52 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 43
+%% -----------------------------------------------------------------------------
+%%
+%% InlineAssemblyBlock ::= '{' AssemblyItem* '}'
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... InlineAssemblyBlock ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(inlineAssemblyBlock),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 44
+%% -----------------------------------------------------------------------------
+%%
+%% InlineAssemblyStatement ::= 'ASSEMBLY' StringLiteral? InlineAssemblyBlock
+%%
+%% ==> Statement                           == Statement ::= ... InlineAssemblyStatement ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(inlineAssemblyStatement),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 51
+%% -----------------------------------------------------------------------------
+%%
+%% FunctionalAssemblyExpression ::= Identifier '(' AssemblyItem? ( ',' AssemblyItem )* ')'
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... FunctionalAssemblyExpression ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(functionalAssemblyExpression),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 52
+%% -----------------------------------------------------------------------------
+%%
+%% AssemblyAssignment ::= ( Identifier ':=' FunctionalAssemblyExpression ) | ( '=:' Identifier )
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... AssemblyAssignment ...
+%%
+%% AssemblyLocalBinding ::= 'LET' Identifier ':=' FunctionalAssemblyExpression
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... AssemblyLocalBinding ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(assemblyAssignment),
@@ -277,43 +774,124 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 53
+%% -----------------------------------------------------------------------------
+%%
+%% InlineAssemblyBlock ::= '{' AssemblyItem* '}'
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... InlineAssemblyBlock ...
+%% ==> Statement                           == Statement ::= ... InlineAssemblyBlock ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(inlineAssemblyBlock),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 54
+%% -----------------------------------------------------------------------------
+%%
+%% InlineAssemblyStatement ::= 'ASSEMBLY' StringLiteral? InlineAssemblyBlock
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(inlineAssemblyStatement),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 61
+%% -----------------------------------------------------------------------------
+%%
+%% Block ::= '{' Statement* '}'
+%%
+%% ==> Statement                           == Statement ::= ... Block ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(block),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 62
+%%
+%% FunctionDefinition ::= 'FUNCTION' Identifier? ParameterList
+%%                        ( ModifierInvocation | StateMutability | 'EXTERNAL' | 'PUBLIC' | 'INTERNAL' | 'PRIVATE' )*
+%%                        ( 'RETURNS' ParameterList )? ( ';' | Block )
+%%
+%% ==> ContractPart                        == ContractPart ::= ... FunctionDefinition ...
+%%
+%% ModifierDefinition ::= 'MODIFIER' Identifier ParameterList? Block
+%%
+%% ==> ContractPart                        == ContractPart ::= ... ModifierDefinition ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(modifierDefinition),
     create_code(functionDefinition),
+    create_code(modifierDefinition),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 63
+%% -----------------------------------------------------------------------------
+%%
+%% ContractDefinition ::= ( 'CONTRACT' | 'LIBRARY' | 'INTERFACE' ) Identifier
+%%                        ( 'IS' InheritanceSpecifier (',' InheritanceSpecifier )* )?
+%%                        '{' ContractPart* '}'
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(contractDefinition),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 64
+%% -----------------------------------------------------------------------------
+%%
+%% SourceUnit ::= (PragmaDirective | ImportDirective | ContractDefinition)*
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(sourceUnit),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level ???
+%% Level 99
+%% -----------------------------------------------------------------------------
+%%
+%% AssemblyItem ::= Identifier
+%%                | FunctionalAssemblyExpression
+%%                | InlineAssemblyBlock
+%%                | AssemblyLocalBinding
+%%                | AssemblyAssignment
+%%                | AssemblyLabel
+%%                | NumberLiteral
+%%                | StringLiteral
+%%                | HexLiteral
+%%
+%% ContractPart ::= StateVariableDeclaration
+%%                | UsingForDeclaration
+%%                | StructDefinition
+%%                | ModifierDefinition
+%%                | FunctionDefinition
+%%                | EventDefinition
+%%                | EnumDefinition
+%%
+%% ElementaryTypeNameExpression ::= ElementaryTypeName
+%%
+%% EnumValue ::= Identifier
+%%
+%% ExpressionStatement ::= Expression
+%%
+%% PrimaryExpression ::= BooleanLiteral
+%%                     | NumberLiteral
+%%                     | HexLiteral
+%%                     | StringLiteral
+%%                     | TupleExpression
+%%                     | Identifier
+%%                     | ElementaryTypeNameExpression
+%%
+%% SimpleStatement ::= VariableDefinition
+%%                   | ExpressionStatement
+%%
+%% TypeName ::= ElementaryTypeName
+%%            | UserDefinedTypeName
+%%            | Mapping
+%%            | ArrayTypeName
+%%            | FunctionTypeName
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     ok.

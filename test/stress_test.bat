@@ -36,6 +36,7 @@ IF "%1" == "" (
     DEL _build\test\lib\syparse\test\reliability_*.*
     RD _build\test\logs /Q /S
     MD _build\test\logs
+    RD tmp\backup /Q /S
     DEL test\reliability_*.*
     RD tmp\backup /Q /S
 
