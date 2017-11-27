@@ -1,14 +1,52 @@
-%%-*- mode: erlang -*-
-%%-*- coding: utf-8 -*-
+%%%-------------------------------------------------------------------
+%%% File        : performance_complete__compacted_referenceExamples_SUITE.erl
+%%% Description : Test Suite for rule: referenceExamples.
+%%%
+%%% Created     : 27.11.2017
+%%%-------------------------------------------------------------------
+-module(performance_complete__compacted_referenceExamples_SUITE).
 
-% Manual testing.
-[{tests, []}].
+-export([
+    all/0,
+    end_per_suite/1,
+    init_per_suite/1,
+    suite/0,
+    test_compacted/1
+]).
 
-%%
-%% Tests for rule: referenceExamples
-%%
+-include_lib("common_test/include/ct.hrl").
+-include_lib("eunit/include/eunit.hrl").
 
-"
+%%--------------------------------------------------------------------
+%% COMMON TEST CALLBACK FUNCTIONS - SUITE
+%%--------------------------------------------------------------------
+
+suite() ->
+    [
+        {timetrap, {minutes, 10}}
+    ].
+
+init_per_suite(Config) ->
+    Config.
+
+end_per_suite(_Config) ->
+    ok.
+
+%%--------------------------------------------------------------------
+%% COMMON TEST CALLBACK FUNCTIONS - ALL
+%%--------------------------------------------------------------------
+
+all() ->
+    [
+        test_compacted
+    ].
+
+%%--------------------------------------------------------------------
+%% TEST CASES
+%%--------------------------------------------------------------------
+
+test_compacted(_Config) ->
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       abi-spec.rst
         //      chapter:    Examples
@@ -22,8 +60,8 @@
             function baz(uint32 x, bool y) returns (bool r) { r = x > 32 || y; }
             function sam(bytes name, bool z, uint[] data) {}
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       abi-spec.rst
         //      chapter:    JSON
@@ -39,8 +77,8 @@
             function foo(uint a) { Event1(a, b); }
             bytes32 b;
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       abi-spec.rst
         //      chapter:    Handling tuple types
@@ -52,8 +90,8 @@
             struct T { uint x; uint y; }
             function f(S s, T t, uint a) { }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       assembly.rst
         //      chapter:    Inline Assembly
@@ -128,8 +166,8 @@
                 }
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       assembly.rst
         //      chapter:    Inline Assembly
@@ -142,8 +180,8 @@
                 assembly { 2 3 add \"abc\" and }
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       assembly.rst
         //      chapter:    Inline Assembly
@@ -160,8 +198,8 @@
                 }
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       assembly.rst
         //      chapter:    Inline Assembly
@@ -226,8 +264,8 @@
 
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       assembly.rst
         //      chapter:    Inline Assembly
@@ -250,8 +288,8 @@
                 } // v is \"deallocated\" here
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       assembly.rst
         //      chapter:    Inline Assembly
@@ -269,8 +307,8 @@
                 }
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       assembly.rst
         //      chapter:    Inline Assembly
@@ -293,8 +331,8 @@
                 }
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       assembly.rst
         //      chapter:    Inline Assembly
@@ -321,8 +359,8 @@
                 }
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       assembly.rst
         //      chapter:    Inline Assembly
@@ -340,8 +378,8 @@
                 }
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       assembly.rst
         //      chapter:    Standalone Assembly
@@ -358,8 +396,8 @@
                 }
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    creating Contracts
@@ -440,8 +478,8 @@
                 return (keccak256(newOwner) & 0xff) == (bytes20(tokenAddress) & 0xff);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Visibility and Getters
@@ -455,8 +493,8 @@
             function setData(uint a) internal { data = a; }
             uint public data;
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Visibility and Getters
@@ -500,8 +538,8 @@
            }
            mapping (uint => mapping(bool => Data[])) public data;
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Function Modifiers
@@ -585,8 +623,8 @@
                 return 7;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Constant State Variables
@@ -600,8 +638,8 @@
             string constant text = \"abc\";
             bytes32 constant myHash = keccak256(\"abc\");
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    View Functions
@@ -615,8 +653,8 @@
                 return a * (b + 42) + now;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Pure Functions
@@ -630,8 +668,8 @@
                 return a * (b + 42);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Fallback Function
@@ -670,8 +708,8 @@
                 //test.send(2 ether);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Events
@@ -694,8 +732,8 @@
                 Deposit(msg.sender, _id, msg.value);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Inheritance
@@ -829,8 +867,8 @@
 
         contract Final is Base2, Base1 {
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Inheritance
@@ -850,8 +888,8 @@
             function Derived(uint _y) Base(_y * _y) {
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Abstract Contracts
@@ -867,8 +905,8 @@
         contract Cat is Feline {
             function utterance() returns (bytes32) { return \"miaow\"; }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Interfaces
@@ -880,8 +918,8 @@
         interface Token {
            function transfer(address recipient, uint amount);
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Libraries
@@ -993,8 +1031,8 @@
                 var z = x.add(y);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       contracts.rst
         //      chapter:    Using For
@@ -1075,8 +1113,8 @@
                     data[index] = _new;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       control-structure.rst
         //      chapter:    Input Parameters and Output Parameters
@@ -1091,8 +1129,8 @@
                 // do something with _a and _b.
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       control-structure.rst
         //      chapter:    Input Parameters and Output Parameters
@@ -1108,8 +1146,8 @@
                 o_product = _a * _b;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       control-structure.rst
         //      chapter:    Function Calls
@@ -1123,8 +1161,8 @@
             function g(uint a) returns (uint ret) { return f(); }
             function f() returns (uint ret) { return g(7) + f(); }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       control-structure.rst
         //      chapter:    Function Calls
@@ -1143,8 +1181,8 @@
             function setFeed(address addr) { feed = InfoFeed(addr); }
             function callFeed() { feed.info.value(10).gas(800)(); }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       control-structure.rst
         //      chapter:    Function Calls
@@ -1164,8 +1202,8 @@
                 f({value: 2, key: 3});
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       control-structure.rst
         //      chapter:    Function Calls
@@ -1181,8 +1219,8 @@
                 return k;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       control-structure.rst
         //      chapter:    Function Calls
@@ -1211,8 +1249,8 @@
                 D newD = (new D).value(amount)(arg);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       control-structure.rst
         //      chapter:    Assignment
@@ -1249,8 +1287,8 @@
                 // equivalent to 1.
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       control-structure.rst
         //      chapter:    Assignment
@@ -1272,8 +1310,8 @@
                 return this.balance;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       frequently-asked-questions.rst
         //      chapter:    What are some examples of basic string manipulation (``substring``, ``indexOf``, ``charAt``, etc)?
@@ -1293,8 +1331,8 @@
                 bytes(s)[i] = c;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       frequently-asked-questions.rst
         //      chapter:    When returning a value of say ``uint`` type, is it possible to return an ``undefined`` or 'null'-like value?
@@ -1323,8 +1361,8 @@
                 }
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       frequently-asked-questions.rst
         //      chapter:    What is the ``memory`` keyword? What does it do?
@@ -1362,8 +1400,8 @@
                 x.push(2);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       frequently-asked-questions.rst
         //      chapter:    How do I initialize a contract with only a specific amount of wei?
@@ -1383,8 +1421,8 @@
                 child = (new B).value(10)(); //construct a new B with 10 wei
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       frequently-asked-questions.rst
         //      chapter:    Can a contract pass an array (static size) or string or ``bytes`` (dynamic size) to another contract?
@@ -1409,8 +1447,8 @@
                 y[3] = 4;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       introduction-to-smart-contracts.rst
         //      chapter:    A Simple Smart Contract
@@ -1431,8 +1469,8 @@
                 return storedData;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       introduction-to-smart-contracts.rst
         //      chapter:    A Simple Smart Contract
@@ -1470,8 +1508,8 @@
                 Sent(msg.sender, receiver, amount);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       layout-of-source-files.rst
         //      chapter:    Comments
@@ -1493,8 +1531,8 @@
                 p = 2 * (w + h);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       miscellaneous.rst
         //      chapter:    Layout of State Variables in Storage
@@ -1508,8 +1546,8 @@
           uint x;
           mapping(uint => mapping(uint => s)) data;
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       security-considerations.rst
         //      chapter:    Re-Entrancy
@@ -1541,8 +1579,8 @@
               msg.sender.transfer(share);
           }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       security-considerations.rst
         //      chapter:    tx.origin
@@ -1583,8 +1621,8 @@
                 TxUserWallet(msg.sender).transferTo(owner, msg.sender.balance);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       structure-of-a-contract.rst
         //      chapter:    State Variables
@@ -1597,8 +1635,8 @@
           uint storedData; // State variable
           // ...
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       structure-of-a-contract.rst
         //      chapter:    Functions
@@ -1612,8 +1650,8 @@
               // ...
           }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       structure-of-a-contract.rst
         //      chapter:    Function Modifiers
@@ -1634,8 +1672,8 @@
               // ...
           }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       structure-of-a-contract.rst
         //      chapter:    Events
@@ -1652,8 +1690,8 @@
               HighestBidIncreased(msg.sender, msg.value); // Triggering event
           }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       structure-of-a-contract.rst
         //      chapter:    Structs Types
@@ -1670,8 +1708,8 @@
               uint vote;
           }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       structure-of-a-contract.rst
         //      chapter:    Enum Types
@@ -1683,8 +1721,8 @@
         contract Purchase {
           enum State { Created, Locked, Inactive } // Enum
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       types.rst
         //      chapter:    Enums
@@ -1715,8 +1753,8 @@
                 return uint(defaultChoice);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       types.rst
         //      chapter:    Function Types
@@ -1809,8 +1847,8 @@
             // Use the data
           }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       types.rst
         //      chapter:    Data location
@@ -1840,8 +1878,8 @@
             function g(uint[] storage storageArray) internal {}
             function h(uint[] memoryArray) {}
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       types.rst
         //      chapter:    Allocating Memory Arrays
@@ -1858,8 +1896,8 @@
                 a[6] = 8;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       types.rst
         //      chapter:    Array Literals / Inline Arrays
@@ -1876,8 +1914,8 @@
                 // ...
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       types.rst
         //      chapter:    Members
@@ -1942,8 +1980,8 @@
                 return b;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       types.rst
         //      chapter:    Structs
@@ -1995,8 +2033,8 @@
                 return true;
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       types.rst
         //      chapter:    Mappings
@@ -2020,8 +2058,8 @@
                 return m.balances(this);
             }
         }
-    ".
-"
+    "),
+    {ok, _} = syparse:source_to_pt("
         // =====================================================================
         // from file:       types.rst
         //      chapter:    Delete
@@ -2045,4 +2083,5 @@
                 // referencing storage objects can only be made from existing storage objects.
             }
         }
-    ".
+    "),
+    ok.

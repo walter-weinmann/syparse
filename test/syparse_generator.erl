@@ -79,7 +79,7 @@ generate() ->
                     ok = file_create_eunit_all("reliability", "contract_", ?ALL_CLAUSE_RELIABILITY_CONTRACT_PART),
                     ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_RELIABILITY_DETAILED),
                     ok = file_create_eunit_all("reliability", "statement", ?ALL_CLAUSE_RELIABILITY_STATEMENT),
-                    ok = file_create_eunit_all("reliability", "stmntsemi", ?ALL_CLAUSE_RELIABILITY_STATEMENT_SEMICOLON);
+                    ok = file_create_eunit_all("reliability", "stmntsemi", ?ALL_CLAUSE_RELIABILITY_STATEMENT_SEMICOLON)
             end;
         _ -> ok
     end.
