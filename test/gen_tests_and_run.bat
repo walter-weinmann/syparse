@@ -24,23 +24,35 @@ rem ----------------------------------------------------------------------------
 > gen_tests_and_run.log (
 
     SETLOCAL enableDelayedExpansion
-    ECHO !DATE!_!TIME!
-    CALL rebar3 compile
-    erl -noshell -pa _build\default\lib\syparse\ebin -s syparse_generator generate -s init stop
-    dir code_templates
-    del /Q code_templates
-    ECHO !DATE!_!TIME!
+    ECHO %time% Start Test Data Generation and Run
 
+    REM Setting syparse options ...............................................
+    REM true: compacted / false: detailed.
+    SET GENERATE_COMPACTED=true
+    SET GENERATE_CT=true
+    SET GENERATE_EUNIT=false
+    SET GENERATE_PERFORMANCE=true
+    SET GENERATE_RELIABILITY=true
+    SET HEAP_SIZE=+hms 100663296
+    SET LOGGING=false
+    SET MAX_BASIC=250
+    CALL test\gen_tests
+
+    ECHO %time% Start EUnit Tests
     SET SOURCEFILES_OLD=SOURCEFILES
     SET SOURCEFILES=
     CALL rebar3 eunit
+
     SET SOURCEFILES=SOURCEFILES_OLD
-    ECHO !DATE!_!TIME!
+    ECHO %time% Start Common Tests
     CALL rebar3 ct
-    ECHO !DATE!_!TIME!
+
+    ECHO %time% Start Coverage Analysis
     CALL rebar3 cover
-    ECHO !DATE!_!TIME!
+
+    ECHO %time% Start Dialyzer
     CALL rebar3 dialyzer
-    ECHO !DATE!_!TIME!
+
+    ECHO %time% End   Test Data Generation and Run
 
 )
