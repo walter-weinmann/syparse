@@ -33,40 +33,56 @@
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 generate() ->
-    file:delete(?CODE_TEMPLATES),
-
-    dets:open_file(?CODE_TEMPLATES, [
-        {auto_save, 0}
+    ets:new(?CODE_TEMPLATES, [
+        named_table,
+        private,
+        ordered_set
     ]),
 
     create_code(),
 
     %% Common tests ............................................................
 
-    ok = file_create_ct_all("performance", "complete_", "compacted", ?ALL_CLAUSE_PERFORMANCE),
-
-    ok = file_create_ct_all("reliability", "complete_", "compacted", ?ALL_CLAUSE_RELIABILITY),
-    ok = file_create_ct_all("reliability", "complete_", "detailed", [referenceExamples]),
-    ok = file_create_ct_all("reliability", "complete_", "detailed", [special]),
-    ok = file_create_ct_all("reliability", "contract_", "compacted", ?ALL_CLAUSE_CONTRACT_PART),
-%%    ok = file_create_ct_all("reliability", "contract_", "detailed", ?ALL_CLAUSE_CONTRACT_PART),
-    ok = file_create_ct_all("reliability", "statement", "compacted", ?ALL_CLAUSE_STATEMENT),
-%%    ok = file_create_ct_all("reliability", "statement", "detailed", ?ALL_CLAUSE_STATEMENT),
-    ok = file_create_ct_all("reliability", "stmntsemi", "compacted", ?ALL_CLAUSE_STATEMENT_SEMICOLON),
-%%    ok = file_create_ct_all("reliability", "stmntsemi", "detailed", ?ALL_CLAUSE_STATEMENT_SEMICOLON),
+    case ?GENERATE_CT of
+        true ->
+            case ?GENERATE_PERFORMANCE of
+                true ->
+                    ok = file_create_ct_all("performance", "complete_", "compacted", ?ALL_CLAUSE_PERFORMANCE);
+                _ -> ok
+            end,
+            case ?GENERATE_RELIABILITY of
+                true ->
+                    case ?GENERATE_COMPACTED of
+                        true ->
+                            ok = file_create_ct_all("reliability", "complete_", "compacted", ?ALL_CLAUSE_RELIABILITY),
+                            ok = file_create_ct_all("reliability", "contract_", "compacted", ?ALL_CLAUSE_RELIABILITY_CONTRACT_PART),
+                            ok = file_create_ct_all("reliability", "statement", "compacted", ?ALL_CLAUSE_RELIABILITY_STATEMENT),
+                            ok = file_create_ct_all("reliability", "stmntsemi", "compacted", ?ALL_CLAUSE_RELIABILITY_STATEMENT_SEMICOLON);
+                        _ ->
+                            ok = file_create_ct_all("reliability", "complete_", "detailed", ?ALL_CLAUSE_RELIABILITY),
+                            ok = file_create_ct_all("reliability", "contract_", "detailed", ?ALL_CLAUSE_RELIABILITY_CONTRACT_PART),
+                            ok = file_create_ct_all("reliability", "statement", "detailed", ?ALL_CLAUSE_RELIABILITY_STATEMENT),
+                            ok = file_create_ct_all("reliability", "stmntsemi", "detailed", ?ALL_CLAUSE_RELIABILITY_STATEMENT_SEMICOLON)
+                    end;
+                _ -> ok
+            end;
+        _ -> ok
+    end,
 
     %% EUnit tests .............................................................
 
-    ok = file_create_eunit_all("performance", "complete_", [referenceExamples]),
-    ok = file_create_eunit_all("performance", "complete_", [special]),
-
-    ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_DETAILED),
-    ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_RELIABILITY),
-    ok = file_create_eunit_all("reliability", "contract_", ?ALL_CLAUSE_CONTRACT_PART),
-    ok = file_create_eunit_all("reliability", "statement", ?ALL_CLAUSE_STATEMENT),
-    ok = file_create_eunit_all("reliability", "stmntsemi", ?ALL_CLAUSE_STATEMENT_SEMICOLON),
-
-    dets:close(?CODE_TEMPLATES).
+    case ?GENERATE_EUNIT of
+        true ->
+            case ?GENERATE_RELIABILITY of
+                true ->
+                    ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_RELIABILITY),
+                    ok = file_create_eunit_all("reliability", "contract_", ?ALL_CLAUSE_RELIABILITY_CONTRACT_PART),
+                    ok = file_create_eunit_all("reliability", "complete_", ?ALL_CLAUSE_RELIABILITY_DETAILED),
+                    ok = file_create_eunit_all("reliability", "statement", ?ALL_CLAUSE_RELIABILITY_STATEMENT),
+                    ok = file_create_eunit_all("reliability", "stmntsemi", ?ALL_CLAUSE_RELIABILITY_STATEMENT_SEMICOLON);
+            end;
+        _ -> ok
+    end.
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Creating code base.
@@ -76,6 +92,86 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 01
+%% -----------------------------------------------------------------------------
+%%
+%% BooleanLiteral ::= 'TRUE' | 'FALSE'
+%%
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... BooleanLiteral ,,,
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% Break ::= 'BREAK'
+%%
+%% ==> Statement                           == Statement ::= ... Break ';' ...
+%%
+%% Byte ::= 'BYTE' | 'BYTES' | ... | 'BYTES32'
+%%
+%% ==> ElementaryTypeName                  == ElementaryTypeName ::= ... Byte ...
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
+%% Continue ::= 'CONTINUE'
+%%
+%% ==> Statement                           == Statement ::= ... Continue ';' ...
+%%
+%% DecimalNumber ::= [0-9]+
+%%
+%% HexLiteral ::= 'HEX' ('"' ([0-9a-fA-F][0-9a-fA-F])* '"' | "'" ([0-9a-fA-F][0-9a-fA-F])* "'")
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... HexLiteral ...
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... HexLiteral ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% HexNumber ::= '0x' [0-9a-fA-F]+
+%%
+%% Identifier ::= [a-zA-Z_$] [a-zA-Z_$0-9]*
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= Identifier
+%% ==> EnumValue                           == EnumValue ::= Identifier
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... Identifier ...
+%%
+%% Int ::= 'INT' | 'INT8' | ... | 'INT256'
+%%
+%% ==> ElementaryTypeName                  == ElementaryTypeName ::= ... Int ...
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
+%% NumberUnit ::= 'WEI' | 'SZABO' | 'FINNEY' | 'ETHER'
+%%              | 'SECONDS' | 'MINUTES' | 'HOURS' | 'DAYS' | 'WEEKS' | 'YEARS'
+%%
+%% PlaceholderStatement ::= '_'
+%%
+%% ==> Statement                           == Statement ::= ... PlaceholderStatement ';' ...
+%%
+%% PRAGMA_DIRECTIVE ::= ([^;]+;)
+%%
+%% StateMutability ::= 'PURE' | 'CONSTANT' | 'VIEW' | 'PAYABLE'
+%%
+%% StorageLocation ::= 'MEMORY' | 'STORAGE'
+%%
+%% StringLiteral ::= '"' ([^"\r\n\\] | '\\' .)* '"'
+%% ==> AssemblyItem                        == AssemblyItem ::= ... StringLiteral ...
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... StringLiteral ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% Throw ::= 'THROW'
+%%
+%% ==> Statement                           == Statement ::= ... Throw ';' ...
+%%
+%% Uint ::= 'UINT' | 'UINT8' | ... | 'UINT256'
+%%
+%% ==> ElementaryTypeName                  == ElementaryTypeName ::= ... Uint ...
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(booleanLiteral),
@@ -100,6 +196,49 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 02
+%% -----------------------------------------------------------------------------
+%%
+%% AssemblyLabel ::= Identifier ':'
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... AssemblyLabel ...
+%%
+%% EnumDefinition ::= 'ENUM' Identifier '{' EnumValue? (',' EnumValue)* '}'
+%%
+%% ==> ContractPart                        ==
+%%
+%% Fixed ::= 'FIXED' | ( 'FIXED' DecimalNumber 'x' DecimalNumber )
+%%
+%% ==> ElementaryTypeName                  == ElementaryTypeName ::= ... Fixed ...
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
+%% IdentifierList ::= '(' ( Identifier? ',' )* Identifier? ')'
+%%
+%% ImportDirective ::= 'IMPORT' StringLiteral ('AS' Identifier)? ';'
+%%                   | 'IMPORT' ('*' | Identifier) ('AS' Identifier)? 'FROM' StringLiteral ';'
+%%                   | 'IMPORT' '{' Identifier ('AS' Identifier)? ( ',' Identifier ('AS' Identifier)? )* '}' 'FROM' StringLiteral ';'
+%%
+%% NumberLiteral ::= ( HexNumber | DecimalNumber ) (' ' NumberUnit)?
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... NumberLiteral ...
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... NumberLiteral ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% PragmaDirective ::= 'PRAGMA' Identifier ([^;]+) ';'
+%%
+%% Ufixed ::= 'UFIXED' | ( 'UFIXED' DecimalNumber 'x' DecimalNumber )
+%%
+%% ==> ElementaryTypeName                  == ElementaryTypeName ::= ... | Ufixed
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
+%% UserDefinedTypeName ::= Identifier ( '.' Identifier )*
+%%
+%% ==> TypeName                            == TypeName ::= ... UserDefinedTypeName ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(assemblyLabel),
@@ -114,6 +253,23 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 03
+%% -----------------------------------------------------------------------------
+%%
+%% ElementaryTypeName ::= 'ADDRESS'
+%%                      | 'BOOL'
+%%                      | 'STRING'
+%%                      | 'VAR'
+%% ==                      | Int
+%% ==                      | Uint
+%% ==                      | Byte
+%% ==                      | Fixed
+%% ==                      | Ufixed
+%%
+%% ==> ElementaryTypeNameExpression        == ElementaryTypeNameExpression ::= ElementaryTypeNane
+%% ==> TypeName                            == TypeName ::= ... ElementaryTypeName ...
+%%
+%% PragmaDirective ::= 'PRAGMA' Identifier ([^;]+) ';'
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(elementaryTypeName),
@@ -121,12 +277,105 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 04
+%% -----------------------------------------------------------------------------
+%%
+%% Expression ::= Expression ('++' | '--')
+%%              | NewExpression
+%%              | IndexAccess
+%%              | MemberAccess
+%%              | FunctionCall
+%%              | '(' Expression ')'
+%%              | ('!' | '~' | 'delete' | '++' | '--' | '+' | '-') Expression
+%%              | Expression '**' Expression
+%%              | Expression ('*' | '/' | '%') Expression
+%%              | Expression ('+' | '-') Expression
+%%              | Expression ('<<' | '>>') Expression
+%%              | Expression '&' Expression
+%%              | Expression '^' Expression
+%%              | Expression '|' Expression
+%%              | Expression ('<' | '>' | '<=' | '>=') Expression
+%%              | Expression ('==' | '!=') Expression
+%%              | Expression '&&' Expression
+%%              | Expression '||' Expression
+%%              | Expression '?' Expression ':' Expression
+%%              | Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') Expression
+%%              | PrimaryExpression
+%%
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(expression),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 05
+%% -----------------------------------------------------------------------------
+%%
+%% ArrayTypeName ::= TypeName '[' Expression? ']'
+%%
+%% ==> TypeName                            == TypeName ::= ... ArrayTypeName ...
+%%
+%% ExpressionList ::= Expression ( ',' Expression )*
+%%
+%% ==> FunctionCallArguments               == FunctionCallArguments ::= ... ExpressionList? ...
+%%
+%% IndexAccess ::= Expression '[' Expression? ']'
+%%
+%% ==> Expression                          == Expression ::= ... IndexAccess ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% IndexedParameterList ::= '(' ( TypeName 'INDEXED'? Identifier? (',' TypeName 'INDEXED'? Identifier?)* )? ')'
+%%
+%% InheritanceSpecifier ::= UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
+%%
+%% Mapping ::= 'MAPPING' '(' ElementaryTypeName '=>' TypeName ')'
+%%
+%% ==> TypeName                            == TypeName ::= ... Mapping ...
+%%
+%% MemberAccess ::= Expression '.' Identifier
+%%
+%% ==> Expression                          == Expression ::= ... MemberAccess ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% NameValueList ::= Identifier ':' Expression ( ',' Identifier ':' Expression )*
+%%
+%% NewExpression ::= 'NEW' TypeName
+%%
+%% ==> Expression                          == Expression ::= ... NewExpression ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% ParameterList ::=        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
+%%
+%% Return ::= 'RETURN' Expression?
+%%
+%% ==> Statement                           == Statement ::= ... Return ';' ...
+%%
+%% StateVariableDeclaration ::= TypeName ( 'PUBLIC' | 'INTERNAL' | 'PRIVATE' | 'CONSTANT' )? Identifier ('=' Expression)? ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... StateVariableDeclaration ...
+%%
+%% TupleExpression ::= '(' ( Expression ( ',' Expression )*  )? ')'
+%%                   | '[' ( Expression ( ',' Expression )*  )? ']'
+%%
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... TupleExpression ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% TypeNameList ::=         '(' ( TypeName (',' TypeName )* )? ')'
+%%
+%% UsingForDeclaration ::= 'USING' Identifier 'FOR' ('*' | TypeName) ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... UsingForDeclaration ...
+%%
+%% VariableDeclaration ::= TypeName StorageLocation? Identifier
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(arrayTypeName),
@@ -148,6 +397,32 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 06
+%% -----------------------------------------------------------------------------
+%%
+%% EventDefinition ::= 'EVENT' Identifier IndexedParameterList 'ANONYMOUS'? ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... EventDefinition ...
+%%
+%% FunctionCallArguments ::= '{' NameValueList? '}'
+%%                         | ExpressionList?
+%%
+%% FunctionTypeName ::= 'FUNCTION' TypeNameList ( 'INTERNAL' | 'EXTERNAL' | StateMutability )*
+%%                      ( 'RETURNS' TypeNameList )?
+%%
+%% ==> TypeName                            == TypeName ::= ... FunctionTypeName ...
+%%
+%% ModifierInvocation ::= Identifier ( '(' ExpressionList? ')' )?
+%%
+%% StructDefinition ::= 'STRUCT' Identifier '{'
+%%                      ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... StructDefinition ...
+%%
+%% VariableDefinition ::= ('var' IdentifierList | VariableDeclaration) ( '=' Expression )?
+%%
+%% ==> SimpleStatement                     == SimpleStatement ::= ... VariableDefinition ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(eventDefinition),
@@ -159,18 +434,119 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 07
+%% -----------------------------------------------------------------------------
+%%
+%% FunctionCall ::= Expression '(' FunctionCallArguments ')'
+%%
+%% ==> Expression                          == Expression ::= ... FunctionCall ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(functionCall),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 14
+%% -----------------------------------------------------------------------------
+%%
+%% Expression ::= Expression ('++' | '--')
+%%              | NewExpression
+%%              | IndexAccess
+%%              | MemberAccess
+%%              | FunctionCall
+%%              | '(' Expression ')'
+%%              | ('!' | '~' | 'delete' | '++' | '--' | '+' | '-') Expression
+%%              | Expression '**' Expression
+%%              | Expression ('*' | '/' | '%') Expression
+%%              | Expression ('+' | '-') Expression
+%%              | Expression ('<<' | '>>') Expression
+%%              | Expression '&' Expression
+%%              | Expression '^' Expression
+%%              | Expression '|' Expression
+%%              | Expression ('<' | '>' | '<=' | '>=') Expression
+%%              | Expression ('==' | '!=') Expression
+%%              | Expression '&&' Expression
+%%              | Expression '||' Expression
+%%              | Expression '?' Expression ':' Expression
+%%              | Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') Expression
+%%              | PrimaryExpression
+%%
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(expression),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 15
+%% -----------------------------------------------------------------------------
+%%
+%% ArrayTypeName ::= TypeName '[' Expression? ']'
+%%
+%% ==> TypeName                            == TypeName ::= ... ArrayTypeName ...
+%%
+%% ExpressionList ::= Expression ( ',' Expression )*
+%%
+%% ==> FunctionCallArguments               == FunctionCallArguments ::= ... ExpressionList? ...
+%%
+%% IndexAccess ::= Expression '[' Expression? ']'
+%%
+%% ==> Expression                          == Expression ::= ... IndexAccess ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% IndexedParameterList ::= '(' ( TypeName 'INDEXED'? Identifier? (',' TypeName 'INDEXED'? Identifier?)* )? ')'
+%%
+%% InheritanceSpecifier ::= UserDefinedTypeName ( '(' Expression ( ',' Expression )* ')' )?
+%%
+%% Mapping ::= 'MAPPING' '(' ElementaryTypeName '=>' TypeName ')'
+%%
+%% ==> TypeName                            == TypeName ::= ... Mapping ...
+%%
+%% MemberAccess ::= Expression '.' Identifier
+%%
+%% ==> Expression                          == Expression ::= ... MemberAccess ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% NameValueList ::= Identifier ':' Expression ( ',' Identifier ':' Expression )*
+%%
+%% NewExpression ::= 'NEW' TypeName
+%%
+%% ==> Expression                          == Expression ::= ... NewExpression ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% ParameterList ::=        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
+%%
+%% Return ::= 'RETURN' Expression?
+%%
+%% ==> Statement                           == Statement ::= ... Return ';' ...
+%%
+%% StateVariableDeclaration ::= TypeName ( 'PUBLIC' | 'INTERNAL' | 'PRIVATE' | 'CONSTANT' )? Identifier ('=' Expression)? ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... StateVariableDeclaration ...
+%%
+%% TupleExpression ::= '(' ( Expression ( ',' Expression )*  )? ')'
+%%                   | '[' ( Expression ( ',' Expression )*  )? ']'
+%%
+%% ==> Expression                          == Expression ::= ... PrimaryExpression ...
+%% ==> ExpressionStatement                 == ExpressionStatement ::= Expression
+%% ==> PrimaryExpression                   == PrimaryExpression ::= ... TupleExpression ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
+%% TypeNameList ::=         '(' ( TypeName (',' TypeName )* )? ')'
+%%
+%% UsingForDeclaration ::= 'USING' Identifier 'FOR' ('*' | TypeName) ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... UsingForDeclaration ...
+%%
+%% VariableDeclaration ::= TypeName StorageLocation? Identifier
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(arrayTypeName),
@@ -192,6 +568,32 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 16
+%% -----------------------------------------------------------------------------
+%%
+%% EventDefinition ::= 'EVENT' Identifier IndexedParameterList 'ANONYMOUS'? ';'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... EventDefinition ...
+%%
+%% FunctionCallArguments ::= '{' NameValueList? '}'
+%%                         | ExpressionList?
+%%
+%% FunctionTypeName ::= 'FUNCTION' TypeNameList ( 'INTERNAL' | 'EXTERNAL' | StateMutability )*
+%%                      ( 'RETURNS' TypeNameList )?
+%%
+%% ==> TypeName                            == TypeName ::= ... FunctionTypeName ...
+%%
+%% ModifierInvocation ::= Identifier ( '(' ExpressionList? ')' )?
+%%
+%% StructDefinition ::= 'STRUCT' Identifier '{'
+%%                      ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
+%%
+%% ==> ContractPart                        == ContractPart ::= ... StructDefinition ...
+%%
+%% VariableDefinition ::= ('var' IdentifierList | VariableDeclaration) ( '=' Expression )?
+%%
+%% ==> SimpleStatement                     == SimpleStatement ::= ... VariableDefinition ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(eventDefinition),
@@ -203,12 +605,38 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 17
+%% -----------------------------------------------------------------------------
+%%
+%% FunctionCall ::= Expression '(' FunctionCallArguments ')'
+%%
+%% ==> Expression                          == Expression ::= ... FunctionCall ...
+%% ==> SimpleStatement                     == SimpleStatement ::= ... ExpressionStatement ...
+%% ==> Statement                           == Statement ::= ... SimpleStatement ';' ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(functionCall),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 21
+%% -----------------------------------------------------------------------------
+%%
+%% DoWhileStatement ::= 'DO' Statement 'WHILE' '(' Expression ')'
+%%
+%% ==> Statement                           == Statement ::= ... DoWhileStatement ';' ...
+%%
+%% ForStatement ::= 'FOR' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
+%%
+%% ==> Statement                           == Statement ::= ... ForStatement ...
+%%
+%% IfStatement ::= 'IF' '(' Expression ')' Statement ( 'ELSE' Statement )?
+%%
+%% ==> Statement                           == Statement ::= ... IfStatement ...
+%%
+%% WhileStatement ::= 'WHILE' '(' Expression ')' Statement
+%%
+%% ==> Statement                           == Statement ::= ... WhileStatement ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(doWhileStatement),
@@ -218,12 +646,36 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 22
+%% -----------------------------------------------------------------------------
+%%
+%% Block ::= '{' Statement* '}'
+%%
+%% ==> Statement                           == Statement ::= ... Block ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(block),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 31
+%% -----------------------------------------------------------------------------
+%%
+%% DoWhileStatement ::= 'DO' Statement 'WHILE' '(' Expression ')'
+%%
+%% ==> Statement                           == Statement ::= ... DoWhileStatement ';' ...
+%%
+%% ForStatement ::= 'FOR' '(' (SimpleStatement)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
+%%
+%% ==> Statement                           == Statement ::= ... ForStatement ...
+%%
+%% IfStatement ::= 'IF' '(' Expression ')' Statement ( 'ELSE' Statement )?
+%%
+%% ==> Statement                           == Statement ::= ... IfStatement ...
+%%
+%% WhileStatement ::= 'WHILE' '(' Expression ')' Statement
+%%
+%% ==> Statement                           == Statement ::= ... WhileStatement ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(doWhileStatement),
@@ -233,18 +685,40 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 32
+%% -----------------------------------------------------------------------------
+%%
+%% Block ::= '{' Statement* '}'
+%%
+%% ==> Statement                           == Statement ::= ... Block ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(block),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 41
+%% -----------------------------------------------------------------------------
+%%
+%% FunctionalAssemblyExpression ::= Identifier '(' AssemblyItem? ( ',' AssemblyItem )* ')'
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... FunctionalAssemblyExpression ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(functionalAssemblyExpression),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 42
+%% -----------------------------------------------------------------------------
+%%
+%% AssemblyAssignment ::= ( Identifier ':=' FunctionalAssemblyExpression ) | ( '=:' Identifier )
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... AssemblyAssignment ...
+%%
+%% AssemblyLocalBinding ::= 'LET' Identifier ':=' FunctionalAssemblyExpression
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... AssemblyLocalBinding ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(assemblyAssignment),
@@ -252,24 +726,52 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 43
+%% -----------------------------------------------------------------------------
+%%
+%% InlineAssemblyBlock ::= '{' AssemblyItem* '}'
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... InlineAssemblyBlock ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(inlineAssemblyBlock),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 44
+%% -----------------------------------------------------------------------------
+%%
+%% InlineAssemblyStatement ::= 'ASSEMBLY' StringLiteral? InlineAssemblyBlock
+%%
+%% ==> Statement                           == Statement ::= ... InlineAssemblyStatement ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(inlineAssemblyStatement),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 51
+%% -----------------------------------------------------------------------------
+%%
+%% FunctionalAssemblyExpression ::= Identifier '(' AssemblyItem? ( ',' AssemblyItem )* ')'
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... FunctionalAssemblyExpression ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(functionalAssemblyExpression),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 52
+%% -----------------------------------------------------------------------------
+%%
+%% AssemblyAssignment ::= ( Identifier ':=' FunctionalAssemblyExpression ) | ( '=:' Identifier )
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... AssemblyAssignment ...
+%%
+%% AssemblyLocalBinding ::= 'LET' Identifier ':=' FunctionalAssemblyExpression
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... AssemblyLocalBinding ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(assemblyAssignment),
@@ -277,43 +779,124 @@ create_code() ->
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 53
+%% -----------------------------------------------------------------------------
+%%
+%% InlineAssemblyBlock ::= '{' AssemblyItem* '}'
+%%
+%% ==> AssemblyItem                        == AssemblyItem ::= ... InlineAssemblyBlock ...
+%% ==> Statement                           == Statement ::= ... InlineAssemblyBlock ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(inlineAssemblyBlock),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 54
+%% -----------------------------------------------------------------------------
+%%
+%% InlineAssemblyStatement ::= 'ASSEMBLY' StringLiteral? InlineAssemblyBlock
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(inlineAssemblyStatement),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 61
+%% -----------------------------------------------------------------------------
+%%
+%% Block ::= '{' Statement* '}'
+%%
+%% ==> Statement                           == Statement ::= ... Block ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(block),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 62
+%%
+%% FunctionDefinition ::= 'FUNCTION' Identifier? ParameterList
+%%                        ( ModifierInvocation | StateMutability | 'EXTERNAL' | 'PUBLIC' | 'INTERNAL' | 'PRIVATE' )*
+%%                        ( 'RETURNS' ParameterList )? ( ';' | Block )
+%%
+%% ==> ContractPart                        == ContractPart ::= ... FunctionDefinition ...
+%%
+%% ModifierDefinition ::= 'MODIFIER' Identifier ParameterList? Block
+%%
+%% ==> ContractPart                        == ContractPart ::= ... ModifierDefinition ...
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    create_code(modifierDefinition),
     create_code(functionDefinition),
+    create_code(modifierDefinition),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 63
+%% -----------------------------------------------------------------------------
+%%
+%% ContractDefinition ::= ( 'CONTRACT' | 'LIBRARY' | 'INTERFACE' ) Identifier
+%%                        ( 'IS' InheritanceSpecifier (',' InheritanceSpecifier )* )?
+%%                        '{' ContractPart* '}'
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(contractDefinition),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Level 64
+%% -----------------------------------------------------------------------------
+%%
+%% SourceUnit ::= (PragmaDirective | ImportDirective | ContractDefinition)*
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     create_code(sourceUnit),
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Level ???
+%% Level 99
+%% -----------------------------------------------------------------------------
+%%
+%% AssemblyItem ::= Identifier
+%%                | FunctionalAssemblyExpression
+%%                | InlineAssemblyBlock
+%%                | AssemblyLocalBinding
+%%                | AssemblyAssignment
+%%                | AssemblyLabel
+%%                | NumberLiteral
+%%                | StringLiteral
+%%                | HexLiteral
+%%
+%% ContractPart ::= StateVariableDeclaration
+%%                | UsingForDeclaration
+%%                | StructDefinition
+%%                | ModifierDefinition
+%%                | FunctionDefinition
+%%                | EventDefinition
+%%                | EnumDefinition
+%%
+%% ElementaryTypeNameExpression ::= ElementaryTypeName
+%%
+%% EnumValue ::= Identifier
+%%
+%% ExpressionStatement ::= Expression
+%%
+%% PrimaryExpression ::= BooleanLiteral
+%%                     | NumberLiteral
+%%                     | HexLiteral
+%%                     | StringLiteral
+%%                     | TupleExpression
+%%                     | Identifier
+%%                     | ElementaryTypeNameExpression
+%%
+%% SimpleStatement ::= VariableDefinition
+%%                   | ExpressionStatement
+%%
+%% TypeName ::= ElementaryTypeName
+%%            | UserDefinedTypeName
+%%            | Mapping
+%%            | ArrayTypeName
+%%            | FunctionTypeName
+%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     ok.
@@ -326,9 +909,9 @@ create_code() ->
 
 create_code(arrayTypeName = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{typeName, TypeName}] = dets:lookup(?CODE_TEMPLATES, typeName),
+    [{typeName, TypeName}] = ets:lookup(?CODE_TEMPLATES, typeName),
     TypeName_Length = length(TypeName),
 
     Code = [
@@ -352,9 +935,9 @@ create_code(arrayTypeName = Rule) ->
 
 create_code(assemblyAssignment = Rule) ->
     ?CREATE_CODE_START,
-    [{functionalAssemblyExpression, FunctionalAssemblyExpression}] = dets:lookup(?CODE_TEMPLATES, functionalAssemblyExpression),
+    [{functionalAssemblyExpression, FunctionalAssemblyExpression}] = ets:lookup(?CODE_TEMPLATES, functionalAssemblyExpression),
     FunctionalAssemblyIdentifier_Length = length(FunctionalAssemblyExpression),
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
 
     Code = [
@@ -381,7 +964,7 @@ create_code(assemblyAssignment = Rule) ->
 
 create_code(assemblyLabel = Rule) ->
     ?CREATE_CODE_START,
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
 
     Code = [lists:nth(rand:uniform(Identifier_Length), Identifier) ++
@@ -399,9 +982,9 @@ create_code(assemblyLabel = Rule) ->
 
 create_code(assemblyLocalBinding = Rule) ->
     ?CREATE_CODE_START,
-    [{functionalAssemblyExpression, FunctionalAssemblyExpression}] = dets:lookup(?CODE_TEMPLATES, functionalAssemblyExpression),
+    [{functionalAssemblyExpression, FunctionalAssemblyExpression}] = ets:lookup(?CODE_TEMPLATES, functionalAssemblyExpression),
     FunctionalAssemblyIdentifier_Length = length(FunctionalAssemblyExpression),
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
 
     Code = [
@@ -425,7 +1008,7 @@ create_code(assemblyLocalBinding = Rule) ->
 
 create_code(block = Rule) ->
     ?CREATE_CODE_START,
-    [{statement, Statement}] = dets:lookup(?CODE_TEMPLATES, statement),
+    [{statement, Statement}] = ets:lookup(?CODE_TEMPLATES, statement),
     Statement_Length = length(Statement),
 
     Code =
@@ -561,11 +1144,11 @@ create_code(continue = Rule) ->
 
 create_code(contractDefinition = Rule) ->
     ?CREATE_CODE_START,
-    [{contractPart, ContractPart}] = dets:lookup(?CODE_TEMPLATES, contractPart),
+    [{contractPart, ContractPart}] = ets:lookup(?CODE_TEMPLATES, contractPart),
     ContractPart_Length = length(ContractPart),
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
-    [{inheritanceSpecifier, InheritanceSpecifier}] = dets:lookup(?CODE_TEMPLATES, inheritanceSpecifier),
+    [{inheritanceSpecifier, InheritanceSpecifier}] = ets:lookup(?CODE_TEMPLATES, inheritanceSpecifier),
     InheritanceSpecifier_Length = length(InheritanceSpecifier),
 
     Code = [
@@ -690,9 +1273,9 @@ create_code(decimalNumber = Rule) ->
 
 create_code(doWhileStatement = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{statement, Statement}] = dets:lookup(?CODE_TEMPLATES, statement),
+    [{statement, Statement}] = ets:lookup(?CODE_TEMPLATES, statement),
     Statement_Length = length(Statement),
 
     Code = [
@@ -746,9 +1329,9 @@ create_code(elementaryTypeName = Rule) ->
 
 create_code(enumDefinition = Rule) ->
     ?CREATE_CODE_START,
-    [{enumValue, EnumValue}] = dets:lookup(?CODE_TEMPLATES, enumValue),
+    [{enumValue, EnumValue}] = ets:lookup(?CODE_TEMPLATES, enumValue),
     EnumValue_Length = length(EnumValue),
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
 
     Code = [
@@ -797,9 +1380,9 @@ create_code(enumDefinition = Rule) ->
 
 create_code(eventDefinition = Rule) ->
     ?CREATE_CODE_START,
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
-    [{indexedParameterList, IndexedParameterList}] = dets:lookup(?CODE_TEMPLATES, indexedParameterList),
+    [{indexedParameterList, IndexedParameterList}] = ets:lookup(?CODE_TEMPLATES, indexedParameterList),
     IndexedParameterList_Length = length(IndexedParameterList),
 
     Code = [
@@ -853,7 +1436,7 @@ create_code(eventDefinition = Rule) ->
 
 create_code(expression = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code = [
@@ -1055,7 +1638,7 @@ create_code(expression = Rule) ->
 
 create_code(expressionList = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code =
@@ -1111,7 +1694,7 @@ create_code(expressionList = Rule) ->
 
 create_code(fixed = Rule) ->
     ?CREATE_CODE_START,
-    [{decimalNumber, DecimalNumber}] = dets:lookup(?CODE_TEMPLATES, decimalNumber),
+    [{decimalNumber, DecimalNumber}] = ets:lookup(?CODE_TEMPLATES, decimalNumber),
     DecimalNumber_Length = length(DecimalNumber),
 
     Code =
@@ -1173,13 +1756,13 @@ create_code(fixed = Rule) ->
 
 create_code(forStatement = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{expressionStatement, ExpressionStatement}] = dets:lookup(?CODE_TEMPLATES, expressionStatement),
+    [{expressionStatement, ExpressionStatement}] = ets:lookup(?CODE_TEMPLATES, expressionStatement),
     ExpressionStatement_Length = length(ExpressionStatement),
-    [{simpleStatement, SimpleStatement}] = dets:lookup(?CODE_TEMPLATES, simpleStatement),
+    [{simpleStatement, SimpleStatement}] = ets:lookup(?CODE_TEMPLATES, simpleStatement),
     SimpleStatement_Length = length(SimpleStatement),
-    [{statement, Statement}] = dets:lookup(?CODE_TEMPLATES, statement),
+    [{statement, Statement}] = ets:lookup(?CODE_TEMPLATES, statement),
     Statement_Length = length(Statement),
 
     Code = [
@@ -1217,9 +1800,9 @@ create_code(forStatement = Rule) ->
 
 create_code(functionalAssemblyExpression = Rule) ->
     ?CREATE_CODE_START,
-    [{assemblyItem, AssemblyItem}] = dets:lookup(?CODE_TEMPLATES, assemblyItem),
+    [{assemblyItem, AssemblyItem}] = ets:lookup(?CODE_TEMPLATES, assemblyItem),
     AssemblyItem_Length = length(AssemblyItem),
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
 
     Code = [
@@ -1262,9 +1845,9 @@ create_code(functionalAssemblyExpression = Rule) ->
 
 create_code(functionCall = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{functionCallArguments, FunctionCallArguments}] = dets:lookup(?CODE_TEMPLATES, functionCallArguments),
+    [{functionCallArguments, FunctionCallArguments}] = ets:lookup(?CODE_TEMPLATES, functionCallArguments),
     FunctionCallArguments_Length = length(FunctionCallArguments),
 
     Code = [
@@ -1290,7 +1873,7 @@ create_code(functionCall = Rule) ->
 
 create_code(functionCallArguments = Rule) ->
     ?CREATE_CODE_START,
-    [{nameValueList, NameValueList}] = dets:lookup(?CODE_TEMPLATES, nameValueList),
+    [{nameValueList, NameValueList}] = ets:lookup(?CODE_TEMPLATES, nameValueList),
     NameValueList_Length = length(NameValueList),
 
     Code =
@@ -1316,15 +1899,15 @@ create_code(functionCallArguments = Rule) ->
 
 create_code(functionDefinition = Rule) ->
     ?CREATE_CODE_START,
-    [{block, Block}] = dets:lookup(?CODE_TEMPLATES, block),
+    [{block, Block}] = ets:lookup(?CODE_TEMPLATES, block),
     Block_Length = length(Block),
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
-    [{parameterList, ParameterList}] = dets:lookup(?CODE_TEMPLATES, parameterList),
+    [{parameterList, ParameterList}] = ets:lookup(?CODE_TEMPLATES, parameterList),
     ParameterList_Length = length(ParameterList),
-    [{modifierInvocation, ModifierInvocation}] = dets:lookup(?CODE_TEMPLATES, modifierInvocation),
+    [{modifierInvocation, ModifierInvocation}] = ets:lookup(?CODE_TEMPLATES, modifierInvocation),
     ModifierInvocation_Length = length(ModifierInvocation),
-    [{stateMutability, StateMutability}] = dets:lookup(?CODE_TEMPLATES, stateMutability),
+    [{stateMutability, StateMutability}] = ets:lookup(?CODE_TEMPLATES, stateMutability),
     StateMutability_Length = length(StateMutability),
 
     Code =
@@ -1394,7 +1977,7 @@ create_code(functionDefinition = Rule) ->
 
 create_code(functionTypeName = Rule) ->
     ?CREATE_CODE_START,
-    [{typeNameList, TypeNameList}] = dets:lookup(?CODE_TEMPLATES, typeNameList),
+    [{typeNameList, TypeNameList}] = ets:lookup(?CODE_TEMPLATES, typeNameList),
     TypeNameList_Length = length(TypeNameList),
 
     Code = [
@@ -1564,7 +2147,7 @@ create_code(identifier = Rule) ->
 
 create_code(identifierList = Rule) ->
     ?CREATE_CODE_START,
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
 
     Code =
@@ -1603,9 +2186,9 @@ create_code(identifierList = Rule) ->
 
 create_code(ifStatement = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{statement, Statement}] = dets:lookup(?CODE_TEMPLATES, statement),
+    [{statement, Statement}] = ets:lookup(?CODE_TEMPLATES, statement),
     Statement_Length = length(Statement),
 
     Code = [
@@ -1634,9 +2217,9 @@ create_code(ifStatement = Rule) ->
 
 create_code(importDirective = Rule) ->
     ?CREATE_CODE_START,
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
-    [{stringLiteral, StringLiteral}] = dets:lookup(?CODE_TEMPLATES, stringLiteral),
+    [{stringLiteral, StringLiteral}] = ets:lookup(?CODE_TEMPLATES, stringLiteral),
     StringLiteral_Length = length(StringLiteral),
 
     Code = [
@@ -1732,7 +2315,7 @@ create_code(importDirective = Rule) ->
 
 create_code(indexAccess = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code =
@@ -1762,9 +2345,9 @@ create_code(indexAccess = Rule) ->
 
 create_code(indexedParameterList = Rule) ->
     ?CREATE_CODE_START,
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
-    [{typeName, TypeName}] = dets:lookup(?CODE_TEMPLATES, typeName),
+    [{typeName, TypeName}] = ets:lookup(?CODE_TEMPLATES, typeName),
     TypeName_Length = length(TypeName),
 
     Code =
@@ -1795,9 +2378,9 @@ create_code(indexedParameterList = Rule) ->
 
 create_code(inheritanceSpecifier = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{userDefinedTypeName, UserDefinedTypeName}] = dets:lookup(?CODE_TEMPLATES, userDefinedTypeName),
+    [{userDefinedTypeName, UserDefinedTypeName}] = ets:lookup(?CODE_TEMPLATES, userDefinedTypeName),
     UserDefinedTypeName_Length = length(UserDefinedTypeName),
 
     Code =
@@ -1842,7 +2425,7 @@ create_code(inheritanceSpecifier = Rule) ->
 
 create_code(inlineAssemblyBlock = Rule) ->
     ?CREATE_CODE_START,
-    [{assemblyItem, AssemblyItem}] = dets:lookup(?CODE_TEMPLATES, assemblyItem),
+    [{assemblyItem, AssemblyItem}] = ets:lookup(?CODE_TEMPLATES, assemblyItem),
     AssemblyItem_Length = length(AssemblyItem),
 
     Code =
@@ -1889,9 +2472,9 @@ create_code(inlineAssemblyBlock = Rule) ->
 
 create_code(inlineAssemblyStatement = Rule) ->
     ?CREATE_CODE_START,
-    [{inlineAssemblyBlock, InlineAssemblyBlock}] = dets:lookup(?CODE_TEMPLATES, inlineAssemblyBlock),
+    [{inlineAssemblyBlock, InlineAssemblyBlock}] = ets:lookup(?CODE_TEMPLATES, inlineAssemblyBlock),
     InlineAssemblyBlock_Length = length(InlineAssemblyBlock),
-    [{stringLiteral, StringLiteral}] = dets:lookup(?CODE_TEMPLATES, stringLiteral),
+    [{stringLiteral, StringLiteral}] = ets:lookup(?CODE_TEMPLATES, stringLiteral),
     StringLiteral_Length = length(StringLiteral),
 
     Code = [
@@ -1945,9 +2528,9 @@ create_code(int = Rule) ->
 
 create_code(mapping = Rule) ->
     ?CREATE_CODE_START,
-    [{elementaryTypeName, ElementaryTypeName}] = dets:lookup(?CODE_TEMPLATES, elementaryTypeName),
+    [{elementaryTypeName, ElementaryTypeName}] = ets:lookup(?CODE_TEMPLATES, elementaryTypeName),
     ElementaryTypeName_Length = length(ElementaryTypeName),
-    [{typeName, TypeName}] = dets:lookup(?CODE_TEMPLATES, typeName),
+    [{typeName, TypeName}] = ets:lookup(?CODE_TEMPLATES, typeName),
     TypeName_Length = length(TypeName),
 
     Code = [
@@ -1976,9 +2559,9 @@ create_code(mapping = Rule) ->
 
 create_code(memberAccess = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
 
     Code =
@@ -2005,11 +2588,11 @@ create_code(memberAccess = Rule) ->
 
 create_code(modifierDefinition = Rule) ->
     ?CREATE_CODE_START,
-    [{block, Block}] = dets:lookup(?CODE_TEMPLATES, block),
+    [{block, Block}] = ets:lookup(?CODE_TEMPLATES, block),
     Block_Length = length(Block),
-    [{parameterList, ParameterList}] = dets:lookup(?CODE_TEMPLATES, parameterList),
+    [{parameterList, ParameterList}] = ets:lookup(?CODE_TEMPLATES, parameterList),
     ParameterList_Length = length(ParameterList),
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
 
     Code =
@@ -2038,9 +2621,9 @@ create_code(modifierDefinition = Rule) ->
 
 create_code(modifierInvocation = Rule) ->
     ?CREATE_CODE_START,
-    [{expressionList, ExpressionList}] = dets:lookup(?CODE_TEMPLATES, expressionList),
+    [{expressionList, ExpressionList}] = ets:lookup(?CODE_TEMPLATES, expressionList),
     ExpressionList_Length = length(ExpressionList),
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
 
     Code =
@@ -2066,9 +2649,9 @@ create_code(modifierInvocation = Rule) ->
 
 create_code(nameValueList = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
 
     Code =
@@ -2136,7 +2719,7 @@ create_code(nameValueList = Rule) ->
 
 create_code(newExpression = Rule) ->
     ?CREATE_CODE_START,
-    [{typeName, TypeName}] = dets:lookup(?CODE_TEMPLATES, typeName),
+    [{typeName, TypeName}] = ets:lookup(?CODE_TEMPLATES, typeName),
     TypeName_Length = length(TypeName),
 
     Code = [
@@ -2169,11 +2752,11 @@ create_code(newExpression = Rule) ->
 
 create_code(numberLiteral = Rule) ->
     ?CREATE_CODE_START,
-    [{decimalNumber, DecimalNumber}] = dets:lookup(?CODE_TEMPLATES, decimalNumber),
+    [{decimalNumber, DecimalNumber}] = ets:lookup(?CODE_TEMPLATES, decimalNumber),
     DecimalNumber_Length = length(DecimalNumber),
-    [{hexNumber, HexNumber}] = dets:lookup(?CODE_TEMPLATES, hexNumber),
+    [{hexNumber, HexNumber}] = ets:lookup(?CODE_TEMPLATES, hexNumber),
     HexNumber_Length = length(HexNumber),
-    [{numberUnit, NumberUnit}] = dets:lookup(?CODE_TEMPLATES, numberUnit),
+    [{numberUnit, NumberUnit}] = ets:lookup(?CODE_TEMPLATES, numberUnit),
     NumberUnit_Length = length(NumberUnit),
 
     Code = [
@@ -2234,9 +2817,9 @@ create_code(numberUnit = Rule) ->
 
 create_code(parameterList = Rule) ->
     ?CREATE_CODE_START,
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
-    [{typeName, TypeName}] = dets:lookup(?CODE_TEMPLATES, typeName),
+    [{typeName, TypeName}] = ets:lookup(?CODE_TEMPLATES, typeName),
     TypeName_Length = length(TypeName),
 
     Code =
@@ -2348,9 +2931,9 @@ create_code(pragma_directive = Rule) ->
 
 create_code(pragmaDirective = Rule) ->
     ?CREATE_CODE_START,
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
-    [{pragma_directive, Pragma_directive}] = dets:lookup(?CODE_TEMPLATES, pragma_directive),
+    [{pragma_directive, Pragma_directive}] = ets:lookup(?CODE_TEMPLATES, pragma_directive),
     Pragma_directive_Length = length(Pragma_directive),
 
     Code = [
@@ -2390,7 +2973,7 @@ create_code(referenceExamples = Rule) ->
             string:replace(CodeExample, "\"", "\\\"", all)
         ]) || {File, Chapter, SubChapter, CodeExample} <- ?TESTS_FROM_SOLIDITY_DOCS
     ],
-    dets:insert(?CODE_TEMPLATES, {Rule, Code}),
+    ets:insert(?CODE_TEMPLATES, {Rule, Code}),
 %   ?CREATE_CODE_END;
     ok;
 
@@ -2400,7 +2983,7 @@ create_code(referenceExamples = Rule) ->
 
 create_code(return = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code =
@@ -2420,11 +3003,11 @@ create_code(return = Rule) ->
 
 create_code(sourceUnit = Rule) ->
     ?CREATE_CODE_START,
-    [{contractDefinition, ContractDefinition}] = dets:lookup(?CODE_TEMPLATES, contractDefinition),
+    [{contractDefinition, ContractDefinition}] = ets:lookup(?CODE_TEMPLATES, contractDefinition),
     ContractDefinition_Length = length(ContractDefinition),
-    [{importDirective, ImportDirective}] = dets:lookup(?CODE_TEMPLATES, importDirective),
+    [{importDirective, ImportDirective}] = ets:lookup(?CODE_TEMPLATES, importDirective),
     ImportDirective_Length = length(ImportDirective),
-    [{pragmaDirective, PragmaDirective}] = dets:lookup(?CODE_TEMPLATES, pragmaDirective),
+    [{pragmaDirective, PragmaDirective}] = ets:lookup(?CODE_TEMPLATES, pragmaDirective),
     PragmaDirective_Length = length(PragmaDirective),
 
     Code = [
@@ -2603,7 +3186,7 @@ create_code(special = Rule) ->
         "Import {identifier1, identifier2} From \\\"string\\\";",
         "Pragma identifier1 ^1.0.0; Pragma identifier2 ^1.0.0;"
     ],
-    dets:insert(?CODE_TEMPLATES, {Rule, Code}),
+    ets:insert(?CODE_TEMPLATES, {Rule, Code}),
 %   ?CREATE_CODE_END;
     ok;
 
@@ -2631,11 +3214,11 @@ create_code(stateMutability = Rule) ->
 
 create_code(stateVariableDeclaration = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
-    [{typeName, TypeName}] = dets:lookup(?CODE_TEMPLATES, typeName),
+    [{typeName, TypeName}] = ets:lookup(?CODE_TEMPLATES, typeName),
     TypeName_Length = length(TypeName),
 
     Code = [
@@ -2731,9 +3314,9 @@ create_code(stringLiteral = Rule) ->
 
 create_code(structDefinition = Rule) ->
     ?CREATE_CODE_START,
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
-    [{variableDeclaration, VariableDeclaration}] = dets:lookup(?CODE_TEMPLATES, variableDeclaration),
+    [{variableDeclaration, VariableDeclaration}] = ets:lookup(?CODE_TEMPLATES, variableDeclaration),
     VariableDeclaration_Length = length(VariableDeclaration),
 
     Code = [
@@ -2803,7 +3386,7 @@ create_code(throw = Rule) ->
 
 create_code(tupleExpression = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
 
     Code =
@@ -2883,7 +3466,7 @@ create_code(tupleExpression = Rule) ->
 
 create_code(typeNameList = Rule) ->
     ?CREATE_CODE_START,
-    [{typeName, TypeName}] = dets:lookup(?CODE_TEMPLATES, typeName),
+    [{typeName, TypeName}] = ets:lookup(?CODE_TEMPLATES, typeName),
     TypeName_Length = length(TypeName),
 
     Code =
@@ -2938,7 +3521,7 @@ create_code(typeNameList = Rule) ->
 
 create_code(uFixed = Rule) ->
     ?CREATE_CODE_START,
-    [{decimalNumber, DecimalNumber}] = dets:lookup(?CODE_TEMPLATES, decimalNumber),
+    [{decimalNumber, DecimalNumber}] = ets:lookup(?CODE_TEMPLATES, decimalNumber),
     DecimalNumber_Length = length(DecimalNumber),
 
     Code =
@@ -3026,7 +3609,7 @@ create_code(uInt = Rule) ->
 
 create_code(userDefinedTypeName = Rule) ->
     ?CREATE_CODE_START,
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
 %% wwe
 %%    Identifier_Length = length(Identifier),
 %%
@@ -3066,9 +3649,9 @@ create_code(userDefinedTypeName = Rule) ->
 
 create_code(usingForDeclaration = Rule) ->
     ?CREATE_CODE_START,
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
-    [{typeName, TypeName}] = dets:lookup(?CODE_TEMPLATES, typeName),
+    [{typeName, TypeName}] = ets:lookup(?CODE_TEMPLATES, typeName),
     TypeName_Length = length(TypeName),
 
     Code = [
@@ -3094,11 +3677,11 @@ create_code(usingForDeclaration = Rule) ->
 
 create_code(variableDeclaration = Rule) ->
     ?CREATE_CODE_START,
-    [{identifier, Identifier}] = dets:lookup(?CODE_TEMPLATES, identifier),
+    [{identifier, Identifier}] = ets:lookup(?CODE_TEMPLATES, identifier),
     Identifier_Length = length(Identifier),
-    [{storageLocation, StorageLocation}] = dets:lookup(?CODE_TEMPLATES, storageLocation),
+    [{storageLocation, StorageLocation}] = ets:lookup(?CODE_TEMPLATES, storageLocation),
     StorageLocation_Length = length(StorageLocation),
-    [{typeName, TypeName}] = dets:lookup(?CODE_TEMPLATES, typeName),
+    [{typeName, TypeName}] = ets:lookup(?CODE_TEMPLATES, typeName),
     TypeName_Length = length(TypeName),
 
     Code = [
@@ -3128,11 +3711,11 @@ create_code(variableDeclaration = Rule) ->
 
 create_code(variableDefinition = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{identifierList, IdentifierList}] = dets:lookup(?CODE_TEMPLATES, identifierList),
+    [{identifierList, IdentifierList}] = ets:lookup(?CODE_TEMPLATES, identifierList),
     IdentifierList_Length = length(IdentifierList),
-    [{variableDeclaration, VariableDeclaration}] = dets:lookup(?CODE_TEMPLATES, variableDeclaration),
+    [{variableDeclaration, VariableDeclaration}] = ets:lookup(?CODE_TEMPLATES, variableDeclaration),
     VariableDeclaration_Length = length(VariableDeclaration),
 
     Code =
@@ -3169,9 +3752,9 @@ create_code(variableDefinition = Rule) ->
 
 create_code(whileStatement = Rule) ->
     ?CREATE_CODE_START,
-    [{expression, Expression}] = dets:lookup(?CODE_TEMPLATES, expression),
+    [{expression, Expression}] = ets:lookup(?CODE_TEMPLATES, expression),
     Expression_Length = length(Expression),
-    [{statement, Statement}] = dets:lookup(?CODE_TEMPLATES, statement),
+    [{statement, Statement}] = ets:lookup(?CODE_TEMPLATES, statement),
     Statement_Length = length(Statement),
 
     Code = [
@@ -3198,10 +3781,15 @@ file_create_ct_all(Type, CompleteDescription, CompactedDetailed, [Rule | Rules])
     file_create_ct_all(Type, CompleteDescription, CompactedDetailed, Rules).
 
 file_create_ct(Type, CompleteDescription, CompactedDetailed, Rule) ->
-    [{Rule, Code}] = dets:lookup(?CODE_TEMPLATES, Rule),
+    [{Rule, Code}] = ets:lookup(?CODE_TEMPLATES, Rule),
 
     CodeLength = length(Code),
     RuleString = atom_to_list(Rule),
+
+    case file:list_dir(?PATH_CT) of
+        {error, enoent} -> file:make_dir(?PATH_CT);
+        _ -> ok
+    end,
 
     FileName = lists:append([Type, "_", CompleteDescription, "_", CompactedDetailed, "_", RuleString, "_SUITE"]),
     {ok, File, _} = file:path_open([?PATH_CT], FileName ++ ".erl", [write]),
@@ -3380,9 +3968,14 @@ file_create_eunit_all(Type, CompleteDescription, [Rule | Rules]) ->
     file_create_eunit_all(Type, CompleteDescription, Rules).
 
 file_create_eunit(Type, CompleteDescription, Rule) ->
-    [{Rule, Code}] = dets:lookup(?CODE_TEMPLATES, Rule),
+    [{Rule, Code}] = ets:lookup(?CODE_TEMPLATES, Rule),
 
     RuleStrimg = atom_to_list(Rule),
+
+    case file:list_dir(?PATH_EUNIT) of
+        {error, enoent} -> file:make_dir(?PATH_EUNIT);
+        _ -> ok
+    end,
 
     FileName = lists:append([Type, "_", CompleteDescription, "_", RuleStrimg, ".tst"]),
     {ok, File, _} = file:path_open([?PATH_EUNIT], FileName, [write]),
@@ -3434,12 +4027,21 @@ file_write_eunit(CompleteDescription, File, [H | T]) ->
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 store_code(Rule, Code, Max, Strict) ->
-    erlang:display(io:format("store Code         ===> ~12.. B rule: ~s ", [length(Code), atom_to_list(Rule)])),
+    case ?LOGGING of
+        true ->
+            {total_heap_size, MSize} = erlang:process_info(whereis(code_server), total_heap_size),
+            erlang:display(io:format("store total_heap   ===> ~12.. B rule: ~s ", [MSize, atom_to_list(Rule)])),
+            erlang:display(io:format("store Code         ===> ~12.. B rule: ~s ", [length(Code), atom_to_list(Rule)]));
+        _ -> ok
+    end,
 
     case Max == 0 of
         true ->
-            erlang:display(io:format("store CodeNew      ===> ~12.. B rule: ~s ", [0, atom_to_list(Rule)])),
-            ?debugFmt("~ncode lines         ===> ~12.. B rule: ~s ~n", [0, atom_to_list(Rule)]);
+            case ?LOGGING of
+                true ->
+                    erlang:display(io:format("store CodeNew      ===> ~12.. B rule: ~s ", [0, atom_to_list(Rule)]));
+                _ -> ok
+            end;
         _ ->
             CodeUnique = ordsets:to_list(ordsets:from_list(Code)),
             CodeUnique_Length = length(CodeUnique),
@@ -3449,7 +4051,7 @@ store_code(Rule, Code, Max, Strict) ->
                                         lists:sublist(CodeUniqueSorted, 1, Max);
                                     _ -> CodeUnique
                                 end,
-            CodeTotal = case dets:lookup(?CODE_TEMPLATES, Rule) of
+            CodeTotal = case ets:lookup(?CODE_TEMPLATES, Rule) of
                             [{Rule, CodeOld}] ->
                                 lists:sort(?F_RANDOM, ordsets:to_list(ordsets:from_list(lists:append([CodeOld, CodeUniqueLimited]))));
                             _ -> CodeUniqueLimited
@@ -3460,7 +4062,16 @@ store_code(Rule, Code, Max, Strict) ->
                               [lists:nth(rand:uniform(CodeTotal_Length), CodeTotal) || _ <- lists:seq(1, Max)];
                           _ -> CodeTotal
                       end,
-            dets:insert(?CODE_TEMPLATES, {Rule, CodeNew}),
-            erlang:display(io:format("store CodeNew      ===> ~12.. B rule: ~s ", [length(CodeNew), atom_to_list(Rule)])),
-            ?debugFmt("~ncode lines         ===> ~12.. B rule: ~s ~n", [length(CodeNew), atom_to_list(Rule)])
+            ets:insert(?CODE_TEMPLATES, {Rule, CodeNew}),
+            case ?LOGGING of
+                true ->
+                    erlang:display(io:format("store CodeNew      ===> ~12.. B rule: ~s ", [length(CodeNew), atom_to_list(Rule)]));
+                _ -> ok
+            end
+    end,
+
+    case ?LOGGING of
+        true ->
+            erlang:display(io:format("store table size   ===> ~12.. B rule: ~s ", [ets:info(?CODE_TEMPLATES, memory), atom_to_list(Rule)]));
+        _ -> ok
     end.

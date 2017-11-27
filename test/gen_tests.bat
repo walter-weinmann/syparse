@@ -24,11 +24,44 @@ rem ----------------------------------------------------------------------------
 > gen_tests.log (
 
     SETLOCAL enableDelayedExpansion
-    ECHO !DATE!_!TIME!
-    CALL rebar3 compile
-    erl -noshell -pa _build\default\lib\syparse\ebin -s syparse_generator generate -s init stop
-    dir code_templates
-    del /Q code_templates
-    ECHO !DATE!_!TIME!
+    ECHO %time% Start Test Data Generation
+
+    IF EXIST _build\test\lib\syparse\test\performance_*.* (
+        DEL /Q _build\test\lib\syparse\test\performance_*.*
+    )
+    IF EXIST _build\test\lib\syparse\test\reliability_*.* (
+        DEL /Q _build\test\lib\syparse\test\reliability_*.*
+    )
+    IF EXIST test\performance_*.* (
+        DEL /Q test\performance_*.*
+    )
+    IF EXIST test\reliability_*.* (
+        DEL /Q test\reliability_*.*
+    )
+
+    CALL rebar3 as test compile
+
+    REM Setting syparse options ...............................................
+    IF "%GENERATE_COMPACTED%" == "" (
+        REM true: compacted / false: detailed.
+        SET GENERATE_COMPACTED=true
+        SET GENERATE_CT=true
+        SET GENERATE_EUNIT=false
+        SET GENERATE_PERFORMANCE=true
+        SET GENERATE_RELIABILITY=true
+        SET HEAP_SIZE=+hms 100663296
+        SET LOGGING=false
+        SET MAX_BASIC=250
+    )
+
+    REM Starting test data generator ...........................................
+    erl -noshell -pa _build\test\lib\syparse\test %HEAP_SIZE% -s syparse_generator generate -s init stop
+
+    IF EXIST code_templates (
+        DIR code_templates
+        DEL /Q code_templates
+    )
+
+    ECHO %time% End  Test Data Generation
 
 )
