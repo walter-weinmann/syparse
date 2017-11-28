@@ -3786,10 +3786,7 @@ file_create_ct(Type, CompleteDescription, CompactedDetailed, Rule) ->
     CodeLength = length(Code),
     RuleString = atom_to_list(Rule),
 
-    case file:list_dir(?PATH_CT) of
-        {error, enoent} -> file:make_dir(?PATH_CT);
-        _ -> ok
-    end,
+    filelib:ensure_dir(?PATH_CT),
 
     FileName = lists:append([Type, "_", CompleteDescription, "_", CompactedDetailed, "_", RuleString, "_SUITE"]),
     {ok, File, _} = file:path_open([?PATH_CT], FileName ++ ".erl", [write]),
@@ -3972,10 +3969,7 @@ file_create_eunit(Type, CompleteDescription, Rule) ->
 
     RuleStrimg = atom_to_list(Rule),
 
-    case file:list_dir(?PATH_EUNIT) of
-        {error, enoent} -> file:make_dir(?PATH_EUNIT);
-        _ -> ok
-    end,
+    filelib:ensure_dir(?PATH_EUNIT),
 
     FileName = lists:append([Type, "_", CompleteDescription, "_", RuleStrimg, ".tst"]),
     {ok, File, _} = file:path_open([?PATH_EUNIT], FileName, [write]),

@@ -258,8 +258,8 @@
 -define(MAX_CONTRACT_PART, ?MAX_BASIC * 4).
 -define(MAX_STATEMENT, ?MAX_BASIC * 8).
 
--define(PATH_CT, "test").
--define(PATH_EUNIT, "test").
+-define(PATH_CT, "test/generated/ct/").
+-define(PATH_EUNIT, "test/generated/eunit/").
 
 -define(TESTS_FROM_SOLIDITY_DOCS, [
 %% wwe

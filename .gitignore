@@ -5,5 +5,6 @@ rebar.lock
 rebar3.crashdump
 src/sylexer.erl
 src/syparse.erl
-test/reliability_*
+test/generated/ct/reliability_*
+test/generated/eunit
 tmp
