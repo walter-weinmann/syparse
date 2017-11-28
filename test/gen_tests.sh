@@ -31,11 +31,11 @@ timestamp() {
 
 echo "$(timestamp) Start Test Data Generation"
 
-if ls _build/test/lib/tnsparse/test/performance_*.* 1> /dev/null 2>&1; then
-    rm _build/test/lib/tnsparse/test/performance_*.*
+if ls _build/test/lib/syparse/test/performance_*.* 1> /dev/null 2>&1; then
+    rm _build/test/lib/syparse/test/performance_*.*
 fi
-if ls _build/test/lib/tnsparse/test/reliability_*.* 1> /dev/null 2>&1; then
-    rm _build/test/lib/tnsparse/test/reliability_*.*
+if ls _build/test/lib/syparse/test/reliability_*.* 1> /dev/null 2>&1; then
+    rm _build/test/lib/syparse/test/reliability_*.*
 fi
 if ls test/performance_*.* 1> /dev/null 2>&1; then
     rm test/performance_*.*
@@ -46,7 +46,7 @@ fi
 
 rebar3 as test compile
 
-# Setting tnsparse options ...............................................
+# Setting syparse options ...............................................
 if [ "$GENERATE_COMPACTED" == "" ]; then
     # true: compacted / false: detailed.
     export GENERATE_COMPACTED="true"
@@ -60,7 +60,7 @@ if [ "$GENERATE_COMPACTED" == "" ]; then
 fi
 
 # Starting test data generator ...........................................
-erl -noshell -pa _build/test/lib/tnsparse/test $HEAP_SIZE -s tnsparse_generator generate -s init stop
+erl -noshell -pa _build/test/lib/syparse/test $HEAP_SIZE -s syparse_generator generate -s init stop
 
 if [ -f "code_templates" ]; then
     ls -l code_templates

@@ -50,7 +50,7 @@ if [ -d "tmp/backup" ]; then
 fi
 mkdir  tmp/backup
 
-# Setting tnsparse options ...............................................
+# Setting syparse options ...............................................
 # true: compacted / false: detailed.
 export GENERATE_COMPACTED="true"
 export GENERATE_CT="true"

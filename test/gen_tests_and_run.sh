@@ -31,7 +31,7 @@ timestamp() {
 
 echo "$(timestamp) Start Test Data Generation and Run"
 
-# Setting tnsparse options ...............................................
+# Setting syparse options ...............................................
 # "true": compacted / "false": detailed.
 export GENERATE_COMPACTED="true"
 export GENERATE_CT="true"
