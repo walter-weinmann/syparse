@@ -22,7 +22,7 @@ contract C {
 
 ```erlang
 1> {ok, {ParseTree, Tokens}} = syparse:source_to_pt("pragma solidity ^0.4.0;
-                                                     
+
                                                      contract C {
                                                        struct s { uint a; uint b; }
                                                        uint x;
@@ -294,11 +294,3 @@ the grammar rule of ```ParameterList``` has precedence over ```TypeNameList```.
 ## 4. Acknowledgement
 
 This project was inspired by the [sqlparse](https://github.com/K2InformaticsGmbH/sqlparse) project of the company [K2 Informatics GmbH](http://www.k2informatics.ch).
-
-## 5. Contributing
-
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
